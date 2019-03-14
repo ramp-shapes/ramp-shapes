@@ -1,0 +1,386 @@
+[
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/ontologies/platform#formContainer"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/ldp#contains"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasBody"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/body"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasTarget"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range-source/3450d6a8-2a13-471b-a178-088765cd4d23"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#Annotation"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/body"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/2000/01/rdf-schema#label"
+    },
+    "o" : {
+      "type" : "literal",
+      "value" : "Borders"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/body"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/2000/01/rdf-schema#label"
+    },
+    "o" : {
+      "xml:lang" : "ru",
+      "type" : "literal",
+      "value" : "Границы"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/prov#generatedAtTime"
+    },
+    "o" : {
+      "datatype" : "http://www.w3.org/2001/XMLSchema#dateTime",
+      "type" : "literal",
+      "value" : "2019-03-14T10:30:49.587Z"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/prov#wasAttributedTo"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/user/admin"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/ldp#Resource"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/prov#Entity"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#end"
+    },
+    "o" : {
+      "datatype" : "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+      "type" : "literal",
+      "value" : "9"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#start"
+    },
+    "o" : {
+      "datatype" : "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+      "type" : "literal",
+      "value" : "9"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#TextPositionSelector"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#end"
+    },
+    "o" : {
+      "datatype" : "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+      "type" : "literal",
+      "value" : "34"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#start"
+    },
+    "o" : {
+      "datatype" : "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+      "type" : "literal",
+      "value" : "34"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#TextPositionSelector"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range-source/3450d6a8-2a13-471b-a178-088765cd4d23"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasSelector"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range-source/3450d6a8-2a13-471b-a178-088765cd4d23"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasSource"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasEndSelector"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#hasStartSelector"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#RangeSelector"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#refinedBy"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#XPathSelector"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
+    },
+    "o" : {
+      "type" : "literal",
+      "value" : "/table[1]/tbody[1]/tr[4]/td[1]"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#refinedBy"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    },
+    "o" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/ns/oa#XPathSelector"
+    }
+  },
+  {
+    "s" : {
+      "type" : "uri",
+      "value" : "http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83"
+    },
+    "p" : {
+      "type" : "uri",
+      "value" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
+    },
+    "o" : {
+      "type" : "literal",
+      "value" : "/table[1]/tbody[1]/tr[4]/td[1]"
+    }
+  }
+]
