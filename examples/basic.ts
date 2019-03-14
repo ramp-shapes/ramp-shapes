@@ -1,4 +1,4 @@
-import { Shape, unifyTriplesToShape } from '../src/index';
+import { Shape, unifyTriplesToJson } from '../src/index';
 
 const triples = require('./triples.json');
 
@@ -45,4 +45,6 @@ const annotationShape = Shape.object({
   })),
 });
 
-const result = unifyTriplesToShape(triples, annotationShape);
+for (const result of unifyTriplesToJson(annotationShape, triples)) {
+  console.log(JSON.stringify(result, null, 2));
+}

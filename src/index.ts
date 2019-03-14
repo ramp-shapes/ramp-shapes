@@ -83,11 +83,12 @@ export namespace Shape {
   }
 }
 
-export function unifyTriplesToJson(shape: Shape, triples: ReadonlyArray<Rdf.Triple>): any {
-  switch (shape.type) {
-    case 'object':
-      return unifyObject(shape, triples);
-  }
+export function *unifyTriplesToJson(
+  shape: Shape,
+  triples: ReadonlyArray<Rdf.Triple>
+): Iterable<unknown> {
+  const allCandidates = findAllCandidates(triples);
+  yield* unifyShape(shape, allCandidates, triples);
 }
 
 function *unifyShape(
@@ -95,61 +96,58 @@ function *unifyShape(
   candidates: ReadonlyHashSet<Rdf.Node>,
   triples: ReadonlyArray<Rdf.Triple>
 ): Iterable<unknown> {
-
+  switch (shape.type) {
+    case 'object':
+      yield* unifyObject(shape, candidates, triples);
+      break;
+    case 'union':
+      yield* unifyUnion(shape, candidates, triples);
+      break;
+    case 'array':
+      yield* unifyArray(shape, candidates, triples);
+      break;
+    case 'constant':
+      yield* unifyConstant(shape, candidates, triples);
+      break;
+    case 'placeholder':
+      yield* unifyPlaceholder(shape, candidates, triples);
+  }
 }
 
 function *unifyObject(
   shape: ObjectShape,
   candidates: ReadonlyHashSet<Rdf.Node>,
   triples: ReadonlyArray<Rdf.Triple>
-): Iterable<{ candidate: Rdf.Node; value: unknown }> {
-  let objects = makeNodeMap<{ [fieldName: string]: unknown }>();
+): Iterable<unknown> {
+  const template: { [fieldName: string]: unknown } = {};
   for (const candidate of candidates) {
-    objects.set(candidate, {});
-  }
-
-  for (const field of shape.fields) {
-    if (objects.size === 0) {
-      break;
-    }
-
-    const filtered = makeNodeSet();
-    for (const [candidate] of objects) {
-      filtered.add(candidate);
-    }
-
-    const nextObjects = makeNodeMap<{ [fieldName: string]: unknown }>();
-    for (const {candidate, value} of unifyField(field, filtered, triples)) {
-      const previousValue = objects.get(candidate)!;
-      nextObjects.set(candidate, {...previousValue, [field.fieldName]: value});
-    }
-    objects = nextObjects;
-  }
-
-  for (const [candidate, value] of objects) {
-    yield {candidate, value};
+    yield* unifyFields(shape.fields, template, candidate, triples);
   }
 }
 
 function *unifyFields(
   fields: ReadonlyArray<ObjectField>,
   template: { [fieldName: string]: unknown },
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidate: Rdf.Node,
   triples: ReadonlyArray<Rdf.Triple>
-): Iterable<{ candidate: Rdf.Node; value: { [fieldName: string]: unknown } }> {
+): Iterable<unknown> {
+  if (fields.length === 0) {
+    yield template;
+  }
   const [field, ...otherFields] = fields;
-  const filtered = makeNodeSet();
-  for (const {candidate, value} of unifyField(field, candidates, triples)) {
-    filtered.add(candidate);
+  for (const value of unifyField(field, candidate, triples)) {
+    template[field.fieldName] = value;
+    yield* unifyFields(otherFields, template, candidate, triples);
+    delete template[field.fieldName];
   }
 }
 
 function *unifyField(
   field: ObjectField,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidate: Rdf.Node,
   triples: ReadonlyArray<Rdf.Triple>
-): Iterable<{ candidate: Rdf.Node; value: unknown }> {
-  const sourceToTargets = triples.reduce((acc: HashMap<Rdf.Node, HashSet<Rdf.Node>>, {s, p, o}: Rdf.Triple) => {
+): Iterable<unknown> {
+  const targets = triples.reduce((acc: HashSet<Rdf.Node>, {s, p, o}: Rdf.Triple) => {
     if (!equalsNode(field.predicate, p)) {
       return acc;
     }
@@ -162,22 +160,13 @@ function *unifyField(
       source = o;
       target = s;
     }
-    if (candidates.has(source)) {
-      let targets = acc.get(source);
-      if (!targets) {
-        targets = makeNodeSet();
-        acc.set(source, targets);
-      }
-      targets.add(target);
+    if (equalsNode(candidate, source)) {
+      acc.add(target);
     }
     return acc;
-  }, makeNodeMap());
+  }, makeNodeSet());
 
-  for (const [source, targets] of sourceToTargets) {
-    for (const value of unifyShape(field.valueShape, targets, triples)) {
-      return {value, candidate: source};
-    }
-  }
+  yield* unifyShape(field.valueShape, targets, triples);
 }
 
 function *unifyUnion(
@@ -196,6 +185,28 @@ function *unifyArray(
   triples: ReadonlyArray<Rdf.Triple>
 ): Iterable<unknown> {
   yield Array.from(unifyShape(shape.itemShape, candidates, triples));
+}
+
+function *unifyConstant(
+  shape: ConstantShape,
+  candidates: ReadonlyHashSet<Rdf.Node>,
+  triples: ReadonlyArray<Rdf.Triple>
+): Iterable<unknown> {
+  for (const candidate of candidates) {
+    if (equalsNode(candidate, shape.value)) {
+      yield candidate;
+    }
+  }
+}
+
+function *unifyPlaceholder(
+  shape: PlaceholderShape,
+  candidates: ReadonlyHashSet<Rdf.Node>,
+  triples: ReadonlyArray<Rdf.Triple>
+): Iterable<unknown> {
+  for (const candidate of candidates) {
+    yield candidate;
+  }
 }
 
 function findAllCandidates(triples: ReadonlyArray<Rdf.Triple>) {
