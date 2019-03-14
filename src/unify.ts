@@ -37,6 +37,7 @@ export function *unifyTriplesToJson(params: {
       }
       return shape;
     },
+    enableTrace: Boolean(params.trace),
     trace,
     traceOpen: (...args) => {
       trace(...args);
@@ -65,6 +66,7 @@ interface UnificationContext {
   readonly triples: ReadonlyArray<Rdf.Triple>;
   readonly vars: HashMap<ShapeID, unknown>;
   resolveShape(shapeID: ShapeID): Shape;
+  enableTrace: boolean;
   trace(...args: unknown[]): void;
   traceOpen(...args: unknown[]): void;
   traceClose(...args: unknown[]): void;
@@ -98,20 +100,23 @@ function *unifyObject(
   candidates: ReadonlyHashSet<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  const template: { [fieldName: string]: unknown } = {};
   for (const candidate of filterIris(candidates)) {
-    context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
-    for (const partial of unifyFields(shape.typeFields, template, candidate, context)) {
+    if (context.enableTrace) {
+      context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
+    }
+    for (const partial of unifyFields(shape.typeFields, {}, candidate, context)) {
       let foundObject = false;
-      for (const final of unifyFields(shape.otherFields, template, candidate, context)) {
+      for (const final of unifyFields(shape.otherFields, partial, candidate, context)) {
         foundObject = true;
-        yield final;
+        yield {...final};
       }
       if (shape.typeFields.length > 0 && !foundObject) {
         throw new Error(`Invalid entity ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}`);
       }
     }
-    context.traceClose('/object', Rdf.toString(shape.id), candidate.value);
+    if (context.enableTrace) {
+      context.traceClose('/object', Rdf.toString(shape.id), candidate.value);
+    }
   }
 }
 
@@ -120,7 +125,7 @@ function *unifyFields(
   template: { [fieldName: string]: unknown },
   candidate: Rdf.Iri,
   context: UnificationContext
-): IterableIterator<unknown> {
+): IterableIterator<{ [fieldName: string]: unknown }> {
   if (fields.length === 0) {
     yield template;
     return;
@@ -128,9 +133,14 @@ function *unifyFields(
   const [field, ...otherFields] = fields;
   for (const value of unifyField(field, candidate, context)) {
     template[field.fieldName] = value;
-    context.traceOpen('field', `"${field.fieldName}"`);
+    if (context.enableTrace) {
+      context.trace(`field "${field.fieldName}" ->`, (
+        Array.isArray(value) ? `[length = ${value.length}]` :
+        (typeof value === 'object' && value) ? `{keys: ${Object.keys(value)}}` :
+        String(value)
+      ));
+    }
     yield* unifyFields(otherFields, template, candidate, context);
-    context.traceClose('/field', `"${field.fieldName}"`);
     delete template[field.fieldName];
   }
 }
@@ -168,12 +178,16 @@ function *unifyUnion(
   candidates: ReadonlyHashSet<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  context.traceOpen('union', Rdf.toString(shape.id));
+  if (context.enableTrace) {
+    context.traceOpen('union', Rdf.toString(shape.id));
+  }
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     yield* unifyShape(variantShape, candidates, context);
   }
-  context.traceClose('/union', Rdf.toString(shape.id));
+  if (context.enableTrace) {
+    context.traceClose('/union', Rdf.toString(shape.id));
+  }
 }
 
 function *unifySet(
@@ -182,9 +196,13 @@ function *unifySet(
   context: UnificationContext
 ): IterableIterator<unknown> {
   const itemShape = context.resolveShape(shape.itemShape);
-  context.traceOpen('set', Rdf.toString(shape.id));
+  if (context.enableTrace) {
+    context.traceOpen('set', Rdf.toString(shape.id));
+  }
   yield Array.from(unifyShape(itemShape, candidates, context));
-  context.traceClose('/set', Rdf.toString(shape.id));
+  if (context.enableTrace) {
+    context.traceClose('/set', Rdf.toString(shape.id));
+  }
 }
 
 function *unifyConstant(
@@ -194,7 +212,9 @@ function *unifyConstant(
 ): IterableIterator<unknown> {
   for (const candidate of candidates) {
     if (Rdf.equals(candidate, shape.value)) {
-      context.trace('constant ->', Rdf.toString(candidate));
+      if (context.enableTrace) {
+        context.trace('constant ->', Rdf.toString(candidate));
+      }
       yield candidate;
     }
   }
@@ -206,7 +226,9 @@ function *unifyPlaceholder(
   context: UnificationContext
 ): IterableIterator<unknown> {
   for (const candidate of candidates) {
-    context.trace('placeholder ->', Rdf.toString(candidate));
+    if (context.enableTrace) {
+      context.trace('placeholder ->', Rdf.toString(candidate));
+    }
     context.vars.set(shape.id, candidate);
     yield candidate;
     context.vars.delete(shape.id);

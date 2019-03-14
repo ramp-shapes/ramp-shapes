@@ -63,11 +63,12 @@ const backwardsShape = schema.object({
     oa.RangeSelector,
     oa.XPathSelector
   )),
-  annotations: schema.referredFrom(oa.hasTarget, schema.set(schema.placeholder())),
+  annotations: schema.referredFrom(oa.hasTarget, schema.set(oa.Annotation)),
 });
 
 for (const result of unifyTriplesToJson({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
   console.log('FOUND oa:Annotation', JSON.stringify(result.value, null, 2));
+  console.log('VAR xpath', JSON.stringify(result.vars.get(xpathPlaceholder), null, 2));
 }
 
 for (const result of unifyTriplesToJson({rootShape: backwardsShape, shapes: schema.shapes, triples})) {

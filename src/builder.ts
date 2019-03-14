@@ -13,7 +13,7 @@ export class ShapeBuilder {
   }
 
   object(fields: { [fieldName: string]: PartialField }): ShapeID {
-    return this.namedObject(this.randomShapeID('object_'), fields);
+    return this.namedObject(this.randomShapeID('object'), fields);
   }
   
   namedObject(id: ShapeID, fields: { [fieldName: string]: PartialField }): ShapeID {
@@ -51,25 +51,25 @@ export class ShapeBuilder {
   }
 
   union(...variants: Rdf.Iri[]): ShapeID {
-    const id = this.randomShapeID('union_');
+    const id = this.randomShapeID('union');
     this._shapes.push({type: 'union', id, variants});
     return id;
   }
 
   set(itemShape: ShapeID): ShapeID {
-    const id = this.randomShapeID('set_');
+    const id = this.randomShapeID('set');
     this._shapes.push({type: 'set', id, itemShape});
     return id;
   }
 
   constant(value: Rdf.Node): ShapeID {
-    const id = this.randomShapeID('constant_');
+    const id = this.randomShapeID('constant');
     this._shapes.push({type: 'constant', id, value});
     return id;
   }
 
   placeholder(id?: ShapeID): ShapeID {
-    const shapeId = id || this.randomShapeID('placeholder_');
+    const shapeId = id || this.randomShapeID('placeholder');
     this._shapes.push({type: 'placeholder', id: shapeId});
     return shapeId;
   }

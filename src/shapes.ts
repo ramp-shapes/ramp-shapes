@@ -18,16 +18,16 @@ export interface ObjectField {
   readonly valueShape: ShapeID;
 }
 
-export interface SetShape {
-  readonly type: 'set';
-  readonly id: ShapeID;
-  readonly itemShape: ShapeID;
-}
-
 export interface UnionShape {
   readonly type: 'union';
   readonly id: ShapeID;
   readonly variants: ReadonlyArray<ShapeID>;
+}
+
+export interface SetShape {
+  readonly type: 'set';
+  readonly id: ShapeID;
+  readonly itemShape: ShapeID;
 }
 
 export interface ConstantShape {
