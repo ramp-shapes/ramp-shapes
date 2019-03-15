@@ -1,12 +1,12 @@
 import * as Rdf from './rdf-model';
-import { ShapeID, Shape, ObjectField } from './shapes';
+import { ShapeID, Shape, ObjectProperty, PropertyPathSegment } from './shapes';
 
-export type PartialField = Pick<ObjectField, 'predicate' | 'direction' | 'valueShape'>;
+export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
 
 export interface ObjectShapeProps {
   id?: ShapeID;
-  typeFields?: { [fieldName: string]: PartialField };
-  fields?: { [fieldName: string]: PartialField };
+  typeProperties?: { [name: string]: PartialProperty };
+  properties?: { [name: string]: PartialProperty };
 }
 
 export class ShapeBuilder {
@@ -17,28 +17,27 @@ export class ShapeBuilder {
   }
 
   object(props: ObjectShapeProps): ShapeID {
-    const {id = this.randomShapeID('object'), typeFields, fields} = props;
+    const {id = this.randomShapeID('object'), typeProperties, properties} = props;
 
-    function toField(fieldName: string, partial: PartialField): ObjectField {
-      const {predicate, direction, valueShape} = partial;
+    function toField(name: string, partial: PartialProperty): ObjectProperty {
+      const {path, valueShape} = partial;
       return {
-        type: 'field',
-        fieldName,
-        predicate,
-        direction,
+        type: 'property',
+        name,
+        path,
         valueShape,
       };
     }
 
-    function toFields(partials: { [fieldName: string]: PartialField }) {
-      return Object.keys(partials).map(fieldName => toField(fieldName, partials[fieldName]));
+    function toFields(partials: { [name: string]: PartialProperty }) {
+      return Object.keys(partials).map(name => toField(name, partials[name]));
     }
 
     this._shapes.push({
       type: 'object',
       id,
-      typeFields: typeFields ? toFields(typeFields) : [],
-      otherFields: fields ? toFields(fields) : [],
+      typeProperties: typeProperties ? toFields(typeProperties) : [],
+      properties: properties ? toFields(properties) : [],
     });
     return id;
   }
@@ -80,10 +79,25 @@ export class ShapeBuilder {
   }
 }
 
-export function field(predicate: Rdf.Iri, valueShape: ShapeID): PartialField {
-  return {predicate, direction: 'to-object', valueShape};
+export function self(valueShape: ShapeID): PartialProperty {
+  return {path: [], valueShape};
 }
 
-export function reverseField(predicate: Rdf.Iri, valueShape: ShapeID): PartialField {
-  return {predicate, direction: 'to-subject', valueShape};
+export function property(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
+  return {path: [{predicate, direction: 'to-object'}], valueShape};
+}
+
+export function inverseProperty(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
+  return {path: [{predicate, direction: 'to-subject'}], valueShape};
+}
+
+export function propertyPath(
+  predicates: ReadonlyArray<Rdf.Iri>, valueShape: ShapeID
+): PartialProperty {
+  return {
+    path: predicates.map((predicate): PropertyPathSegment =>
+      ({predicate, direction: 'to-object'})
+    ),
+    valueShape,
+  };
 }

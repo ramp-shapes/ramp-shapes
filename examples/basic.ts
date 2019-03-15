@@ -1,4 +1,4 @@
-import { Rdf, ShapeBuilder, field, reverseField, unifyTriplesToJson } from '../src/index';
+import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToJson, propertyPath } from '../src/index';
 
 const triples = require('./triples.json');
 
@@ -35,58 +35,61 @@ const xpathNode = schema.node();
 
 schema.object({
   id: oa.XPathSelector,
-  typeFields: {
-    type: field(rdf.type, schema.constant(oa.XPathSelector)),
+  typeProperties: {
+    type: property(rdf.type, schema.constant(oa.XPathSelector)),
   },
-  fields: {
-    xpath: field(rdf.value, xpathNode),
-    refinedBy: field(oa.refinedBy, schema.optional(schema.node())),
+  properties: {
+    xpath: property(rdf.value, xpathNode),
+    offset: propertyPath([oa.refinedBy, oa.start], schema.node()),
+    refinedBy: property(oa.refinedBy, schema.optional(schema.node())),
   }
 });
 
 schema.object({
   id: oa.RangeSelector,
-  typeFields: {
-    type: field(rdf.type, schema.constant(oa.RangeSelector)),
+  typeProperties: {
+    type: property(rdf.type, schema.constant(oa.RangeSelector)),
   },
-  fields: {
-    start: field(oa.hasStartSelector, oa.XPathSelector),
-    end: field(oa.hasEndSelector, oa.XPathSelector),
+  properties: {
+    start: property(oa.hasStartSelector, oa.XPathSelector),
+    end: property(oa.hasEndSelector, oa.XPathSelector),
   }
 });
 
 schema.object({
   id: oa.Annotation,
-  typeFields: {
-    type: field(rdf.type, schema.constant(oa.Annotation)),
+  typeProperties: {
+    type: property(rdf.type, schema.constant(oa.Annotation)),
   },
-  fields: {
-    target: field(oa.hasTarget, schema.object({
-      fields: {
-        source: field(oa.hasSource, schema.node()),
-        selector: field(oa.hasSelector, schema.union(
+  properties: {
+    iri: self(schema.node()),
+    target: property(oa.hasTarget, schema.object({
+      properties: {
+        source: property(oa.hasSource, schema.node()),
+        selector: property(oa.hasSelector, schema.union(
           oa.RangeSelector,
           oa.XPathSelector
         ))
       }
     })),
-    body: field(oa.hasBody, schema.object({
-      fields: {
-        label: field(rdfs.label, schema.set(schema.node())),
-        nonExistentValue: field(rdf.value, schema.optional(schema.node())),
+    body: property(oa.hasBody, schema.object({
+      properties: {
+        label: property(rdfs.label, schema.set(schema.node())),
+        nonExistentValue: property(rdf.value, schema.optional(schema.node())),
       }
     })),
   }
 });
 
 const backwardsShape = schema.object({
-  fields: {
-    source: field(oa.hasSource, schema.node()),
-    selector: field(oa.hasSelector, schema.union(
+  properties: {
+    iri: self(schema.node()),
+    source: property(oa.hasSource, schema.node()),
+    selector: property(oa.hasSelector, schema.union(
       oa.RangeSelector,
       oa.XPathSelector
     )),
-    annotations: reverseField(oa.hasTarget, schema.set(oa.Annotation)),
+    annotations: inverseProperty(oa.hasTarget, schema.set(oa.Annotation)),
   }
 });
 

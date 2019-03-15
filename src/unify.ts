@@ -1,7 +1,7 @@
 import { HashMap, HashSet, ReadonlyHashMap, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
-  ShapeID, Shape, ObjectShape, ObjectField, UnionShape, SetShape, OptionalShape, NodeShape
+  ShapeID, Shape, ObjectShape, ObjectProperty, UnionShape, SetShape, OptionalShape, NodeShape
 } from './shapes';
 
 export interface UnificationSolution {
@@ -107,13 +107,13 @@ function *unifyObject(
     if (context.enableTrace) {
       context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
     }
-    for (const partial of unifyFields(shape.typeFields, {}, candidate, context)) {
+    for (const partial of unifyProperties(shape.typeProperties, {}, candidate, context)) {
       let foundObject = false;
-      for (const final of unifyFields(shape.otherFields, partial, candidate, context)) {
+      for (const final of unifyProperties(shape.properties, partial, candidate, context)) {
         foundObject = true;
         yield {...final};
       }
-      if (shape.typeFields.length > 0 && !foundObject) {
+      if (shape.typeProperties.length > 0 && !foundObject) {
         throw new Error(`Invalid entity ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}`);
       }
     }
@@ -123,53 +123,65 @@ function *unifyObject(
   }
 }
 
-function *unifyFields(
-  fields: ReadonlyArray<ObjectField>,
+function *unifyProperties(
+  properties: ReadonlyArray<ObjectProperty>,
   template: { [fieldName: string]: unknown },
   candidate: Rdf.Iri | Rdf.Blank,
   context: UnificationContext
 ): IterableIterator<{ [fieldName: string]: unknown }> {
-  if (fields.length === 0) {
+  if (properties.length === 0) {
     yield template;
     return;
   }
-  const [field, ...otherFields] = fields;
-  for (const value of unifyField(field, candidate, context)) {
-    template[field.fieldName] = value;
+  const [first, ...rest] = properties;
+  for (const value of unifyProperty(first, candidate, context)) {
+    template[first.name] = value;
     if (context.enableTrace) {
-      context.trace(`field "${field.fieldName}" ->`, toTraceString(value));
+      context.trace(`field "${first.name}" ->`, toTraceString(value));
     }
-    yield* unifyFields(otherFields, template, candidate, context);
-    delete template[field.fieldName];
+    yield* unifyProperties(rest, template, candidate, context);
+    delete template[first.name];
   }
 }
 
-function *unifyField(
-  field: ObjectField,
+function *unifyProperty(
+  property: ObjectProperty,
   candidate: Rdf.Iri | Rdf.Blank,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  const targets = context.triples.reduce((acc: HashSet<Rdf.Node>, {s, p, o}: Rdf.Triple) => {
-    if (!Rdf.equals(field.predicate, p)) {
-      return acc;
-    }
-    let source: Rdf.Node;
-    let target: Rdf.Node;
-    if (field.direction === 'to-object') {
-      source = s;
-      target = o;
-    } else {
-      source = o;
-      target = s;
-    }
-    if (Rdf.equals(candidate, source)) {
-      acc.add(target);
-    }
-    return acc;
-  }, makeNodeSet());
+  if (property.path.length === 0) {
+    yield candidate;
+    return;
+  }
 
-  const valueShape = context.resolveShape(field.valueShape);
-  yield* unifyShape(valueShape, targets, context);
+  let current = makeNodeSet();
+  let next = makeNodeSet();
+  current.add(candidate);
+
+  for (const segment of property.path) {
+    for (const {s, p, o} of context.triples) {
+      if (!Rdf.equals(p, segment.predicate)) {
+        continue;
+      }
+      let source = s;
+      let target = o;
+      if (segment.direction === 'to-subject') {
+        source = o;
+        target = s;
+      }
+      if (current.has(source)) {
+        next.add(target);
+      }
+    }
+
+    const previous = current;
+    previous.clear();
+    current = next;
+    next = previous;
+  }
+
+  const valueShape = context.resolveShape(property.valueShape);
+  yield* unifyShape(valueShape, current, context);
 }
 
 function *unifyUnion(
