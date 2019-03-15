@@ -1,7 +1,7 @@
 import { HashMap, HashSet, ReadonlyHashMap, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
-  ShapeID, Shape, ObjectShape, ObjectField, UnionShape, SetShape, ConstantShape, PlaceholderShape
+  ShapeID, Shape, ObjectShape, ObjectField, UnionShape, SetShape, OptionalShape, NodeShape
 } from './shapes';
 
 export interface UnificationSolution {
@@ -87,11 +87,14 @@ function *unifyShape(
     case 'set':
       yield* unifySet(shape, candidates, context);
       break;
-    case 'constant':
-      yield* unifyConstant(shape, candidates, context);
+    case 'optional':
+      yield* unifyOptional(shape, candidates, context);
       break;
-    case 'placeholder':
-      yield* unifyPlaceholder(shape, candidates, context);
+    case 'node':
+      yield* unifyNode(shape, candidates, context);
+      break;
+    default:
+      throw new Error(`Unknown shape type ${(shape as Shape).type}`);
   }
 }
 
@@ -100,7 +103,7 @@ function *unifyObject(
   candidates: ReadonlyHashSet<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  for (const candidate of filterIris(candidates)) {
+  for (const candidate of filterResources(candidates)) {
     if (context.enableTrace) {
       context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
     }
@@ -123,7 +126,7 @@ function *unifyObject(
 function *unifyFields(
   fields: ReadonlyArray<ObjectField>,
   template: { [fieldName: string]: unknown },
-  candidate: Rdf.Iri,
+  candidate: Rdf.Iri | Rdf.Blank,
   context: UnificationContext
 ): IterableIterator<{ [fieldName: string]: unknown }> {
   if (fields.length === 0) {
@@ -147,7 +150,7 @@ function *unifyFields(
 
 function *unifyField(
   field: ObjectField,
-  candidate: Rdf.Iri,
+  candidate: Rdf.Iri | Rdf.Blank,
   context: UnificationContext
 ): IterableIterator<unknown> {
   const targets = context.triples.reduce((acc: HashSet<Rdf.Node>, {s, p, o}: Rdf.Triple) => {
@@ -205,39 +208,47 @@ function *unifySet(
   }
 }
 
-function *unifyConstant(
-  shape: ConstantShape,
+function *unifyOptional(
+  shape: OptionalShape,
+  candidates: ReadonlyHashSet<Rdf.Node>,
+  context: UnificationContext
+): IterableIterator<unknown> {
+  let found = false;
+  const valueShape = context.resolveShape(shape.valueShape);
+  for (const value of unifyShape(valueShape, candidates, context)) {
+    found = true;
+    yield value;
+  }
+  if (!found) {
+    yield shape.emptyValue;
+  }
+}
+
+function *unifyNode(
+  shape: NodeShape,
   candidates: ReadonlyHashSet<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   for (const candidate of candidates) {
-    if (Rdf.equals(candidate, shape.value)) {
+    if (!shape.value) {
       if (context.enableTrace) {
-        context.trace('constant ->', Rdf.toString(candidate));
+        context.trace('node (any) ->', Rdf.toString(candidate));
+      }
+      context.vars.set(shape.id, candidate);
+      yield candidate;
+      context.vars.delete(shape.id);
+    } else if (Rdf.equals(candidate, shape.value)) {
+      if (context.enableTrace) {
+        context.trace('node (constant) ->', Rdf.toString(candidate));
       }
       yield candidate;
     }
   }
 }
 
-function *unifyPlaceholder(
-  shape: PlaceholderShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
-  context: UnificationContext
-): IterableIterator<unknown> {
-  for (const candidate of candidates) {
-    if (context.enableTrace) {
-      context.trace('placeholder ->', Rdf.toString(candidate));
-    }
-    context.vars.set(shape.id, candidate);
-    yield candidate;
-    context.vars.delete(shape.id);
-  }
-}
-
-function *filterIris(nodes: ReadonlyHashSet<Rdf.Node>) {
+function *filterResources(nodes: ReadonlyHashSet<Rdf.Node>) {
   for (const node of nodes) {
-    if (node.type === 'uri') {
+    if (node.type === 'uri' || node.type === 'bnode') {
       yield node;
     }
   }
@@ -246,12 +257,8 @@ function *filterIris(nodes: ReadonlyHashSet<Rdf.Node>) {
 function findAllCandidates(triples: ReadonlyArray<Rdf.Triple>) {
   const candidates = makeNodeSet();
   for (const {s, p, o} of triples) {
-    if (Rdf.isIri(s)) {
-      candidates.add(s);
-    }
-    if (Rdf.isIri(o)) {
-      candidates.add(o);
-    }
+    candidates.add(s);
+    candidates.add(o);
   }
   return candidates;
 }
