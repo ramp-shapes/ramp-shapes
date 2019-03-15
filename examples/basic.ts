@@ -26,6 +26,7 @@ namespace oa {
   export const hasEndSelector = Rdf.iri(NAMESPACE + 'hasEndSelector');
   export const start = Rdf.iri(NAMESPACE + 'start');
   export const end = Rdf.iri(NAMESPACE + 'end');
+  export const refinedBy = Rdf.iri(NAMESPACE + 'refinedBy');
 }
 
 const schema = new ShapeBuilder();
@@ -39,6 +40,7 @@ schema.object({
   },
   fields: {
     xpath: field(rdf.value, xpathNode),
+    refinedBy: field(oa.refinedBy, schema.optional(schema.node())),
   }
 });
 
@@ -61,7 +63,6 @@ schema.object({
   fields: {
     target: field(oa.hasTarget, schema.object({
       fields: {
-        type: field(rdf.type, schema.optional(schema.node())),
         source: field(oa.hasSource, schema.node()),
         selector: field(oa.hasSelector, schema.union(
           oa.RangeSelector,

@@ -137,11 +137,7 @@ function *unifyFields(
   for (const value of unifyField(field, candidate, context)) {
     template[field.fieldName] = value;
     if (context.enableTrace) {
-      context.trace(`field "${field.fieldName}" ->`, (
-        Array.isArray(value) ? `[length = ${value.length}]` :
-        (typeof value === 'object' && value) ? `{keys: ${Object.keys(value)}}` :
-        String(value)
-      ));
+      context.trace(`field "${field.fieldName}" ->`, toTraceString(value));
     }
     yield* unifyFields(otherFields, template, candidate, context);
     delete template[field.fieldName];
@@ -217,9 +213,15 @@ function *unifyOptional(
   const valueShape = context.resolveShape(shape.valueShape);
   for (const value of unifyShape(valueShape, candidates, context)) {
     found = true;
+    if (context.enableTrace) {
+      context.trace('optional (found) ->', toTraceString(value));
+    }
     yield value;
   }
   if (!found) {
+    if (context.enableTrace) {
+      context.trace('optional (empty)');
+    }
     yield shape.emptyValue;
   }
 }
@@ -269,4 +271,10 @@ function makeNodeSet() {
 
 function makeNodeMap<V>() {
   return new HashMap<Rdf.Node, V>(Rdf.hash, Rdf.equals);
+}
+
+function toTraceString(value: unknown) {
+  return Array.isArray(value) ? `[length = ${value.length}]` :
+    (typeof value === 'object' && value) ? `{keys: ${Object.keys(value)}}` :
+    String(value);
 }
