@@ -19,7 +19,7 @@ export interface ObjectProperty {
 
 export interface PropertyPathSegment {
   readonly predicate: Rdf.Iri;
-  readonly direction: 'to-object' | 'to-subject';
+  readonly reverse: boolean;
 }
 
 export interface UnionShape {

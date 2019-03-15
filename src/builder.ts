@@ -84,11 +84,11 @@ export function self(valueShape: ShapeID): PartialProperty {
 }
 
 export function property(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
-  return {path: [{predicate, direction: 'to-object'}], valueShape};
+  return {path: [{predicate, reverse: false}], valueShape};
 }
 
 export function inverseProperty(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
-  return {path: [{predicate, direction: 'to-subject'}], valueShape};
+  return {path: [{predicate, reverse: true}], valueShape};
 }
 
 export function propertyPath(
@@ -96,7 +96,7 @@ export function propertyPath(
 ): PartialProperty {
   return {
     path: predicates.map((predicate): PropertyPathSegment =>
-      ({predicate, direction: 'to-object'})
+      ({predicate, reverse: false})
     ),
     valueShape,
   };

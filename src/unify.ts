@@ -9,7 +9,7 @@ export interface UnificationSolution {
   readonly vars: ReadonlyHashMap<ShapeID, unknown>;
 }
 
-export function *unifyTriplesToJson(params: {
+export function *unifyTriplesToShape(params: {
   rootShape: ShapeID,
   shapes: ReadonlyArray<Shape>,
   triples: ReadonlyArray<Rdf.Triple>,
@@ -107,14 +107,17 @@ function *unifyObject(
     if (context.enableTrace) {
       context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
     }
-    for (const partial of unifyProperties(shape.typeProperties, {}, candidate, context)) {
-      let foundObject = false;
-      for (const final of unifyProperties(shape.properties, partial, candidate, context)) {
-        foundObject = true;
+    for (const partial of unifyProperties(shape.typeProperties, {}, candidate, undefined, context)) {
+      // stores failed to match properties to produce diagnostics
+      const missing = shape.typeProperties.length > 0 ? [] as ObjectProperty[] : undefined;
+      for (const final of unifyProperties(shape.properties, partial, candidate, missing, context)) {
         yield {...final};
       }
-      if (shape.typeProperties.length > 0 && !foundObject) {
-        throw new Error(`Invalid entity ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}`);
+      if (missing && missing.length > 0) {
+        throw new Error(
+          `Invalid entity ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
+          `failed to match properties: ${missing.map(p => `"${p.name}"`).join(', ')}.`
+        );
       }
     }
     if (context.enableTrace) {
@@ -127,20 +130,29 @@ function *unifyProperties(
   properties: ReadonlyArray<ObjectProperty>,
   template: { [fieldName: string]: unknown },
   candidate: Rdf.Iri | Rdf.Blank,
+  missing: ObjectProperty[] | undefined,
   context: UnificationContext
 ): IterableIterator<{ [fieldName: string]: unknown }> {
   if (properties.length === 0) {
-    yield template;
+    if (!missing || missing.length === 0) {
+      yield template;
+    }
     return;
   }
   const [first, ...rest] = properties;
+  let found = false;
   for (const value of unifyProperty(first, candidate, context)) {
+    found = true;
     template[first.name] = value;
     if (context.enableTrace) {
       context.trace(`field "${first.name}" ->`, toTraceString(value));
     }
-    yield* unifyProperties(rest, template, candidate, context);
+    yield* unifyProperties(rest, template, candidate, missing, context);
     delete template[first.name];
+  }
+  if (!found && missing) {
+    missing.push(first);
+    yield* unifyProperties(rest, template, candidate, missing, context);
   }
 }
 
@@ -165,7 +177,7 @@ function *unifyProperty(
       }
       let source = s;
       let target = o;
-      if (segment.direction === 'to-subject') {
+      if (segment.reverse) {
         source = o;
         target = s;
       }

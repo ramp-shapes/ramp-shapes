@@ -1,4 +1,4 @@
-import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToJson, propertyPath } from '../src/index';
+import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToShape, propertyPath } from '../src/index';
 
 const triples = require('./triples.json');
 
@@ -93,12 +93,12 @@ const backwardsShape = schema.object({
   }
 });
 
-for (const result of unifyTriplesToJson({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
+for (const result of unifyTriplesToShape({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
   console.log('FOUND oa:Annotation', JSON.stringify(result.value, null, 2));
   console.log('VAR xpath', JSON.stringify(result.vars.get(xpathNode), null, 2));
 }
 
-for (const result of unifyTriplesToJson({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
+for (const result of unifyTriplesToShape({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
   console.log('FOUND backwards shape', JSON.stringify(result.value, null, 2));
   console.log('VAR xpath', JSON.stringify(result.vars.get(xpathNode), null, 2));
 }
