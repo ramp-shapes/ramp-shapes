@@ -42,7 +42,7 @@ export class ShapeBuilder {
     return id;
   }
 
-  union(...variants: Rdf.Iri[]): ShapeID {
+  union(...variants: ShapeID[]): ShapeID {
     const id = this.randomShapeID('union');
     this._shapes.push({type: 'union', id, variants});
     return id;
@@ -69,6 +69,12 @@ export class ShapeBuilder {
   node(): ShapeID {
     const id = this.randomShapeID('node');
     this._shapes.push({type: 'node', id, value: undefined});
+    return id;
+  }
+
+  list(itemShape: ShapeID): ShapeID {
+    const id = this.randomShapeID('list');
+    this._shapes.push({type: 'list', id, itemShape});
     return id;
   }
 

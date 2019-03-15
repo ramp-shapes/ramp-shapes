@@ -1,3 +1,5 @@
+import { Rdf } from ".";
+
 export type Node = Iri | Literal | Blank;
 
 export interface Iri {
@@ -23,12 +25,12 @@ export interface Triple {
   o: Node;
 }
 
-export function isBlank(e: Node): e is Blank {
-  return e && e.type === 'bnode';
-}
-
 export function isIri(e: Node): e is Iri {
   return e && e.type === 'uri';
+}
+
+export function isBlank(e: Node): e is Blank {
+  return e && e.type === 'bnode';
 }
 
 export function isLiteral(e: Node): e is Literal {
@@ -39,6 +41,10 @@ export function iri(value: string): Iri {
   return {type: 'uri', value};
 }
 
+export function blank(value: string): Blank {
+  return {type: 'bnode', value};
+}
+
 export function literal(value: string, dataType?: Iri): Literal {
   return {
     type: 'literal',
@@ -47,8 +53,13 @@ export function literal(value: string, dataType?: Iri): Literal {
   };
 }
 
-export function blankNode(value: string): Blank {
-  return {type: 'bnode', value};
+export function langString(value: string, lang: string): Literal {
+  return {
+    type: 'literal',
+    datatype: 'http://www.w3.org/2000/01/rdf-schema#langString',
+    value,
+    "xml:lang": lang,
+  };
 }
 
 export function toString(node: Node): string {

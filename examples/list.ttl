@@ -1,0 +1,9 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+<example:a> <example:hasList> (1 2 3 4 5) .
+<example:b> <example:hasList> (
+  <example:b1>
+  <example:b2>
+  <example:b2>
+  <example:b1>
+) .

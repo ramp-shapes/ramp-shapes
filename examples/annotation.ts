@@ -1,33 +1,8 @@
 import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToShape, propertyPath } from '../src/index';
+import { rdf, rdfs, oa } from './namespaces';
+import { toJson } from './util';
 
-const triples = require('./triples.json');
-
-namespace rdf {
-  export const NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-  export const type = Rdf.iri(NAMESPACE + 'type');
-  export const value = Rdf.iri(NAMESPACE + 'value');
-}
-
-namespace rdfs {
-  export const NAMESPACE = 'http://www.w3.org/2000/01/rdf-schema#';
-  export const label = Rdf.iri(NAMESPACE + 'label');
-}
-
-namespace oa {
-  export const NAMESPACE = 'http://www.w3.org/ns/oa#';
-  export const Annotation = Rdf.iri(NAMESPACE + 'Annotation');
-  export const RangeSelector = Rdf.iri(NAMESPACE + 'RangeSelector');
-  export const XPathSelector = Rdf.iri(NAMESPACE + 'XPathSelector');
-  export const hasBody = Rdf.iri(NAMESPACE + 'hasBody');
-  export const hasTarget = Rdf.iri(NAMESPACE + 'hasTarget');
-  export const hasSource = Rdf.iri(NAMESPACE + 'hasSource');
-  export const hasSelector = Rdf.iri(NAMESPACE + 'hasSelector');
-  export const hasStartSelector = Rdf.iri(NAMESPACE + 'hasStartSelector');
-  export const hasEndSelector = Rdf.iri(NAMESPACE + 'hasEndSelector');
-  export const start = Rdf.iri(NAMESPACE + 'start');
-  export const end = Rdf.iri(NAMESPACE + 'end');
-  export const refinedBy = Rdf.iri(NAMESPACE + 'refinedBy');
-}
+const triples = require('./annotation.json');
 
 const schema = new ShapeBuilder();
 
@@ -94,11 +69,11 @@ const backwardsShape = schema.object({
 });
 
 for (const result of unifyTriplesToShape({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
-  console.log('FOUND oa:Annotation', JSON.stringify(result.value, null, 2));
-  console.log('VAR xpath', JSON.stringify(result.vars.get(xpathNode), null, 2));
+  console.log('FOUND oa:Annotation', toJson(result.value));
+  console.log('VAR xpath', toJson(result.vars.get(xpathNode)));
 }
 
 for (const result of unifyTriplesToShape({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
-  console.log('FOUND backwards shape', JSON.stringify(result.value, null, 2));
-  console.log('VAR xpath', JSON.stringify(result.vars.get(xpathNode), null, 2));
+  console.log('FOUND backwards shape', toJson(result.value));
+  console.log('VAR xpath', toJson(result.vars.get(xpathNode)));
 }

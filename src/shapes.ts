@@ -1,6 +1,6 @@
 import * as Rdf from './rdf-model';
 
-export type Shape = ObjectShape | UnionShape | SetShape | OptionalShape | NodeShape;
+export type Shape = ObjectShape | UnionShape | SetShape | OptionalShape | NodeShape | ListShape;
 export type ShapeID = Rdf.Iri | Rdf.Blank;
 
 export interface ObjectShape {
@@ -45,4 +45,16 @@ export interface NodeShape {
   readonly type: 'node';
   readonly id: ShapeID;
   readonly value: Rdf.Node | undefined;
+}
+
+export interface ListShape {
+  readonly type: 'list';
+  readonly id: ShapeID;
+  readonly itemShape: ShapeID;
+  /** @default [{predicate: (rdf:first)}] */
+  readonly headPath?: ReadonlyArray<PropertyPathSegment>;
+  /** @default [{predicate: (rdf:rest)}] */
+  readonly tailPath?: ReadonlyArray<PropertyPathSegment>;
+  /** @default {type: 'node', value: (rdf:nil)} */
+  readonly nilShape?: ShapeID;
 }

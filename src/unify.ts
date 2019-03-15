@@ -1,7 +1,8 @@
 import { HashMap, HashSet, ReadonlyHashMap, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, UnionShape, SetShape, OptionalShape, NodeShape
+  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
+  OptionalShape, NodeShape, ListShape
 } from './shapes';
 
 export interface UnificationSolution {
@@ -20,12 +21,9 @@ export function *unifyTriplesToShape(params: {
     contextShapes.set(shape.id, shape);
   }
 
-  let level = 0;
-  const trace = (...args: unknown[]) => {
-    if (params.trace) {
-      console.log('  '.repeat(level), ...args);
-    }
-  };
+  const trace = params.trace
+    ? (...args: unknown[]) => console.log(...args)
+    : () => {};
 
   const context: UnificationContext = {
     triples: params.triples,
@@ -39,14 +37,6 @@ export function *unifyTriplesToShape(params: {
     },
     enableTrace: Boolean(params.trace),
     trace,
-    traceOpen: (...args) => {
-      trace(...args);
-      level++;
-    },
-    traceClose: (...args) => {
-      level--;
-      trace(...args);
-    }
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -68,13 +58,11 @@ interface UnificationContext {
   resolveShape(shapeID: ShapeID): Shape;
   enableTrace: boolean;
   trace(...args: unknown[]): void;
-  traceOpen(...args: unknown[]): void;
-  traceClose(...args: unknown[]): void;
 }
 
 function *unifyShape(
   shape: Shape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   switch (shape.type) {
@@ -93,6 +81,9 @@ function *unifyShape(
     case 'node':
       yield* unifyNode(shape, candidates, context);
       break;
+    case 'list':
+      yield* unifyList(shape, candidates, context);
+      break;
     default:
       throw new Error(`Unknown shape type ${(shape as Shape).type}`);
   }
@@ -100,13 +91,10 @@ function *unifyShape(
 
 function *unifyObject(
   shape: ObjectShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   for (const candidate of filterResources(candidates)) {
-    if (context.enableTrace) {
-      context.traceOpen('object', Rdf.toString(shape.id), candidate.value);
-    }
     for (const partial of unifyProperties(shape.typeProperties, {}, candidate, undefined, context)) {
       // stores failed to match properties to produce diagnostics
       const missing = shape.typeProperties.length > 0 ? [] as ObjectProperty[] : undefined;
@@ -119,9 +107,6 @@ function *unifyObject(
           `failed to match properties: ${missing.map(p => `"${p.name}"`).join(', ')}.`
         );
       }
-    }
-    if (context.enableTrace) {
-      context.traceClose('/object', Rdf.toString(shape.id), candidate.value);
     }
   }
 }
@@ -139,17 +124,18 @@ function *unifyProperties(
     }
     return;
   }
+
   const [first, ...rest] = properties;
+  const valueShape = context.resolveShape(first.valueShape);
+
   let found = false;
-  for (const value of unifyProperty(first, candidate, context)) {
+  for (const value of unifyProperty(first.path, valueShape, candidate, context)) {
     found = true;
     template[first.name] = value;
-    if (context.enableTrace) {
-      context.trace(`field "${first.name}" ->`, toTraceString(value));
-    }
     yield* unifyProperties(rest, template, candidate, missing, context);
     delete template[first.name];
   }
+
   if (!found && missing) {
     missing.push(first);
     yield* unifyProperties(rest, template, candidate, missing, context);
@@ -157,20 +143,29 @@ function *unifyProperties(
 }
 
 function *unifyProperty(
-  property: ObjectProperty,
+  path: ReadonlyArray<PropertyPathSegment>,
+  valueShape: Shape,
   candidate: Rdf.Iri | Rdf.Blank,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  if (property.path.length === 0) {
-    yield candidate;
-    return;
+  const values = findByPropertyPath(path, candidate, context);
+  yield* unifyShape(valueShape, values, context);
+}
+
+function findByPropertyPath(
+  path: ReadonlyArray<PropertyPathSegment>,
+  candidate: Rdf.Iri | Rdf.Blank,
+  context: UnificationContext
+): Iterable<Rdf.Node> {
+  if (path.length === 0) {
+    return [candidate];
   }
 
   let current = makeNodeSet();
   let next = makeNodeSet();
   current.add(candidate);
 
-  for (const segment of property.path) {
+  for (const segment of path) {
     for (const {s, p, o} of context.triples) {
       if (!Rdf.equals(p, segment.predicate)) {
         continue;
@@ -192,87 +187,145 @@ function *unifyProperty(
     next = previous;
   }
 
-  const valueShape = context.resolveShape(property.valueShape);
-  yield* unifyShape(valueShape, current, context);
+  return current;
 }
 
 function *unifyUnion(
   shape: UnionShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  if (context.enableTrace) {
-    context.traceOpen('union', Rdf.toString(shape.id));
-  }
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     yield* unifyShape(variantShape, candidates, context);
-  }
-  if (context.enableTrace) {
-    context.traceClose('/union', Rdf.toString(shape.id));
   }
 }
 
 function *unifySet(
   shape: SetShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   const itemShape = context.resolveShape(shape.itemShape);
-  if (context.enableTrace) {
-    context.traceOpen('set', Rdf.toString(shape.id));
-  }
   yield Array.from(unifyShape(itemShape, candidates, context));
-  if (context.enableTrace) {
-    context.traceClose('/set', Rdf.toString(shape.id));
-  }
 }
 
 function *unifyOptional(
   shape: OptionalShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   let found = false;
   const valueShape = context.resolveShape(shape.valueShape);
   for (const value of unifyShape(valueShape, candidates, context)) {
     found = true;
-    if (context.enableTrace) {
-      context.trace('optional (found) ->', toTraceString(value));
-    }
     yield value;
   }
   if (!found) {
-    if (context.enableTrace) {
-      context.trace('optional (empty)');
-    }
     yield shape.emptyValue;
   }
 }
 
 function *unifyNode(
   shape: NodeShape,
-  candidates: ReadonlyHashSet<Rdf.Node>,
+  candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
   for (const candidate of candidates) {
     if (!shape.value) {
-      if (context.enableTrace) {
-        context.trace('node (any) ->', Rdf.toString(candidate));
-      }
       context.vars.set(shape.id, candidate);
       yield candidate;
       context.vars.delete(shape.id);
     } else if (Rdf.equals(candidate, shape.value)) {
-      if (context.enableTrace) {
-        context.trace('node (constant) ->', Rdf.toString(candidate));
-      }
       yield candidate;
     }
   }
 }
 
-function *filterResources(nodes: ReadonlyHashSet<Rdf.Node>) {
+const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =
+  [{predicate: Rdf.iri(RDF_NAMESPACE + 'first'), reverse: false}];
+const DEFAULT_LIST_TAIL: ReadonlyArray<PropertyPathSegment> =
+  [{predicate: Rdf.iri(RDF_NAMESPACE + 'rest'), reverse: false}];
+const DEFAULT_LIST_NIL: NodeShape = {
+  type: 'node',
+  id: Rdf.iri(RDF_NAMESPACE + 'nil'),
+  value: Rdf.iri(RDF_NAMESPACE + 'nil'),
+};
+
+function *unifyList(
+  shape: ListShape,
+  candidates: Iterable<Rdf.Node>,
+  context: UnificationContext
+): IterableIterator<unknown[]> {
+  const list: ListUnification = {
+    origin: shape,
+    template: [],
+    head: shape.headPath || DEFAULT_LIST_HEAD,
+    tail: shape.tailPath || DEFAULT_LIST_TAIL,
+    item: context.resolveShape(shape.itemShape),
+    nil: shape.nilShape ? context.resolveShape(shape.nilShape) : DEFAULT_LIST_NIL,
+  };
+  for (const candidate of filterResources(candidates)) {
+    for (const final of unifyListItems(list, false, candidate, context)) {
+      yield [...final];
+    }
+  }
+}
+
+interface ListUnification {
+  readonly origin: ListShape;
+  readonly template: unknown[];
+  readonly head: ReadonlyArray<PropertyPathSegment>;
+  readonly tail: ReadonlyArray<PropertyPathSegment>;
+  readonly item: Shape;
+  readonly nil: Shape;
+}
+
+function *unifyListItems(
+  list: ListUnification,
+  required: boolean,
+  candidate: Rdf.Iri | Rdf.Blank,
+  context: UnificationContext
+): IterableIterator<unknown[]> {
+  let foundNil = false;
+  for (const nil of unifyShape(list.nil, [candidate], context)) {
+    foundNil = true;
+    yield list.template;
+  }
+  if (foundNil) {
+    return;
+  }
+
+  let foundHead = false;
+  for (const head of findByPropertyPath(list.head, candidate, context)) {
+    foundHead = true;
+
+    for (const item of unifyShape(list.item, [head], context)) {
+      list.template.push(item);
+      let foundTail = false;
+      for (const tail of filterResources(findByPropertyPath(list.tail, candidate, context))) {
+        foundTail = true;
+        yield* unifyListItems(list, true, tail, context);
+      }
+      if (!foundTail) {
+        throw new Error(
+          `Missing tail for list ${Rdf.toString(list.origin.id)} ` +
+          `at ${Rdf.toString(candidate)}`
+        );
+      }
+      list.template.pop();
+    }
+  }
+  if (required && !foundHead) {
+    throw new Error(
+      `Missing head or nil for list ${Rdf.toString(list.origin.id)} ` +
+      `at ${Rdf.toString(candidate)}`
+    );
+  }
+}
+
+function *filterResources(nodes: Iterable<Rdf.Node>) {
   for (const node of nodes) {
     if (node.type === 'uri' || node.type === 'bnode') {
       yield node;
