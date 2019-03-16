@@ -3,26 +3,26 @@ import { Rdf } from ".";
 export type Node = Iri | Literal | Blank;
 
 export interface Iri {
-  type: 'uri';
-  value: string;
+  readonly type: 'uri';
+  readonly value: string;
 }
 
 export interface Blank {
-  type: 'bnode';
-  value: string;
+  readonly type: 'bnode';
+  readonly value: string;
 }
 
 export interface Literal {
-  type: 'literal';
-  value: string;
-  datatype?: string;
-  'xml:lang'?: string;
+  readonly type: 'literal';
+  readonly value: string;
+  readonly datatype?: string;
+  readonly 'xml:lang'?: string;
 }
 
 export interface Triple {
-  s: Node;
-  p: Node;
-  o: Node;
+  readonly s: Node;
+  readonly p: Node;
+  readonly o: Node;
 }
 
 export function isIri(e: Node): e is Iri {

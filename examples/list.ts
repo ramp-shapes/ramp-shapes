@@ -1,5 +1,6 @@
 import { join } from 'path';
-import { Rdf, ShapeBuilder, property, unifyTriplesToShape } from '../src/index';
+import { Rdf, ShapeBuilder, property, inverseProperty, self, unifyTriplesToShape } from '../src/index';
+import { rdf } from './namespaces';
 import { toJson, readTriplesFromTtl } from './util';
 
 const triples = readTriplesFromTtl(join(__dirname, 'list.ttl'));
@@ -23,7 +24,16 @@ const listOfUnion = schema.object({
       )
     ))
   }
-})
+});
+
+const listSelf = schema.object({
+  properties: {
+    owner: inverseProperty(Rdf.iri('example:hasList'), schema.node()),
+    list: self(list),
+    rest: property(rdf.rest, list),
+    restAsIri: property(rdf.rest, schema.node()),
+  }
+});
 
 for (const {value} of unifyTriplesToShape({rootShape: list, shapes: schema.shapes, triples})) {
   console.log('FOUND list', toJson(value));
@@ -35,4 +45,8 @@ for (const {value} of unifyTriplesToShape({rootShape: listOwner, shapes: schema.
 
 for (const {value} of unifyTriplesToShape({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
   console.log('FOUND list of union', toJson(value));
+}
+
+for (const {value} of unifyTriplesToShape({rootShape: listSelf, shapes: schema.shapes, triples})) {
+  console.log('FOUND list self', toJson(value));
 }
