@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as N3 from 'n3';
 import { Rdf } from "../src/index";
 
-export function readTriplesFromTtl(path: string): Rdf.Triple[] {
+export function readTriplesFromTurtle(path: string): Rdf.Triple[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
   const parser = N3.Parser();
   return parser.parse(ttl).reduce((acc: Rdf.Triple[], quad) => {
@@ -16,7 +16,7 @@ export function readTriplesFromTtl(path: string): Rdf.Triple[] {
   }, []);
 }
 
-function n3ToRdf(v: N3.Term): Rdf.Node | undefined {
+export function n3ToRdf(v: N3.Term): Rdf.Node | undefined {
   switch (v.termType) {
     case 'NamedNode':
       return Rdf.iri(v.value);
@@ -33,6 +33,22 @@ function n3ToRdf(v: N3.Term): Rdf.Node | undefined {
   }
 }
 
+export function rdfToN3(v: Rdf.Node): N3.NamedNode | N3.BlankNode | N3.Literal {
+  switch (v.type) {
+    case 'uri':
+      return N3.DataFactory.namedNode(v.value);
+    case 'bnode':
+      return N3.DataFactory.blankNode(v.value);
+    case 'literal':
+      const datatypeOrLanguage = (
+        v.datatype === 'http://www.w3.org/2000/01/rdf-schema#langString' ? v["xml:lang"] :
+        typeof v.datatype === 'string' ? N3.DataFactory.namedNode(v.datatype) :
+        undefined
+      );
+      return N3.DataFactory.literal(v.value, datatypeOrLanguage);
+  }
+}
+
 export function toJson(match: unknown): string {
   return JSON.stringify(match, (key, value) => {
     if (typeof value === 'object' && value !== null &&
@@ -42,4 +58,33 @@ export function toJson(match: unknown): string {
     }
     return value;
   }, 2);
+}
+
+export function triplesToTurtleString(
+  triples: ReadonlyArray<Rdf.Triple>,
+  prefixes: { [prefix: string]: string }
+): Promise<string> {
+  const quads = triples.reduce((acc: N3.Quad[], {s, p, o}) => {
+    const ns = rdfToN3(s);
+    const np = rdfToN3(p);
+    const no = rdfToN3(o);
+    if ((ns.termType === 'NamedNode' || ns.termType === 'BlankNode') &&
+      (np.termType === 'NamedNode')
+    ) {
+      acc.push(N3.DataFactory.quad(ns, np, no));
+    }
+    return acc;
+  }, []);
+  
+  return new Promise((resolve, reject) => {
+    const writer = new N3.Writer({prefixes});
+    writer.addQuads(quads);
+    writer.end((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    });
+  });
 }

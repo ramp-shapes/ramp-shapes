@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { Rdf, ShapeBuilder, property, inverseProperty, self, unifyTriplesToShape } from '../src/index';
 import { rdf } from './namespaces';
-import { toJson, readTriplesFromTtl } from './util';
+import { toJson, readTriplesFromTurtle } from './util';
 
-const triples = readTriplesFromTtl(join(__dirname, 'list.ttl'));
+const triples = readTriplesFromTurtle(join(__dirname, 'list.ttl'));
 
 const schema = new ShapeBuilder();
 

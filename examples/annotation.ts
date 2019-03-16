@@ -1,8 +1,9 @@
+import { join } from 'path';
 import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToShape, propertyPath } from '../src/index';
 import { rdf, rdfs, oa } from './namespaces';
-import { toJson } from './util';
+import { readTriplesFromTurtle, toJson } from './util';
 
-const triples = require('./annotation.json');
+const triples = readTriplesFromTurtle(join(__dirname, 'annotation.ttl'));
 
 const schema = new ShapeBuilder();
 
