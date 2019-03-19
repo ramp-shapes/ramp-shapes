@@ -62,13 +62,24 @@ export class ShapeBuilder {
 
   constant(value: Rdf.Node): ShapeID {
     const id = this.randomShapeID('node');
-    this._shapes.push({type: 'node', id, value});
+    this._shapes.push({
+      type: 'node',
+      id,
+      nodeType: value.type === 'literal' ? 'literal' : 'resource',
+      value,
+    });
     return id;
   }
 
-  node(): ShapeID {
+  resource(): ShapeID {
     const id = this.randomShapeID('node');
-    this._shapes.push({type: 'node', id, value: undefined});
+    this._shapes.push({type: 'node', id, nodeType: 'resource'});
+    return id;
+  }
+
+  literal(datatype?: Rdf.Iri): ShapeID {
+    const id = this.randomShapeID('node');
+    this._shapes.push({type: 'node', id, nodeType: 'literal', datatype});
     return id;
   }
 

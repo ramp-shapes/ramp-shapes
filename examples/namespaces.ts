@@ -14,6 +14,17 @@ export namespace rdfs {
   export const label = Rdf.iri(NAMESPACE + 'label');
 }
 
+export namespace xsd {
+  export const NAMESPACE = 'http://www.w3.org/2001/XMLSchema#';
+  export const string = Rdf.iri(NAMESPACE + 'string');
+  export const boolean = Rdf.iri(NAMESPACE + 'boolean');
+  export const integer = Rdf.iri(NAMESPACE + 'integer');
+  export const double = Rdf.iri(NAMESPACE + 'double');
+  export const decimal = Rdf.iri(NAMESPACE + 'decimal');
+  export const nonNegativeInteger = Rdf.iri(NAMESPACE + 'nonNegativeInteger');
+  export const dateTime = Rdf.iri(NAMESPACE + 'dateTime');
+}
+
 export namespace oa {
   export const NAMESPACE = 'http://www.w3.org/ns/oa#';
   export const Annotation = Rdf.iri(NAMESPACE + 'Annotation');

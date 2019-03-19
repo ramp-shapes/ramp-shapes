@@ -7,7 +7,7 @@ const triples = readTriplesFromTurtle(join(__dirname, 'list.ttl'));
 
 const schema = new ShapeBuilder();
 
-const list = schema.list(schema.node());
+const list = schema.list(schema.resource());
 
 const listOwner = schema.object({
   properties: {
@@ -28,10 +28,10 @@ const listOfUnion = schema.object({
 
 const listSelf = schema.object({
   properties: {
-    owner: inverseProperty(Rdf.iri('example:hasList'), schema.node()),
+    owner: inverseProperty(Rdf.iri('example:hasList'), schema.resource()),
     list: self(list),
     rest: property(rdf.rest, list),
-    restAsIri: property(rdf.rest, schema.node()),
+    restAsIri: property(rdf.rest, schema.resource()),
   }
 });
 

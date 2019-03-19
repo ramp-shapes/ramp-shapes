@@ -1,7 +1,13 @@
 import * as Rdf from './rdf-model';
 
-export type Shape = ObjectShape | UnionShape | SetShape | OptionalShape | NodeShape | ListShape;
 export type ShapeID = Rdf.Iri | Rdf.Blank;
+export type Shape =
+  | ObjectShape
+  | UnionShape
+  | SetShape
+  | OptionalShape
+  | NodeShape
+  | ListShape;
 
 export interface ObjectShape {
   readonly type: 'object';
@@ -38,13 +44,15 @@ export interface OptionalShape {
   readonly type: 'optional';
   readonly id: ShapeID;
   readonly valueShape: ShapeID;
-  readonly emptyValue: null | undefined;
+  readonly emptyValue?: null | undefined;
 }
 
 export interface NodeShape {
   readonly type: 'node';
   readonly id: ShapeID;
-  readonly value: Rdf.Node | undefined;
+  readonly nodeType: 'resource' | 'literal';
+  readonly datatype?: Rdf.Iri;
+  readonly value?: Rdf.Node;
 }
 
 export interface ListShape {

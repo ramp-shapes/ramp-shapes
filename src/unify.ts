@@ -1,9 +1,11 @@
-import { HashMap, HashSet, ReadonlyHashMap, ReadonlyHashSet } from './hash-map';
+import { HashMap, HashSet, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, NodeShape, ListShape
+  OptionalShape, NodeShape, ListShape,
 } from './shapes';
+import { tryConvertToNativeType } from './type-conversion';
+import { rdf, xsd } from './vocabulary';
 
 export interface UnificationSolution {
   readonly value: unknown;
@@ -35,6 +37,11 @@ export function *unifyTriplesToShape(params: {
       }
       return shape;
     },
+    convertType: (shape, value) => {
+      return shape.type === 'node'
+        ? tryConvertToNativeType(shape, value as Rdf.Node)
+        : value;
+    },
     enableTrace: Boolean(params.trace),
     trace,
   };
@@ -56,6 +63,7 @@ interface UnificationContext {
   readonly triples: ReadonlyArray<Rdf.Triple>;
   readonly vars: HashMap<ShapeID, unknown>;
   resolveShape(shapeID: ShapeID): Shape;
+  convertType(shape: Shape, value: unknown): unknown;
   enableTrace: boolean;
   trace(...args: unknown[]): void;
 }
@@ -65,27 +73,27 @@ function *unifyShape(
   candidates: Iterable<Rdf.Node>,
   context: UnificationContext
 ): IterableIterator<unknown> {
-  switch (shape.type) {
-    case 'object':
-      yield* unifyObject(shape, candidates, context);
-      break;
-    case 'union':
-      yield* unifyUnion(shape, candidates, context);
-      break;
-    case 'set':
-      yield* unifySet(shape, candidates, context);
-      break;
-    case 'optional':
-      yield* unifyOptional(shape, candidates, context);
-      break;
-    case 'node':
-      yield* unifyNode(shape, candidates, context);
-      break;
-    case 'list':
-      yield* unifyList(shape, candidates, context);
-      break;
-    default:
-      throw new Error(`Unknown shape type ${(shape as Shape).type}`);
+  const solutions = (() => {
+    switch (shape.type) {
+      case 'object':
+        return unifyObject(shape, candidates, context);
+      case 'union':
+        return unifyUnion(shape, candidates, context);
+      case 'set':
+        return unifySet(shape, candidates, context);
+      case 'optional':
+        return unifyOptional(shape, candidates, context);
+      case 'node':
+        return unifyNode(shape, candidates, context);
+      case 'list':
+        return unifyList(shape, candidates, context);
+      default:
+        throw new Error(`Unknown shape type ${(shape as Shape).type}`);
+    }
+  })();
+  
+  for (const value of solutions) {
+    yield context.convertType(shape, value);
   }
 }
 
@@ -93,7 +101,7 @@ function *unifyObject(
   shape: ObjectShape,
   candidates: Iterable<Rdf.Node>,
   context: UnificationContext
-): IterableIterator<unknown> {
+): IterableIterator<{ [fieldName: string]: unknown }> {
   for (const candidate of filterResources(candidates)) {
     for (const partial of unifyProperties(shape.typeProperties, {}, candidate, undefined, context)) {
       // stores failed to match properties to produce diagnostics
@@ -205,7 +213,7 @@ function *unifySet(
   shape: SetShape,
   candidates: Iterable<Rdf.Node>,
   context: UnificationContext
-): IterableIterator<unknown> {
+): IterableIterator<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
   yield Array.from(unifyShape(itemShape, candidates, context));
 }
@@ -230,27 +238,38 @@ function *unifyNode(
   shape: NodeShape,
   candidates: Iterable<Rdf.Node>,
   context: UnificationContext
-): IterableIterator<unknown> {
+): IterableIterator<Rdf.Node> {
   for (const candidate of candidates) {
-    if (!shape.value) {
-      context.vars.set(shape.id, candidate);
-      yield candidate;
-      context.vars.delete(shape.id);
-    } else if (Rdf.equals(candidate, shape.value)) {
-      yield candidate;
+    let nodeType: 'literal' | 'resource';
+    let datatype: string | undefined;
+    if (candidate.type === 'literal') {
+      nodeType = 'literal';
+      datatype = candidate.datatype || xsd.string.value;
+    } else {
+      nodeType = 'resource';
+    }
+
+    if (nodeType === shape.nodeType && (!shape.datatype || datatype === shape.datatype.value)) {
+      if (!shape.value) {
+        context.vars.set(shape.id, candidate);
+        yield candidate;
+        context.vars.delete(shape.id);
+      } else if (Rdf.equals(candidate, shape.value)) {
+        yield candidate;
+      }
     }
   }
 }
 
-const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: Rdf.iri(RDF_NAMESPACE + 'first'), reverse: false}];
+  [{predicate: rdf.first, reverse: false}];
 const DEFAULT_LIST_TAIL: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: Rdf.iri(RDF_NAMESPACE + 'rest'), reverse: false}];
+  [{predicate: rdf.rest, reverse: false}];
 const DEFAULT_LIST_NIL: NodeShape = {
   type: 'node',
-  id: Rdf.iri(RDF_NAMESPACE + 'nil'),
-  value: Rdf.iri(RDF_NAMESPACE + 'nil'),
+  id: rdf.nil,
+  nodeType: 'resource',
+  value: rdf.nil,
 };
 
 function *unifyList(
