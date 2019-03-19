@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { Rdf, ShapeBuilder, property, inverseProperty, self, unifyTriplesToShape } from '../src/index';
+import { Rdf, ShapeBuilder, property, inverseProperty, self, frame } from '../src/index';
 import { rdf } from './namespaces';
 import { toJson, readTriplesFromTurtle } from './util';
 
@@ -35,18 +35,18 @@ const listSelf = schema.object({
   }
 });
 
-for (const {value} of unifyTriplesToShape({rootShape: list, shapes: schema.shapes, triples})) {
+for (const {value} of frame({rootShape: list, shapes: schema.shapes, triples})) {
   console.log('FOUND list', toJson(value));
 }
 
-for (const {value} of unifyTriplesToShape({rootShape: listOwner, shapes: schema.shapes, triples})) {
+for (const {value} of frame({rootShape: listOwner, shapes: schema.shapes, triples})) {
   console.log('FOUND list owner', toJson(value));
 }
 
-for (const {value} of unifyTriplesToShape({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
+for (const {value} of frame({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
   console.log('FOUND list of union', toJson(value));
 }
 
-for (const {value} of unifyTriplesToShape({rootShape: listSelf, shapes: schema.shapes, triples})) {
+for (const {value} of frame({rootShape: listSelf, shapes: schema.shapes, triples})) {
   console.log('FOUND list self', toJson(value));
 }

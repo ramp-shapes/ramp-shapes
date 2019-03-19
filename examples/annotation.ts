@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { Rdf, ShapeBuilder, self, property, inverseProperty, unifyTriplesToShape, propertyPath } from '../src/index';
+import { Rdf, ShapeBuilder, self, property, inverseProperty, frame, propertyPath } from '../src/index';
 import { rdf, rdfs, xsd, oa } from './namespaces';
 import { readTriplesFromTurtle, toJson } from './util';
 
@@ -69,12 +69,12 @@ const backwardsShape = schema.object({
   }
 });
 
-for (const result of unifyTriplesToShape({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
+for (const result of frame({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
   console.log('FOUND oa:Annotation', toJson(result.value));
   console.log('VAR xpath', toJson(result.vars.get(xpathLiteral)));
 }
 
-for (const result of unifyTriplesToShape({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
+for (const result of frame({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
   console.log('FOUND backwards shape', toJson(result.value));
   console.log('VAR xpath', toJson(result.vars.get(xpathLiteral)));
 }

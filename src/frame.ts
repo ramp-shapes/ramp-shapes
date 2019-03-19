@@ -1,5 +1,6 @@
-import { HashMap, HashSet, ReadonlyHashMap } from './hash-map';
+import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
+import { makeNodeMap, makeNodeSet, makeShapeResolver, assertUnknownShape } from './common';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, NodeShape, ListShape,
@@ -7,37 +8,28 @@ import {
 import { tryConvertToNativeType } from './type-conversion';
 import { rdf, xsd } from './vocabulary';
 
-export interface UnificationSolution {
+export interface FramingParams {
+  rootShape: ShapeID;
+  shapes: ReadonlyArray<Shape>;
+  triples: ReadonlyArray<Rdf.Triple>;
+  trace?: boolean;
+}
+
+export interface FramingSolution {
   readonly value: unknown;
   readonly vars: ReadonlyHashMap<ShapeID, unknown>;
 }
 
-export function *unifyTriplesToShape(params: {
-  rootShape: ShapeID,
-  shapes: ReadonlyArray<Shape>,
-  triples: ReadonlyArray<Rdf.Triple>,
-  trace?: boolean,
-}): IterableIterator<UnificationSolution> {
-  const contextShapes = makeNodeMap<Shape>();
-  for (const shape of params.shapes) {
-    contextShapes.set(shape.id, shape);
-  }
-
+export function *frame(params: FramingParams): IterableIterator<FramingSolution> {
   const trace = params.trace
     ? (...args: unknown[]) => console.log(...args)
     : () => {};
 
-  const context: UnificationContext = {
+  const context: FramingContext = {
     triples: params.triples,
-    vars: new HashMap<ShapeID, unknown>(Rdf.hash, Rdf.equals),
-    resolveShape: shapeID => {
-      const shape = contextShapes.get(shapeID);
-      if (!shape) {
-        throw new Error(`Failed to resolve shape ${Rdf.toString(shapeID)}`);
-      }
-      return shape;
-    },
-    convertType: (shape, value) => {
+    vars: makeNodeMap<unknown>() as HashMap<ShapeID, unknown>,
+    resolveShape: makeShapeResolver(params.shapes),
+    frameType: (shape, value) => {
       return shape.type === 'node'
         ? tryConvertToNativeType(shape, value as Rdf.Node)
         : value;
@@ -52,61 +44,61 @@ export function *unifyTriplesToShape(params: {
     value: undefined,
     vars: context.vars,
   };
-  for (const value of unifyShape(rootShape, allCandidates, context)) {
+  for (const value of frameShape(rootShape, allCandidates, context)) {
     solution.value = value;
     yield solution;
     solution.value = undefined;
   }
 }
 
-interface UnificationContext {
+interface FramingContext {
   readonly triples: ReadonlyArray<Rdf.Triple>;
   readonly vars: HashMap<ShapeID, unknown>;
   resolveShape(shapeID: ShapeID): Shape;
-  convertType(shape: Shape, value: unknown): unknown;
+  frameType(shape: Shape, value: unknown): unknown;
   enableTrace: boolean;
   trace(...args: unknown[]): void;
 }
 
-function *unifyShape(
+function *frameShape(
   shape: Shape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown> {
   const solutions = (() => {
     switch (shape.type) {
       case 'object':
-        return unifyObject(shape, candidates, context);
+        return frameObject(shape, candidates, context);
       case 'union':
-        return unifyUnion(shape, candidates, context);
+        return frameUnion(shape, candidates, context);
       case 'set':
-        return unifySet(shape, candidates, context);
+        return frameSet(shape, candidates, context);
       case 'optional':
-        return unifyOptional(shape, candidates, context);
+        return frameOptional(shape, candidates, context);
       case 'node':
-        return unifyNode(shape, candidates, context);
+        return frameNode(shape, candidates, context);
       case 'list':
-        return unifyList(shape, candidates, context);
+        return frameList(shape, candidates, context);
       default:
-        throw new Error(`Unknown shape type ${(shape as Shape).type}`);
+        return assertUnknownShape(shape);
     }
   })();
   
   for (const value of solutions) {
-    yield context.convertType(shape, value);
+    yield context.frameType(shape, value);
   }
 }
 
-function *unifyObject(
+function *frameObject(
   shape: ObjectShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<{ [fieldName: string]: unknown }> {
   for (const candidate of filterResources(candidates)) {
-    for (const partial of unifyProperties(shape.typeProperties, {}, candidate, undefined, context)) {
+    for (const partial of frameProperties(shape.typeProperties, {}, candidate, undefined, context)) {
       // stores failed to match properties to produce diagnostics
       const missing = shape.typeProperties.length > 0 ? [] as ObjectProperty[] : undefined;
-      for (const final of unifyProperties(shape.properties, partial, candidate, missing, context)) {
+      for (const final of frameProperties(shape.properties, partial, candidate, missing, context)) {
         yield {...final};
       }
       if (missing && missing.length > 0) {
@@ -119,12 +111,12 @@ function *unifyObject(
   }
 }
 
-function *unifyProperties(
+function *frameProperties(
   properties: ReadonlyArray<ObjectProperty>,
   template: { [fieldName: string]: unknown },
   candidate: Rdf.Iri | Rdf.Blank,
   missing: ObjectProperty[] | undefined,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<{ [fieldName: string]: unknown }> {
   if (properties.length === 0) {
     if (!missing || missing.length === 0) {
@@ -137,33 +129,33 @@ function *unifyProperties(
   const valueShape = context.resolveShape(first.valueShape);
 
   let found = false;
-  for (const value of unifyProperty(first.path, valueShape, candidate, context)) {
+  for (const value of frameProperty(first.path, valueShape, candidate, context)) {
     found = true;
     template[first.name] = value;
-    yield* unifyProperties(rest, template, candidate, missing, context);
+    yield* frameProperties(rest, template, candidate, missing, context);
     delete template[first.name];
   }
 
   if (!found && missing) {
     missing.push(first);
-    yield* unifyProperties(rest, template, candidate, missing, context);
+    yield* frameProperties(rest, template, candidate, missing, context);
   }
 }
 
-function *unifyProperty(
+function *frameProperty(
   path: ReadonlyArray<PropertyPathSegment>,
   valueShape: Shape,
   candidate: Rdf.Iri | Rdf.Blank,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown> {
   const values = findByPropertyPath(path, candidate, context);
-  yield* unifyShape(valueShape, values, context);
+  yield* frameShape(valueShape, values, context);
 }
 
 function findByPropertyPath(
   path: ReadonlyArray<PropertyPathSegment>,
   candidate: Rdf.Iri | Rdf.Blank,
-  context: UnificationContext
+  context: FramingContext
 ): Iterable<Rdf.Node> {
   if (path.length === 0) {
     return [candidate];
@@ -198,34 +190,34 @@ function findByPropertyPath(
   return current;
 }
 
-function *unifyUnion(
+function *frameUnion(
   shape: UnionShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown> {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
-    yield* unifyShape(variantShape, candidates, context);
+    yield* frameShape(variantShape, candidates, context);
   }
 }
 
-function *unifySet(
+function *frameSet(
   shape: SetShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
-  yield Array.from(unifyShape(itemShape, candidates, context));
+  yield Array.from(frameShape(itemShape, candidates, context));
 }
 
-function *unifyOptional(
+function *frameOptional(
   shape: OptionalShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown> {
   let found = false;
   const valueShape = context.resolveShape(shape.valueShape);
-  for (const value of unifyShape(valueShape, candidates, context)) {
+  for (const value of frameShape(valueShape, candidates, context)) {
     found = true;
     yield value;
   }
@@ -234,10 +226,10 @@ function *unifyOptional(
   }
 }
 
-function *unifyNode(
+function *frameNode(
   shape: NodeShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<Rdf.Node> {
   for (const candidate of candidates) {
     let nodeType: 'literal' | 'resource';
@@ -272,12 +264,12 @@ const DEFAULT_LIST_NIL: NodeShape = {
   value: rdf.nil,
 };
 
-function *unifyList(
+function *frameList(
   shape: ListShape,
   candidates: Iterable<Rdf.Node>,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown[]> {
-  const list: ListUnification = {
+  const list: ListFraming = {
     origin: shape,
     template: [],
     head: shape.headPath || DEFAULT_LIST_HEAD,
@@ -286,13 +278,13 @@ function *unifyList(
     nil: shape.nilShape ? context.resolveShape(shape.nilShape) : DEFAULT_LIST_NIL,
   };
   for (const candidate of filterResources(candidates)) {
-    for (const final of unifyListItems(list, false, candidate, context)) {
+    for (const final of frameListItems(list, false, candidate, context)) {
       yield [...final];
     }
   }
 }
 
-interface ListUnification {
+interface ListFraming {
   readonly origin: ListShape;
   readonly template: unknown[];
   readonly head: ReadonlyArray<PropertyPathSegment>;
@@ -301,14 +293,14 @@ interface ListUnification {
   readonly nil: Shape;
 }
 
-function *unifyListItems(
-  list: ListUnification,
+function *frameListItems(
+  list: ListFraming,
   required: boolean,
   candidate: Rdf.Iri | Rdf.Blank,
-  context: UnificationContext
+  context: FramingContext
 ): IterableIterator<unknown[]> {
   let foundNil = false;
-  for (const nil of unifyShape(list.nil, [candidate], context)) {
+  for (const nil of frameShape(list.nil, [candidate], context)) {
     foundNil = true;
     yield list.template;
   }
@@ -320,12 +312,12 @@ function *unifyListItems(
   for (const head of findByPropertyPath(list.head, candidate, context)) {
     foundHead = true;
 
-    for (const item of unifyShape(list.item, [head], context)) {
+    for (const item of frameShape(list.item, [head], context)) {
       list.template.push(item);
       let foundTail = false;
       for (const tail of filterResources(findByPropertyPath(list.tail, candidate, context))) {
         foundTail = true;
-        yield* unifyListItems(list, true, tail, context);
+        yield* frameListItems(list, true, tail, context);
       }
       if (!foundTail) {
         throw new Error(
@@ -359,14 +351,6 @@ function findAllCandidates(triples: ReadonlyArray<Rdf.Triple>) {
     candidates.add(o);
   }
   return candidates;
-}
-
-function makeNodeSet() {
-  return new HashSet<Rdf.Node>(Rdf.hash, Rdf.equals);
-}
-
-function makeNodeMap<V>() {
-  return new HashMap<Rdf.Node, V>(Rdf.hash, Rdf.equals);
 }
 
 function toTraceString(value: unknown) {
