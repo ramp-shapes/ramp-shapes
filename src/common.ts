@@ -10,6 +10,16 @@ export function makeNodeMap<V>() {
   return new HashMap<Rdf.Node, V>(Rdf.hash, Rdf.equals);
 }
 
+export function randomBlankNode(prefix: string, randomBitCount: number): Rdf.Blank {
+  if (randomBitCount > 48) {
+    throw new Error(`Cannot generate random blank node with > 48 bits of randomness`);
+  }
+  const hexDigitCount = Math.ceil(randomBitCount / 4);
+  const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
+  const value = prefix + num.toString(16).padStart(hexDigitCount, '0');
+  return {type: 'bnode', value};
+}
+
 export function makeShapeResolver(
   shapes: ReadonlyArray<Shape>
 ): (shapeID: ShapeID) => Shape {

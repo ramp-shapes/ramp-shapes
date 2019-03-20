@@ -1,4 +1,5 @@
 import * as Rdf from './rdf-model';
+import { randomBlankNode } from './common';
 import { ShapeID, Shape, ObjectProperty, PropertyPathSegment } from './shapes';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
@@ -90,9 +91,7 @@ export class ShapeBuilder {
   }
 
   private randomShapeID(prefix: string): Rdf.Blank {
-    const num = Math.floor(Math.random() * Math.pow(2, 24));
-    const value = prefix + num.toString(16).padStart(3, '0');
-    return {type: 'bnode', value};
+    return randomBlankNode(prefix, 24);
   }
 }
 

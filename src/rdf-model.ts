@@ -62,6 +62,10 @@ export function langString(value: string, lang: string): Literal {
   };
 }
 
+export function triple(s: Rdf.Node, p: Rdf.Node, o: Rdf.Node) {
+  return {s, p, o};
+}
+
 export function toString(node: Node): string {
   switch (node.type) {
     case 'uri':
