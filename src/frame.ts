@@ -232,16 +232,7 @@ function *frameNode(
   context: FramingContext
 ): IterableIterator<Rdf.Node> {
   for (const candidate of candidates) {
-    let nodeType: 'literal' | 'resource';
-    let datatype: string | undefined;
-    if (candidate.type === 'literal') {
-      nodeType = 'literal';
-      datatype = candidate.datatype || xsd.string.value;
-    } else {
-      nodeType = 'resource';
-    }
-
-    if (nodeType === shape.nodeType && (!shape.datatype || datatype === shape.datatype.value)) {
+    if (doesNodeMatch(shape, candidate)) {
       if (!shape.value) {
         context.vars.set(shape.id, candidate);
         yield candidate;
@@ -251,6 +242,20 @@ function *frameNode(
       }
     }
   }
+}
+
+export function doesNodeMatch(shape: NodeShape, node: Rdf.Node): boolean {
+  let nodeType: 'literal' | 'resource';
+  let datatype: string | undefined;
+  if (node.type === 'literal') {
+    nodeType = 'literal';
+    datatype = node.datatype || xsd.string.value;
+  } else {
+    nodeType = 'resource';
+  }
+
+  return nodeType === shape.nodeType
+    && (!shape.datatype || datatype === shape.datatype.value);
 }
 
 const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =
