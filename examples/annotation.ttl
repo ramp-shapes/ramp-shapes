@@ -3,28 +3,24 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix oa: <http://www.w3.org/ns/oa#>.
 
-<http://www.metaphacts.com/ontologies/platform#formContainer> <http://www.w3.org/ns/ldp#contains> <http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container>.
-<http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d> oa:hasBody <http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/body>;
-    oa:hasTarget <http://www.metaphacts.com/resource/TestTextAnnotator/range-source/3450d6a8-2a13-471b-a178-088765cd4d23>;
+<example:annotation1> oa:hasBody <example:annotation-body1>;
+    oa:hasTarget <example:range-source1>;
     a oa:Annotation.
-<http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/body> rdfs:label "Borders"@en, "Границы"@ru.
-<http://www.metaphacts.com/resource/TestTextAnnotator/annotation/9eef27ef-8f2c-4c88-9434-2d7eaca9df3d/container> <http://www.w3.org/ns/prov#generatedAtTime> "2019-03-14T10:30:49.587Z"^^xsd:dateTime;
-    <http://www.w3.org/ns/prov#wasAttributedTo> <http://www.metaphacts.com/resource/user/admin>;
-    a <http://www.w3.org/ns/ldp#Resource>, <http://www.w3.org/ns/prov#Entity>.
-<http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e> oa:end "9"^^xsd:nonNegativeInteger;
+<example:annotation-body1> rdfs:label "Borders"@en, "Границы"@ru.
+<example:offset1> oa:end "9"^^xsd:nonNegativeInteger;
     oa:start "9"^^xsd:nonNegativeInteger;
     a oa:TextPositionSelector.
-<http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827> oa:end "34"^^xsd:nonNegativeInteger;
+<example:offset2> oa:end "34"^^xsd:nonNegativeInteger;
     oa:start "34"^^xsd:nonNegativeInteger;
     a oa:TextPositionSelector.
-<http://www.metaphacts.com/resource/TestTextAnnotator/range-source/3450d6a8-2a13-471b-a178-088765cd4d23> oa:hasSelector <http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2>;
-    oa:hasSource <http://www.metaphacts.com/resource/TestTextAnnotator>.
-<http://www.metaphacts.com/resource/TestTextAnnotator/range/60d5ef37-184a-4cfd-a9e2-74ff6b59aef2> oa:hasEndSelector <http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83>;
-    oa:hasStartSelector <http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5>;
+<example:range-source1> oa:hasSelector <example:range1>;
+    oa:hasSource <example:document1>.
+<example:range1> oa:hasEndSelector <example:xpath2>;
+    oa:hasStartSelector <example:xpath1>;
     a oa:RangeSelector.
-<http://www.metaphacts.com/resource/TestTextAnnotator/xpath/1047ca32-46b5-470c-8430-968662be1cc5> oa:refinedBy <http://www.metaphacts.com/resource/TestTextAnnotator/offset/878c0d87-b04b-4aea-b877-cb2cd5717d9e>;
+<example:xpath1> oa:refinedBy <example:offset1>;
     a oa:XPathSelector;
     rdf:value "/table[1]/tbody[1]/tr[4]/td[1]".
-<http://www.metaphacts.com/resource/TestTextAnnotator/xpath/9200b42e-cdf9-49e4-ad9e-663dcd010a83> oa:refinedBy <http://www.metaphacts.com/resource/TestTextAnnotator/offset/e41cfb1b-8fb1-40db-b14f-a3608f73e827>;
+<example:xpath2> oa:refinedBy <example:offset2>;
     a oa:XPathSelector;
     rdf:value "/table[1]/tbody[1]/tr[4]/td[1]".

@@ -1,12 +1,14 @@
 import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
-import { makeNodeMap, makeNodeSet, makeShapeResolver, assertUnknownShape } from './common';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, NodeShape, ListShape,
 } from './shapes';
+import {
+  makeNodeMap, makeNodeSet, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults,
+  doesNodeMatch
+} from './common';
 import { tryConvertToNativeType } from './type-conversion';
-import { rdf, xsd } from './vocabulary';
 
 export interface FramingParams {
   rootShape: ShapeID;
@@ -244,44 +246,14 @@ function *frameNode(
   }
 }
 
-export function doesNodeMatch(shape: NodeShape, node: Rdf.Node): boolean {
-  let nodeType: 'literal' | 'resource';
-  let datatype: string | undefined;
-  if (node.type === 'literal') {
-    nodeType = 'literal';
-    datatype = node.datatype || xsd.string.value;
-  } else {
-    nodeType = 'resource';
-  }
-
-  return nodeType === shape.nodeType
-    && (!shape.datatype || datatype === shape.datatype.value);
-}
-
-const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: rdf.first, reverse: false}];
-const DEFAULT_LIST_TAIL: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: rdf.rest, reverse: false}];
-const DEFAULT_LIST_NIL: NodeShape = {
-  type: 'node',
-  id: rdf.nil,
-  nodeType: 'resource',
-  value: rdf.nil,
-};
-
 function *frameList(
   shape: ListShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
 ): IterableIterator<unknown[]> {
-  const list: ListFraming = {
-    origin: shape,
-    template: [],
-    head: shape.headPath || DEFAULT_LIST_HEAD,
-    tail: shape.tailPath || DEFAULT_LIST_TAIL,
-    item: context.resolveShape(shape.itemShape),
-    nil: shape.nilShape ? context.resolveShape(shape.nilShape) : DEFAULT_LIST_NIL,
-  };
+  const {head, tail, nil} = resolveListShapeDefaults(shape);
+  const item = context.resolveShape(shape.itemShape);
+  const list: ListFraming = {origin: shape, template: [], head, tail, nil, item};
   for (const candidate of filterResources(candidates)) {
     for (const final of frameListItems(list, false, candidate, context)) {
       yield [...final];
@@ -295,7 +267,7 @@ interface ListFraming {
   readonly head: ReadonlyArray<PropertyPathSegment>;
   readonly tail: ReadonlyArray<PropertyPathSegment>;
   readonly item: Shape;
-  readonly nil: Shape;
+  readonly nil: Rdf.Iri;
 }
 
 function *frameListItems(
@@ -304,12 +276,8 @@ function *frameListItems(
   candidate: Rdf.Iri | Rdf.Blank,
   context: FramingContext
 ): IterableIterator<unknown[]> {
-  let foundNil = false;
-  for (const nil of frameShape(list.nil, [candidate], context)) {
-    foundNil = true;
+  if (Rdf.equals(candidate, list.nil)) {
     yield list.template;
-  }
-  if (foundNil) {
     return;
   }
 

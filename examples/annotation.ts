@@ -3,7 +3,7 @@ import {
   Rdf, ShapeBuilder, self, property, inverseProperty, propertyPath, frame, flatten
 } from '../src/index';
 import { rdf, rdfs, xsd, oa } from './namespaces';
-import { readTriplesFromTurtle, toJson } from './util';
+import { toJson, readTriplesFromTurtle, triplesToTurtleString } from './util';
 
 const triples = readTriplesFromTurtle(join(__dirname, 'annotation.ttl'));
 
@@ -71,15 +71,25 @@ const backwardsShape = schema.object({
   }
 });
 
-for (const {value, vars} of frame({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
-  console.log('FOUND oa:Annotation', toJson(value));
-  console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
-  for (const {s, p, o} of flatten({value, rootShape: oa.Annotation, shapes: schema.shapes})) {
-    console.log(Rdf.toString(s), Rdf.toString(p), Rdf.toString(o));
-  }
-}
+const PREFIXES = {
+  rdf: rdf.NAMESPACE,
+  rdfs: rdfs.NAMESPACE,
+  xsd: xsd.NAMESPACE,
+  oa: oa.NAMESPACE,
+};
 
-for (const result of frame({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
-  console.log('FOUND backwards shape', toJson(result.value));
-  console.log('VAR xpath', toJson(result.vars.get(xpathLiteral)));
-}
+(async function main() {
+  for (const {value, vars} of frame({rootShape: oa.Annotation, shapes: schema.shapes, triples})) {
+    console.log('FRAME oa:Annotation', toJson(value));
+    console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
+    const triples = flatten({value, rootShape: oa.Annotation, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
+  
+  for (const {value, vars} of frame({rootShape: backwardsShape, shapes: schema.shapes, triples})) {
+    console.log('FRAME backwards shape', toJson(value));
+    console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
+    const triples = flatten({value, rootShape: backwardsShape, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
+})();

@@ -23,7 +23,7 @@ export function n3ToRdf(v: N3.Term): Rdf.Node | undefined {
     case 'BlankNode':
       return Rdf.blank(v.value);
     case 'Literal':
-      if (v.datatypeString === 'http://www.w3.org/2000/01/rdf-schema#langString') {
+      if (v.datatypeString === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString') {
         return Rdf.langString(v.value, v.language);
       } else {
         return Rdf.literal(v.value, Rdf.iri(v.datatypeString));
@@ -41,7 +41,7 @@ export function rdfToN3(v: Rdf.Node): N3.NamedNode | N3.BlankNode | N3.Literal {
       return N3.DataFactory.blankNode(v.value);
     case 'literal':
       const datatypeOrLanguage = (
-        v.datatype === 'http://www.w3.org/2000/01/rdf-schema#langString' ? v["xml:lang"] :
+        v.datatype === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' ? v["xml:lang"] :
         typeof v.datatype === 'string' ? N3.DataFactory.namedNode(v.datatype) :
         undefined
       );
@@ -61,20 +61,20 @@ export function toJson(match: unknown): string {
 }
 
 export function triplesToTurtleString(
-  triples: ReadonlyArray<Rdf.Triple>,
+  triples: Iterable<Rdf.Triple>,
   prefixes: { [prefix: string]: string }
 ): Promise<string> {
-  const quads = triples.reduce((acc: N3.Quad[], {s, p, o}) => {
+  const quads: N3.Quad[] = [];
+  for (const {s, p, o} of triples) {
     const ns = rdfToN3(s);
     const np = rdfToN3(p);
     const no = rdfToN3(o);
     if ((ns.termType === 'NamedNode' || ns.termType === 'BlankNode') &&
       (np.termType === 'NamedNode')
     ) {
-      acc.push(N3.DataFactory.quad(ns, np, no));
+      quads.push(N3.DataFactory.quad(ns, np, no));
     }
-    return acc;
-  }, []);
+  }
   
   return new Promise((resolve, reject) => {
     const writer = new N3.Writer({prefixes});

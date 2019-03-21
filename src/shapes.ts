@@ -63,6 +63,6 @@ export interface ListShape {
   readonly headPath?: ReadonlyArray<PropertyPathSegment>;
   /** @default [{predicate: (rdf:rest)}] */
   readonly tailPath?: ReadonlyArray<PropertyPathSegment>;
-  /** @default {type: 'node', value: (rdf:nil)} */
-  readonly nilShape?: ShapeID;
+  /** @default rdf:nil */
+  readonly nil?: Rdf.Iri;
 }

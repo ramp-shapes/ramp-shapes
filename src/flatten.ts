@@ -1,11 +1,12 @@
-import { makeShapeResolver, randomBlankNode, assertUnknownShape } from './common';
 import * as Rdf from './rdf-model';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, UnionShape, SetShape,
+  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, NodeShape, ListShape,
 } from './shapes';
+import {
+  makeShapeResolver, randomBlankNode, assertUnknownShape, resolveListShapeDefaults, doesNodeMatch
+} from './common';
 import { tryConvertFromNativeType } from './type-conversion';
-import { doesNodeMatch } from './frame';
 
 export interface FlattenParams {
   value: unknown;
@@ -16,6 +17,9 @@ export interface FlattenParams {
 export function flatten(params: FlattenParams): Iterable<Rdf.Triple> {
   const context: FlattenContext = {
     resolveShape: makeShapeResolver(params.shapes),
+    generateSubject: shape => {
+      return randomBlankNode(shape.type, 48);
+    },
     generateBlankNode: prefix => {
       return randomBlankNode(prefix, 48);
     },
@@ -35,6 +39,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Triple> {
 
 interface FlattenContext {
   resolveShape: (shapeID: ShapeID) => Shape;
+  generateSubject: (shape: Shape) => Rdf.Iri | Rdf.Blank;
   generateBlankNode: (prefix: string) => Rdf.Blank;
   flattenType: (shape: Shape, value: unknown) => unknown;
 }
@@ -110,7 +115,7 @@ function flattenObject(
   function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
     yield* flattenEdge(edge, subject, context);
     for (const {property, match} of matches) {
-      yield* match.generate({subject, property});
+      yield* match.generate({subject, path: property.path});
     }
   }
 
@@ -143,19 +148,27 @@ function matchProperties(
 
 interface Edge {
   subject: Rdf.Iri | Rdf.Blank;
-  property: ObjectProperty;
+  path: ReadonlyArray<PropertyPathSegment>;
 }
 
-function *flattenEdge(
+function flattenEdge(
   edge: Edge | undefined,
   object: Rdf.Node,
   context: FlattenContext
 ): Iterable<Rdf.Triple> {
-  if (!edge || edge.property.path.length === 0) {
+  return edge ? flattenPropertyPath(edge.subject, edge.path, object, context) : [];
+}
+
+function *flattenPropertyPath(
+  subject: Rdf.Iri | Rdf.Blank,
+  path: ReadonlyArray<PropertyPathSegment>,
+  object: Rdf.Node,
+  context: FlattenContext
+): Iterable<Rdf.Triple> {
+  if (path.length === 0) {
     return;
   }
-  const path = edge.property.path;
-  let s = edge.subject;
+  let s = subject;
   for (let i = 0; i < path.length - 1; i++) {
     const o = context.generateBlankNode('path');
     const {predicate, reverse} = path[i];
@@ -274,8 +287,39 @@ function flattenList(
   if (!Array.isArray(value)) {
     return undefined;
   }
-  // TODO: implement
-  throw new Error('List flattening not implemented yet');
+
+  const {head, tail, nil} = resolveListShapeDefaults(shape);
+  const itemShape = context.resolveShape(shape.itemShape);
+
+  const matches: ShapeMatch[] = [];
+  for (const item of value) {
+    const match = flattenShape(itemShape, item, context);
+    if (!match) {
+      return undefined;
+    }
+    matches.push(match);
+  }
+
+  const list = matches.length === 0 ? nil : context.generateBlankNode('list');
+
+  function *nodes(): Iterable<Rdf.Node> {
+    yield list;
+  }
+
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+    yield* flattenEdge(edge, list, context);
+    let current = list;
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      yield* match.generate({subject: current, path: head});
+      const next = i === matches.length - 1
+        ? nil : context.generateBlankNode('list');
+      yield* flattenPropertyPath(current, tail, next, context);
+      current = next;
+    }
+  }
+
+  return {nodes, generate};
 }
 
 class SubjectMemo {
@@ -298,7 +342,7 @@ class SubjectMemo {
   }
 
   resolve(context: FlattenContext) {
-    return this.iri || this.lastBlank || context.generateBlankNode(this.shape.type);
+    return this.iri || this.lastBlank || context.generateSubject(this.shape);
   }
 }
 

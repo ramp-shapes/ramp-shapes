@@ -1,5 +1,3 @@
-import { Rdf } from ".";
-
 export type Node = Iri | Literal | Blank;
 
 export interface Iri {
@@ -56,13 +54,13 @@ export function literal(value: string, dataType?: Iri): Literal {
 export function langString(value: string, lang: string): Literal {
   return {
     type: 'literal',
-    datatype: 'http://www.w3.org/2000/01/rdf-schema#langString',
+    datatype: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString',
     value,
     "xml:lang": lang,
   };
 }
 
-export function triple(s: Rdf.Node, p: Rdf.Node, o: Rdf.Node) {
+export function triple(s: Node, p: Node, o: Node) {
   return {s, p, o};
 }
 

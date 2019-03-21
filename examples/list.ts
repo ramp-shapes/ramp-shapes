@@ -1,7 +1,7 @@
 import { join } from 'path';
-import { Rdf, ShapeBuilder, property, inverseProperty, self, frame } from '../src/index';
+import { Rdf, ShapeBuilder, property, inverseProperty, self, frame, flatten } from '../src/index';
 import { rdf } from './namespaces';
-import { toJson, readTriplesFromTurtle } from './util';
+import { toJson, readTriplesFromTurtle, triplesToTurtleString } from './util';
 
 const triples = readTriplesFromTurtle(join(__dirname, 'list.ttl'));
 
@@ -35,18 +35,32 @@ const listSelf = schema.object({
   }
 });
 
-for (const {value} of frame({rootShape: list, shapes: schema.shapes, triples})) {
-  console.log('FOUND list', toJson(value));
-}
+const PREFIXES = {
+  rdf: rdf.NAMESPACE,
+};
 
-for (const {value} of frame({rootShape: listOwner, shapes: schema.shapes, triples})) {
-  console.log('FOUND list owner', toJson(value));
-}
+(async function main() {
+  for (const {value} of frame({rootShape: list, shapes: schema.shapes, triples})) {
+    console.log('FRAME list', toJson(value));
+    const triples = flatten({value, rootShape: list, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
 
-for (const {value} of frame({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
-  console.log('FOUND list of union', toJson(value));
-}
+  for (const {value} of frame({rootShape: listOwner, shapes: schema.shapes, triples})) {
+    console.log('FRAME list owner', toJson(value));
+    const triples = flatten({value, rootShape: listOwner, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
 
-for (const {value} of frame({rootShape: listSelf, shapes: schema.shapes, triples})) {
-  console.log('FOUND list self', toJson(value));
-}
+  for (const {value} of frame({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
+    console.log('FRAME list of union', toJson(value));
+    const triples = flatten({value, rootShape: listOfUnion, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
+
+  for (const {value} of frame({rootShape: listSelf, shapes: schema.shapes, triples})) {
+    console.log('FRAME list self', toJson(value));
+    const triples = flatten({value, rootShape: listSelf, shapes: schema.shapes});
+    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+  }
+})();
