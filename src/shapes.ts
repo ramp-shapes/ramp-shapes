@@ -6,8 +6,10 @@ export type Shape =
   | UnionShape
   | SetShape
   | OptionalShape
-  | NodeShape
-  | ListShape;
+  | ResourceShape
+  | LiteralShape
+  | ListShape
+  | MapShape;
 
 export interface ObjectShape {
   readonly type: 'object';
@@ -47,12 +49,18 @@ export interface OptionalShape {
   readonly emptyValue?: null | undefined;
 }
 
-export interface NodeShape {
-  readonly type: 'node';
+export interface ResourceShape {
+  readonly type: 'resource';
   readonly id: ShapeID;
-  readonly nodeType: 'resource' | 'literal';
+  readonly value?: Rdf.Iri | Rdf.Blank;
+}
+
+export interface LiteralShape {
+  readonly type: 'literal';
+  readonly id: ShapeID;
   readonly datatype?: Rdf.Iri;
-  readonly value?: Rdf.Node;
+  readonly language?: string;
+  readonly value?: Rdf.Literal;
 }
 
 export interface ListShape {
@@ -65,4 +73,11 @@ export interface ListShape {
   readonly tailPath?: ReadonlyArray<PropertyPathSegment>;
   /** @default rdf:nil */
   readonly nil?: Rdf.Iri;
+}
+
+export interface MapShape {
+  readonly type: 'map';
+  readonly id: ShapeID;
+  readonly keyRef: ShapeID;
+  readonly itemShape: ShapeID;
 }

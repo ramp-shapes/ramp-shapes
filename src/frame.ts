@@ -2,7 +2,7 @@ import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, NodeShape, ListShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes';
 import {
   makeNodeMap, makeNodeSet, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults,
@@ -32,7 +32,7 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
     vars: makeNodeMap<unknown>() as HashMap<ShapeID, unknown>,
     resolveShape: makeShapeResolver(params.shapes),
     frameType: (shape, value) => {
-      return shape.type === 'node'
+      return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertToNativeType(shape, value as Rdf.Node)
         : value;
     },
@@ -66,7 +66,7 @@ function *frameShape(
   shape: Shape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<unknown> {
+): Iterable<unknown> {
   const solutions = (() => {
     switch (shape.type) {
       case 'object':
@@ -77,17 +77,23 @@ function *frameShape(
         return frameSet(shape, candidates, context);
       case 'optional':
         return frameOptional(shape, candidates, context);
-      case 'node':
+      case 'resource':
+      case 'literal':
         return frameNode(shape, candidates, context);
       case 'list':
         return frameList(shape, candidates, context);
+      case 'map':
+        return frameMap(shape, candidates, context);
       default:
         return assertUnknownShape(shape);
     }
   })();
   
   for (const value of solutions) {
-    yield context.frameType(shape, value);
+    const typed = context.frameType(shape, value);
+    context.vars.set(shape.id, typed);
+    yield typed;
+    context.vars.delete(shape.id);
   }
 }
 
@@ -95,7 +101,7 @@ function *frameObject(
   shape: ObjectShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<{ [fieldName: string]: unknown }> {
+): Iterable<{ [fieldName: string]: unknown }> {
   for (const candidate of filterResources(candidates)) {
     for (const partial of frameProperties(shape.typeProperties, {}, candidate, undefined, context)) {
       // stores failed to match properties to produce diagnostics
@@ -119,7 +125,7 @@ function *frameProperties(
   candidate: Rdf.Iri | Rdf.Blank,
   missing: ObjectProperty[] | undefined,
   context: FramingContext
-): IterableIterator<{ [fieldName: string]: unknown }> {
+): Iterable<{ [fieldName: string]: unknown }> {
   if (properties.length === 0) {
     if (!missing || missing.length === 0) {
       yield template;
@@ -149,7 +155,7 @@ function *frameProperty(
   valueShape: Shape,
   candidate: Rdf.Iri | Rdf.Blank,
   context: FramingContext
-): IterableIterator<unknown> {
+): Iterable<unknown> {
   const values = findByPropertyPath(path, candidate, context);
   yield* frameShape(valueShape, values, context);
 }
@@ -196,7 +202,7 @@ function *frameUnion(
   shape: UnionShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<unknown> {
+): Iterable<unknown> {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     yield* frameShape(variantShape, candidates, context);
@@ -207,7 +213,7 @@ function *frameSet(
   shape: SetShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<unknown[]> {
+): Iterable<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
   yield Array.from(frameShape(itemShape, candidates, context));
 }
@@ -216,7 +222,7 @@ function *frameOptional(
   shape: OptionalShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<unknown> {
+): Iterable<unknown> {
   let found = false;
   const valueShape = context.resolveShape(shape.valueShape);
   for (const value of frameShape(valueShape, candidates, context)) {
@@ -229,19 +235,13 @@ function *frameOptional(
 }
 
 function *frameNode(
-  shape: NodeShape,
+  shape: ResourceShape | LiteralShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<Rdf.Node> {
+): Iterable<Rdf.Node> {
   for (const candidate of candidates) {
     if (doesNodeMatch(shape, candidate)) {
-      if (!shape.value) {
-        context.vars.set(shape.id, candidate);
-        yield candidate;
-        context.vars.delete(shape.id);
-      } else if (Rdf.equals(candidate, shape.value)) {
-        yield candidate;
-      }
+      yield candidate;
     }
   }
 }
@@ -250,7 +250,7 @@ function *frameList(
   shape: ListShape,
   candidates: Iterable<Rdf.Node>,
   context: FramingContext
-): IterableIterator<unknown[]> {
+): Iterable<unknown[]> {
   const {head, tail, nil} = resolveListShapeDefaults(shape);
   const item = context.resolveShape(shape.itemShape);
   const list: ListFraming = {origin: shape, template: [], head, tail, nil, item};
@@ -307,6 +307,29 @@ function *frameListItems(
       `at ${Rdf.toString(candidate)}`
     );
   }
+}
+
+function *frameMap(
+  shape: MapShape,
+  candidates: Iterable<Rdf.Node>,
+  context: FramingContext
+): Iterable<{ [key: string]: unknown }> {
+  const result: { [key: string]: unknown } = {};
+  const itemShape = context.resolveShape(shape.itemShape);
+  for (const item of frameShape(itemShape, candidates, context)) {
+    const key = context.vars.get(shape.keyRef);
+    if (key) {
+      if (typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean') {
+        result[key.toString()] = item;
+      } else {
+        throw new Error(
+          `Cannot use non-primitive value as a key of map ${Rdf.toString(shape.id)}: ` +
+          `(${typeof key}) ${key}`
+        );
+      }
+    }
+  }
+  yield result;
 }
 
 function *filterResources(nodes: Iterable<Rdf.Node>) {

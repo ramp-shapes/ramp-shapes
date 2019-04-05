@@ -1,6 +1,7 @@
 import * as Rdf from './rdf-model';
 import { randomBlankNode } from './common';
 import { ShapeID, Shape, ObjectProperty, PropertyPathSegment } from './shapes';
+import { rdf } from './vocabulary';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
 
@@ -62,31 +63,41 @@ export class ShapeBuilder {
   }
 
   constant(value: Rdf.Node): ShapeID {
-    const id = this.randomShapeID('node');
-    this._shapes.push({
-      type: 'node',
-      id,
-      nodeType: value.type === 'literal' ? 'literal' : 'resource',
-      value,
-    });
+    const id = this.randomShapeID(value.type === 'literal' ? 'literal' : 'resource');
+    const shape: Shape = value.type === 'literal'
+      ? {type: 'literal', id, value}
+      : {type: 'resource', id, value};
+    this._shapes.push(shape);
     return id;
   }
 
   resource(): ShapeID {
-    const id = this.randomShapeID('node');
-    this._shapes.push({type: 'node', id, nodeType: 'resource'});
+    const id = this.randomShapeID('resource');
+    this._shapes.push({type: 'resource', id});
     return id;
   }
 
   literal(datatype?: Rdf.Iri): ShapeID {
-    const id = this.randomShapeID('node');
-    this._shapes.push({type: 'node', id, nodeType: 'literal', datatype});
+    const id = this.randomShapeID('literal');
+    this._shapes.push({type: 'literal', id, datatype});
+    return id;
+  }
+
+  langLiteral(language: string): ShapeID {
+    const id = this.randomShapeID('langLiteral');
+    this._shapes.push({type: 'literal', id, datatype: rdf.langString, language});
     return id;
   }
 
   list(itemShape: ShapeID): ShapeID {
     const id = this.randomShapeID('list');
     this._shapes.push({type: 'list', id, itemShape});
+    return id;
+  }
+
+  map(keyRef: ShapeID, itemShape: ShapeID): ShapeID {
+    const id = this.randomShapeID('map');
+    this._shapes.push({type: 'map', id, keyRef, itemShape});
     return id;
   }
 

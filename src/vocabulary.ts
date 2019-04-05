@@ -2,6 +2,7 @@ import * as Rdf from './rdf-model';
 
 export namespace rdf {
   export const NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+  export const langString = Rdf.iri(NAMESPACE + 'langString');
   export const first = Rdf.iri(NAMESPACE + 'first');
   export const rest = Rdf.iri(NAMESPACE + 'rest');
   export const nil = Rdf.iri(NAMESPACE + 'nil');

@@ -13,7 +13,7 @@ export interface Blank {
 export interface Literal {
   readonly type: 'literal';
   readonly value: string;
-  readonly datatype?: string;
+  readonly datatype: string;
   readonly 'xml:lang'?: string;
 }
 
@@ -43,10 +43,13 @@ export function blank(value: string): Blank {
   return {type: 'bnode', value};
 }
 
+const RDF_LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString';
+const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
+
 export function literal(value: string, dataType?: Iri): Literal {
   return {
     type: 'literal',
-    datatype: dataType ? dataType.value : undefined,
+    datatype: dataType ? dataType.value : XSD_STRING,
     value,
   };
 }
@@ -54,7 +57,7 @@ export function literal(value: string, dataType?: Iri): Literal {
 export function langString(value: string, lang: string): Literal {
   return {
     type: 'literal',
-    datatype: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString',
+    datatype: RDF_LANG_STRING,
     value,
     "xml:lang": lang,
   };

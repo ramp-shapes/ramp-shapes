@@ -1,7 +1,7 @@
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, NodeShape, ListShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes';
 import {
   makeShapeResolver, randomBlankNode, assertUnknownShape, resolveListShapeDefaults, doesNodeMatch
@@ -24,7 +24,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Triple> {
       return randomBlankNode(prefix, 48);
     },
     flattenType: (shape, value) => {
-      return shape.type === 'node'
+      return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertFromNativeType(shape, value)
         : value;
     }
@@ -64,10 +64,13 @@ function flattenShape(
       return flattenSet(shape, converted, context);
     case 'optional':
       return flattenOptional(shape, converted, context);
-    case 'node':
+    case 'resource':
+    case 'literal':
       return flattenNode(shape, converted, context);
     case 'list':
       return flattenList(shape, converted, context);
+    case 'map':
+      return flattenMap(shape, converted, context);
     default:
       return assertUnknownShape(shape);
   }
@@ -84,10 +87,10 @@ function flattenObject(
 
   const matches: Array<{ property: ObjectProperty; match: ShapeMatch }> = [];
   const missing: Array<ObjectProperty> = [];
-  if (!matchProperties(shape.typeProperties, value, matches, missing, context)) {
+  if (!matchProperties(shape.typeProperties, value, matches, undefined, context)) {
     return undefined;
   }
-  if (!matchProperties(shape.properties, value, matches, undefined, context)) {
+  if (!matchProperties(shape.properties, value, matches, missing, context)) {
     if (shape.typeProperties) {
       throw new Error(
         `Invalid value for shape ${Rdf.toString(shape.id)}: ` +
@@ -262,7 +265,7 @@ function flattenOptional(
 }
 
 function flattenNode(
-  shape: NodeShape,
+  shape: ResourceShape | LiteralShape,
   value: unknown,
   context: FlattenContext
 ): ShapeMatch | undefined {
@@ -316,6 +319,43 @@ function flattenList(
         ? nil : context.generateBlankNode('list');
       yield* flattenPropertyPath(current, tail, next, context);
       current = next;
+    }
+  }
+
+  return {nodes, generate};
+}
+
+function flattenMap(
+  shape: MapShape,
+  value: unknown,
+  context: FlattenContext
+) {
+  if (typeof value !== 'object') {
+    return undefined;
+  }
+
+  const itemShape = context.resolveShape(shape.itemShape);
+
+  const matches: ShapeMatch[] = [];
+  for (const key in value) {
+    if (!Object.hasOwnProperty.call(value, key)) { continue; }
+    const item = (value as { [key: string]: unknown })[key];
+    const match = flattenShape(itemShape, item, context);
+    if (!match) {
+      return undefined;
+    }
+    matches.push(match);
+  }
+
+  function *nodes() {
+    for (const match of matches) {
+      yield* match.nodes();
+    }
+  }
+
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+    for (const match of matches) {
+      yield* match.generate(edge);
     }
   }
 

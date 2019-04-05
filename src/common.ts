@@ -1,6 +1,8 @@
 import { HashMap, HashSet } from './hash-map';
 import * as Rdf from './rdf-model';
-import { ShapeID, Shape, PropertyPathSegment, NodeShape, ListShape } from './shapes';
+import {
+  ShapeID, Shape, PropertyPathSegment, ResourceShape, LiteralShape, ListShape
+} from './shapes';
 import { rdf, xsd } from './vocabulary';
 
 export function makeNodeSet() {
@@ -41,17 +43,16 @@ export function assertUnknownShape(shape: never): never {
   throw new Error(`Unknown shape type ${(shape as Shape).type}`);
 }
 
-export function doesNodeMatch(shape: NodeShape, node: Rdf.Node): boolean {
-  let nodeType: 'literal' | 'resource';
-  let datatype: string | undefined;
-  if (node.type === 'literal') {
-    nodeType = 'literal';
-    datatype = node.datatype || xsd.string.value;
+export function doesNodeMatch(shape: ResourceShape | LiteralShape, node: Rdf.Node): boolean {
+  if (shape.type === 'resource') {
+    return (node.type === 'uri' || node.type === 'bnode')
+      && (!shape.value || Rdf.equals(shape.value, node));
   } else {
-    nodeType = 'resource';
+    return node.type === 'literal'
+      && (!shape.datatype || shape.datatype.value === node.datatype)
+      && (!shape.language || shape.language === node["xml:lang"])
+      && (!shape.value || Rdf.equals(shape.value, node));
   }
-  return nodeType === shape.nodeType
-    && (!shape.datatype || datatype === shape.datatype.value);
 }
 
 const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =

@@ -1,16 +1,18 @@
 import * as Rdf from './rdf-model';
-import { NodeShape } from './shapes';
-import { xsd } from './vocabulary';
+import { ResourceShape, LiteralShape } from './shapes';
+import { rdf, xsd } from './vocabulary';
 
-export function tryConvertToNativeType(shape: NodeShape, value: Rdf.Node): unknown {
-  if (shape.nodeType === 'resource') {
+export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: Rdf.Node): unknown {
+  if (shape.type === 'resource') {
     if (value.type === 'uri') {
       return value.value;
     } else if (value.type === 'bnode') {
       return Rdf.toString(value);
     }
-  } else if (shape.nodeType === 'literal' && shape.datatype && value.type === 'literal') {
+  } else if (shape.type === 'literal' && shape.datatype && value.type === 'literal') {
     if (Rdf.equals(shape.datatype, xsd.string)) {
+      return value.value;
+    } else if (Rdf.equals(shape.datatype, rdf.langString) && shape.language) {
       return value.value;
     } else if (Rdf.equals(shape.datatype, xsd.boolean)) {
       return Boolean(value.value);
@@ -21,14 +23,20 @@ export function tryConvertToNativeType(shape: NodeShape, value: Rdf.Node): unkno
   return value;
 }
 
-export function tryConvertFromNativeType(shape: NodeShape, value: unknown): unknown {
-  if (shape.nodeType === 'resource' && typeof value === 'string') {
+export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, value: unknown): unknown {
+  if (shape.type === 'resource' && typeof value === 'string') {
     return value.startsWith('_:')
       ? Rdf.blank(value.substring(2))
       : Rdf.iri(value);
-  } else if (shape.nodeType === 'literal' && shape.datatype) {
+  } else if (shape.type === 'literal' && shape.datatype) {
     if (Rdf.equals(shape.datatype, xsd.string) && typeof value === 'string') {
       return Rdf.literal(value);
+    } else if (
+      Rdf.equals(shape.datatype, rdf.langString)
+      && shape.language
+      && typeof value === 'string'
+    ) {
+      return Rdf.langString(value, shape.language);
     } else if (Rdf.equals(shape.datatype, xsd.boolean) && typeof value === 'boolean') {
       return Rdf.literal(value ? 'true' : 'false', shape.datatype);
     } else if (isNumberType(shape.datatype.value) && typeof value === 'number') {
