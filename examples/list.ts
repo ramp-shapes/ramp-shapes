@@ -11,16 +11,16 @@ const list = schema.list(schema.resource());
 
 const listOwner = schema.object({
   properties: {
-    list: property(Rdf.iri('example:hasList'), list)
+    list: property(Rdf.namedNode('example:hasList'), list)
   }
 });
 
 const listOfUnion = schema.object({
   properties: {
-    list: property(Rdf.iri('example:hasList'), schema.list(
+    list: property(Rdf.namedNode('example:hasList'), schema.list(
       schema.union(
-        schema.constant(Rdf.iri('example:b1')),
-        schema.constant(Rdf.iri('example:b2')),
+        schema.constant(Rdf.namedNode('example:b1')),
+        schema.constant(Rdf.namedNode('example:b2')),
       )
     ))
   }
@@ -28,7 +28,7 @@ const listOfUnion = schema.object({
 
 const listSelf = schema.object({
   properties: {
-    owner: inverseProperty(Rdf.iri('example:hasList'), schema.resource()),
+    owner: inverseProperty(Rdf.namedNode('example:hasList'), schema.resource()),
     list: self(list),
     rest: property(rdf.rest, list),
     restAsIri: property(rdf.rest, schema.resource()),

@@ -1,6 +1,6 @@
 import * as Rdf from './rdf-model';
 
-export type ShapeID = Rdf.Iri | Rdf.Blank;
+export type ShapeID = Rdf.NamedNode | Rdf.BlankNode;
 export type Shape =
   | ObjectShape
   | UnionShape
@@ -26,7 +26,7 @@ export interface ObjectProperty {
 }
 
 export interface PropertyPathSegment {
-  readonly predicate: Rdf.Iri;
+  readonly predicate: Rdf.NamedNode;
   readonly reverse: boolean;
 }
 
@@ -52,13 +52,13 @@ export interface OptionalShape {
 export interface ResourceShape {
   readonly type: 'resource';
   readonly id: ShapeID;
-  readonly value?: Rdf.Iri | Rdf.Blank;
+  readonly value?: Rdf.NamedNode | Rdf.BlankNode;
 }
 
 export interface LiteralShape {
   readonly type: 'literal';
   readonly id: ShapeID;
-  readonly datatype?: Rdf.Iri;
+  readonly datatype?: Rdf.NamedNode;
   readonly language?: string;
   readonly value?: Rdf.Literal;
 }
@@ -72,7 +72,7 @@ export interface ListShape {
   /** @default [{predicate: (rdf:rest)}] */
   readonly tailPath?: ReadonlyArray<PropertyPathSegment>;
   /** @default rdf:nil */
-  readonly nil?: Rdf.Iri;
+  readonly nil?: Rdf.NamedNode;
 }
 
 export interface MapShape {

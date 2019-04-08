@@ -1,5 +1,4 @@
 import * as Rdf from './rdf-model';
-import { randomBlankNode } from './common';
 import { ShapeID, Shape, ObjectProperty, PropertyPathSegment } from './shapes';
 import { rdf } from './vocabulary';
 
@@ -62,13 +61,25 @@ export class ShapeBuilder {
     return id;
   }
 
-  constant(value: Rdf.Node): ShapeID {
-    const id = this.randomShapeID(value.type === 'literal' ? 'literal' : 'resource');
-    const shape: Shape = value.type === 'literal'
-      ? {type: 'literal', id, value}
-      : {type: 'resource', id, value};
+  constant(value: Rdf.Term): ShapeID {
+    let shape: Shape;
+    switch (value.termType) {
+      case 'NamedNode':
+      case 'BlankNode': {
+        const id = this.randomShapeID('resource');
+        shape = {type: 'resource', id, value};
+        break;
+      }
+      case 'Literal': {
+        const id = this.randomShapeID('literal');
+        shape = {type: 'literal', id, value};
+        break;
+      }
+      default:
+        throw new Error('Unexpected term type for constant shape: ' + value.termType);
+    }
     this._shapes.push(shape);
-    return id;
+    return shape.id;
   }
 
   resource(): ShapeID {
@@ -77,7 +88,7 @@ export class ShapeBuilder {
     return id;
   }
 
-  literal(datatype?: Rdf.Iri): ShapeID {
+  literal(datatype?: Rdf.NamedNode): ShapeID {
     const id = this.randomShapeID('literal');
     this._shapes.push({type: 'literal', id, datatype});
     return id;
@@ -101,8 +112,8 @@ export class ShapeBuilder {
     return id;
   }
 
-  private randomShapeID(prefix: string): Rdf.Blank {
-    return randomBlankNode(prefix, 24);
+  private randomShapeID(prefix: string): Rdf.BlankNode {
+    return Rdf.randomBlankNode(prefix, 24);
   }
 }
 
@@ -110,16 +121,16 @@ export function self(valueShape: ShapeID): PartialProperty {
   return {path: [], valueShape};
 }
 
-export function property(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
+export function property(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
   return {path: [{predicate, reverse: false}], valueShape};
 }
 
-export function inverseProperty(predicate: Rdf.Iri, valueShape: ShapeID): PartialProperty {
+export function inverseProperty(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
   return {path: [{predicate, reverse: true}], valueShape};
 }
 
 export function propertyPath(
-  predicates: ReadonlyArray<Rdf.Iri>, valueShape: ShapeID
+  predicates: ReadonlyArray<Rdf.NamedNode>, valueShape: ShapeID
 ): PartialProperty {
   return {
     path: predicates.map((predicate): PropertyPathSegment =>

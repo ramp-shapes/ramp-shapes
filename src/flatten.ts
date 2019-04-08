@@ -4,7 +4,7 @@ import {
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes';
 import {
-  makeShapeResolver, randomBlankNode, assertUnknownShape, resolveListShapeDefaults, doesNodeMatch
+  makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm
 } from './common';
 import { tryConvertFromNativeType } from './type-conversion';
 
@@ -14,14 +14,14 @@ export interface FlattenParams {
   shapes: ReadonlyArray<Shape>;
 }
 
-export function flatten(params: FlattenParams): Iterable<Rdf.Triple> {
+export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   const context: FlattenContext = {
     resolveShape: makeShapeResolver(params.shapes),
     generateSubject: shape => {
-      return randomBlankNode(shape.type, 48);
+      return Rdf.randomBlankNode(shape.type, 48);
     },
     generateBlankNode: prefix => {
-      return randomBlankNode(prefix, 48);
+      return Rdf.randomBlankNode(prefix, 48);
     },
     flattenType: (shape, value) => {
       return (shape.type === 'resource' || shape.type === 'literal')
@@ -37,16 +37,18 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Triple> {
   return match.generate(undefined);
 }
 
+type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
+
 interface FlattenContext {
   resolveShape: (shapeID: ShapeID) => Shape;
-  generateSubject: (shape: Shape) => Rdf.Iri | Rdf.Blank;
-  generateBlankNode: (prefix: string) => Rdf.Blank;
+  generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
+  generateBlankNode: (prefix: string) => Rdf.BlankNode;
   flattenType: (shape: Shape, value: unknown) => unknown;
 }
 
 interface ShapeMatch {
-  nodes: () => Iterable<Rdf.Node>;
-  generate: (edge: Edge | undefined) => Iterable<Rdf.Triple>;
+  nodes: () => Iterable<RdfNode>;
+  generate: (edge: Edge | undefined) => Iterable<Rdf.Quad>;
 }
 
 function flattenShape(
@@ -111,11 +113,11 @@ function flattenObject(
   }
   const subject = memo.resolve(context);
 
-  function *nodes(): Iterable<Rdf.Node> {
+  function *nodes(): Iterable<RdfNode> {
     yield subject;
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     yield* flattenEdge(edge, subject, context);
     for (const {property, match} of matches) {
       yield* match.generate({subject, path: property.path});
@@ -150,24 +152,24 @@ function matchProperties(
 }
 
 interface Edge {
-  subject: Rdf.Iri | Rdf.Blank;
+  subject: Rdf.NamedNode | Rdf.BlankNode;
   path: ReadonlyArray<PropertyPathSegment>;
 }
 
 function flattenEdge(
   edge: Edge | undefined,
-  object: Rdf.Node,
+  object: RdfNode,
   context: FlattenContext
-): Iterable<Rdf.Triple> {
+): Iterable<Rdf.Quad> {
   return edge ? flattenPropertyPath(edge.subject, edge.path, object, context) : [];
 }
 
 function *flattenPropertyPath(
-  subject: Rdf.Iri | Rdf.Blank,
+  subject: Rdf.NamedNode | Rdf.BlankNode,
   path: ReadonlyArray<PropertyPathSegment>,
-  object: Rdf.Node,
+  object: RdfNode,
   context: FlattenContext
-): Iterable<Rdf.Triple> {
+): Iterable<Rdf.Quad> {
   if (path.length === 0) {
     return;
   }
@@ -175,13 +177,20 @@ function *flattenPropertyPath(
   for (let i = 0; i < path.length - 1; i++) {
     const o = context.generateBlankNode('path');
     const {predicate, reverse} = path[i];
-    yield reverse ? Rdf.triple(o, predicate, s) : Rdf.triple(s, predicate, o);
+    yield reverse ? Rdf.quad(o, predicate, s) : Rdf.quad(s, predicate, o);
     s = o;
   }
   const last = path[path.length - 1];
-  yield last.reverse
-    ? Rdf.triple(object, last.predicate, s)
-    : Rdf.triple(s, last.predicate, object);
+  if (last.reverse) {
+    if (object.termType === 'Literal') {
+      throw new Error(
+        `Cannot put literal ${object} as subject with predicate ${last.predicate}`
+      );
+    }
+    yield Rdf.quad(object, last.predicate, s);
+  } else {
+    yield Rdf.quad(s, last.predicate, object);
+  }
 }
 
 function isSelfProperty(property: ObjectProperty) {
@@ -221,13 +230,13 @@ function flattenSet(
     matches.push(match);
   }
 
-  function *nodes(): Iterable<Rdf.Node> {
+  function *nodes(): Iterable<RdfNode> {
     for (const match of matches) {
       yield* match.nodes();
     }
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     for (const match of matches) {
       yield* match.generate(edge);
     }
@@ -249,13 +258,13 @@ function flattenOptional(
     return undefined;
   }
 
-  function *nodes(): Iterable<Rdf.Node> {
+  function *nodes(): Iterable<RdfNode> {
     if (match) {
       yield* match.nodes();
     }
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     if (match) {
       yield* match.generate(edge);
     }
@@ -269,14 +278,14 @@ function flattenNode(
   value: unknown,
   context: FlattenContext
 ): ShapeMatch | undefined {
-  if (!(looksLikeRdfNode(value) && doesNodeMatch(shape, value))) {
+  if (!(looksLikeRdfNode(value) && matchesTerm(shape, value))) {
     return undefined;
   }
-  const node = value;
-  function *nodes(): Iterable<Rdf.Node> {
+  const node = value as RdfNode;
+  function *nodes(): Iterable<RdfNode> {
     yield node;
   }
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     yield* flattenEdge(edge, node, context);
   }
   return {nodes, generate};
@@ -305,11 +314,11 @@ function flattenList(
 
   const list = matches.length === 0 ? nil : context.generateBlankNode('list');
 
-  function *nodes(): Iterable<Rdf.Node> {
+  function *nodes(): Iterable<RdfNode> {
     yield list;
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     yield* flattenEdge(edge, list, context);
     let current = list;
     for (let i = 0; i < matches.length; i++) {
@@ -353,7 +362,7 @@ function flattenMap(
     }
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Triple> {
+  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     for (const match of matches) {
       yield* match.generate(edge);
     }
@@ -363,20 +372,20 @@ function flattenMap(
 }
 
 class SubjectMemo {
-  private iri: Rdf.Iri | undefined;
-  private lastBlank: Rdf.Blank | undefined;
+  private iri: Rdf.NamedNode | undefined;
+  private lastBlank: Rdf.BlankNode | undefined;
 
   constructor(private shape: Shape) {}
 
-  set(node: Rdf.Node) {
-    if (node.type === 'uri') {
+  set(node: Rdf.Term) {
+    if (node.termType === 'NamedNode') {
       if (this.iri) {
         throw new Error(
           `Inconsistent self reference for object shape ${Rdf.toString(this.shape.id)}`
         );
       }
       this.iri = node;
-    } else if (node.type === 'bnode') {
+    } else if (node.termType === 'BlankNode') {
       this.lastBlank = node;
     }
   }
@@ -386,10 +395,10 @@ class SubjectMemo {
   }
 }
 
-function looksLikeRdfNode(value: unknown): value is Rdf.Node {
-  if (!(typeof value === 'object' && value && 'type' in value)) {
+function looksLikeRdfNode(value: unknown): value is Rdf.Term {
+  if (!(typeof value === 'object' && value && 'termType' in value)) {
     return false;
   }
-  const {type} = value as any;
-  return type === 'uri' || type === 'bnode' || type === 'literal';
+  const {termType} = value as Rdf.Term;
+  return termType === 'NamedNode' || termType === 'BlankNode' || termType === 'Literal';
 }

@@ -5,15 +5,15 @@ import {
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes';
 import {
-  makeNodeMap, makeNodeSet, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults,
-  doesNodeMatch
+  makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
+  resolveListShapeDefaults, matchesTerm
 } from './common';
 import { tryConvertToNativeType } from './type-conversion';
 
 export interface FramingParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
-  triples: ReadonlyArray<Rdf.Triple>;
+  triples: ReadonlyArray<Rdf.Quad>;
   trace?: boolean;
 }
 
@@ -29,11 +29,11 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
 
   const context: FramingContext = {
     triples: params.triples,
-    vars: makeNodeMap<unknown>() as HashMap<ShapeID, unknown>,
+    vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
     resolveShape: makeShapeResolver(params.shapes),
     frameType: (shape, value) => {
       return (shape.type === 'resource' || shape.type === 'literal')
-        ? tryConvertToNativeType(shape, value as Rdf.Node)
+        ? tryConvertToNativeType(shape, value as Rdf.Term)
         : value;
     },
     enableTrace: Boolean(params.trace),
@@ -54,7 +54,7 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
 }
 
 interface FramingContext {
-  readonly triples: ReadonlyArray<Rdf.Triple>;
+  readonly triples: ReadonlyArray<Rdf.Quad>;
   readonly vars: HashMap<ShapeID, unknown>;
   resolveShape(shapeID: ShapeID): Shape;
   frameType(shape: Shape, value: unknown): unknown;
@@ -64,7 +64,7 @@ interface FramingContext {
 
 function *frameShape(
   shape: Shape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<unknown> {
   const solutions = (() => {
@@ -99,7 +99,7 @@ function *frameShape(
 
 function *frameObject(
   shape: ObjectShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<{ [fieldName: string]: unknown }> {
   for (const candidate of filterResources(candidates)) {
@@ -122,7 +122,7 @@ function *frameObject(
 function *frameProperties(
   properties: ReadonlyArray<ObjectProperty>,
   template: { [fieldName: string]: unknown },
-  candidate: Rdf.Iri | Rdf.Blank,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
   missing: ObjectProperty[] | undefined,
   context: FramingContext
 ): Iterable<{ [fieldName: string]: unknown }> {
@@ -153,7 +153,7 @@ function *frameProperties(
 function *frameProperty(
   path: ReadonlyArray<PropertyPathSegment>,
   valueShape: Shape,
-  candidate: Rdf.Iri | Rdf.Blank,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FramingContext
 ): Iterable<unknown> {
   const values = findByPropertyPath(path, candidate, context);
@@ -162,15 +162,15 @@ function *frameProperty(
 
 function findByPropertyPath(
   path: ReadonlyArray<PropertyPathSegment>,
-  candidate: Rdf.Iri | Rdf.Blank,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FramingContext
-): Iterable<Rdf.Node> {
+): Iterable<Rdf.Term> {
   if (path.length === 0) {
     return [candidate];
   }
 
-  let current = makeNodeSet();
-  let next = makeNodeSet();
+  let current = makeTermSet();
+  let next = makeTermSet();
   current.add(candidate);
 
   for (const segment of path) {
@@ -178,8 +178,8 @@ function findByPropertyPath(
       if (!Rdf.equals(p, segment.predicate)) {
         continue;
       }
-      let source = s;
-      let target = o;
+      let source: Rdf.Term = s;
+      let target: Rdf.Term = o;
       if (segment.reverse) {
         source = o;
         target = s;
@@ -200,7 +200,7 @@ function findByPropertyPath(
 
 function *frameUnion(
   shape: UnionShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<unknown> {
   for (const variant of shape.variants) {
@@ -211,7 +211,7 @@ function *frameUnion(
 
 function *frameSet(
   shape: SetShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
@@ -220,7 +220,7 @@ function *frameSet(
 
 function *frameOptional(
   shape: OptionalShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<unknown> {
   let found = false;
@@ -236,11 +236,11 @@ function *frameOptional(
 
 function *frameNode(
   shape: ResourceShape | LiteralShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
-): Iterable<Rdf.Node> {
+): Iterable<Rdf.Term> {
   for (const candidate of candidates) {
-    if (doesNodeMatch(shape, candidate)) {
+    if (matchesTerm(shape, candidate)) {
       yield candidate;
     }
   }
@@ -248,7 +248,7 @@ function *frameNode(
 
 function *frameList(
   shape: ListShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<unknown[]> {
   const {head, tail, nil} = resolveListShapeDefaults(shape);
@@ -267,13 +267,13 @@ interface ListFraming {
   readonly head: ReadonlyArray<PropertyPathSegment>;
   readonly tail: ReadonlyArray<PropertyPathSegment>;
   readonly item: Shape;
-  readonly nil: Rdf.Iri;
+  readonly nil: Rdf.NamedNode;
 }
 
 function *frameListItems(
   list: ListFraming,
   required: boolean,
-  candidate: Rdf.Iri | Rdf.Blank,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FramingContext
 ): IterableIterator<unknown[]> {
   if (Rdf.equals(candidate, list.nil)) {
@@ -311,7 +311,7 @@ function *frameListItems(
 
 function *frameMap(
   shape: MapShape,
-  candidates: Iterable<Rdf.Node>,
+  candidates: Iterable<Rdf.Term>,
   context: FramingContext
 ): Iterable<{ [key: string]: unknown }> {
   const result: { [key: string]: unknown } = {};
@@ -332,16 +332,16 @@ function *frameMap(
   yield result;
 }
 
-function *filterResources(nodes: Iterable<Rdf.Node>) {
+function *filterResources(nodes: Iterable<Rdf.Term>) {
   for (const node of nodes) {
-    if (node.type === 'uri' || node.type === 'bnode') {
+    if (node.termType === 'NamedNode' || node.termType === 'BlankNode') {
       yield node;
     }
   }
 }
 
-function findAllCandidates(triples: ReadonlyArray<Rdf.Triple>) {
-  const candidates = makeNodeSet();
+function findAllCandidates(triples: ReadonlyArray<Rdf.Quad>) {
+  const candidates = makeTermSet();
   for (const {s, p, o} of triples) {
     candidates.add(s);
     candidates.add(o);

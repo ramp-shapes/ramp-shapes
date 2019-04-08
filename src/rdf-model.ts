@@ -1,131 +1,240 @@
-export type Node = Iri | Literal | Blank;
+import { Rdf } from ".";
 
-export interface Iri {
-  readonly type: 'uri';
+export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
+
+export class NamedNode {
+  readonly termType = 'NamedNode';
+  constructor(
+    readonly value: string,
+  ) {}
+  equals(other: Term | undefined | null) {
+    return other && equals(this, other);
+  }
+  hashCode() {
+    return hash(this);
+  }
+  toString() {
+    return toString(this);
+  }
+}
+
+export class BlankNode {
+  readonly termType = 'BlankNode';
+  constructor(
+    readonly value: string,
+  ) {}
+  equals(other: Term | undefined | null) {
+    return other && equals(this, other);
+  }
+  hashCode() {
+    return hash(this);
+  }
+  toString() {
+    return toString(this);
+  }
+}
+
+const RDF_LANG_STRING = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+const XSD_STRING = new NamedNode('http://www.w3.org/2001/XMLSchema#string');
+
+export class Literal {
+  readonly termType = 'Literal';
   readonly value: string;
+  readonly language: string;
+  readonly datatype: NamedNode;
+  constructor(value: string, languageOrDatatype?: string | NamedNode) {
+    this.value = value;
+    if (typeof languageOrDatatype === 'string') {
+      this.language = languageOrDatatype;
+      this.datatype = RDF_LANG_STRING;
+    } else {
+      this.language = "";
+      this.datatype = languageOrDatatype || XSD_STRING;
+    }
+  }
+  equals(other: Term | undefined | null) {
+    return other && equals(this, other);
+  }
+  hashCode() {
+    return hash(this);
+  }
+  toString() {
+    return toString(this);
+  }
 }
 
-export interface Blank {
-  readonly type: 'bnode';
-  readonly value: string;
+export class Variable {
+  readonly termType = 'Variable';
+  constructor(
+    readonly value: string
+  ) {}
+  equals(other: Term | undefined | null) {
+    return other && equals(this, other);
+  }
+  hashCode() {
+    return hash(this);
+  }
+  toString() {
+    return toString(this);
+  }
 }
 
-export interface Literal {
-  readonly type: 'literal';
-  readonly value: string;
-  readonly datatype: string;
-  readonly 'xml:lang'?: string;
+export class DefaultGraph {
+  static readonly instance = new DefaultGraph();
+  readonly termType = 'DefaultGraph';
+  readonly value = '';
+  constructor() {}
+  equals(other: Term | undefined | null) {
+    return other && equals(this, other);
+  }
+  hashCode() {
+    return hash(this);
+  }
+  toString() {
+    return toString(this);
+  }
 }
 
-export interface Triple {
-  readonly s: Node;
-  readonly p: Node;
-  readonly o: Node;
+export class Quad {
+  constructor(
+    readonly subject: NamedNode | BlankNode | Variable,
+    readonly predicate: NamedNode | Variable,
+    readonly object: NamedNode | BlankNode | Literal | Variable,
+    readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
+  ) {}
+  get s() { return this.subject; }
+  get p() { return this.predicate; }
+  get o() { return this.object; }
+  get g() { return this.graph; }
 }
 
-export function isIri(e: Node): e is Iri {
-  return e && e.type === 'uri';
+export function namedNode(value: string): NamedNode {
+  return new NamedNode(value);
 }
 
-export function isBlank(e: Node): e is Blank {
-  return e && e.type === 'bnode';
+export function blankNode(value?: string): BlankNode {
+  return typeof value === 'string'
+    ? new BlankNode(value) : randomBlankNode('b', 48);
 }
 
-export function isLiteral(e: Node): e is Literal {
-  return e && e.type === 'literal';
+export function randomBlankNode(prefix: string, randomBitCount: number): BlankNode {
+  if (randomBitCount > 48) {
+    throw new Error(`Cannot generate random blank node with > 48 bits of randomness`);
+  }
+  const hexDigitCount = Math.ceil(randomBitCount / 4);
+  const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
+  const value = prefix + num.toString(16).padStart(hexDigitCount, '0');
+  return new BlankNode(value);
 }
 
-export function iri(value: string): Iri {
-  return {type: 'uri', value};
+export function literal(value: string, languageOrDatatype?: string | NamedNode): Literal {
+  return new Literal(value, languageOrDatatype);
 }
 
-export function blank(value: string): Blank {
-  return {type: 'bnode', value};
+export function variable(value: string): Variable {
+  return new Variable(value);
 }
 
-const RDF_LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString';
-const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
-
-export function literal(value: string, dataType?: Iri): Literal {
-  return {
-    type: 'literal',
-    datatype: dataType ? dataType.value : XSD_STRING,
-    value,
-  };
+export function defaultGraph(): DefaultGraph {
+  return DefaultGraph.instance;
 }
 
-export function langString(value: string, lang: string): Literal {
-  return {
-    type: 'literal',
-    datatype: RDF_LANG_STRING,
-    value,
-    "xml:lang": lang,
-  };
+export function quad(
+  subject: Quad['subject'],
+  predicate: Quad['predicate'],
+  object: Quad['object'],
+  graph?: Quad['graph'],
+): Quad {
+  return new Quad(subject, predicate, object, graph);
 }
 
-export function triple(s: Node, p: Node, o: Node) {
-  return {s, p, o};
+export function wrap(
+  v:
+    Pick<NamedNode, 'termType' | 'value'> |
+    Pick<BlankNode, 'termType' | 'value'> |
+    Pick<Literal, 'termType' | 'value' | 'language'>
+      & { datatype: Pick<NamedNode, 'termType' | 'value'> } |
+    Pick<Variable, 'termType' | 'value'> |
+    Pick<DefaultGraph, 'termType'>
+): Rdf.Term | undefined {
+  switch (v.termType) {
+    case 'NamedNode':
+      return new NamedNode(v.value);
+    case 'BlankNode':
+      return new BlankNode(v.value);
+    case 'Literal':
+      return new Literal(v.value, v.language || wrap(v.datatype) as Rdf.NamedNode);
+    case 'Variable':
+      return new Variable(v.value);
+    case 'DefaultGraph':
+      return DefaultGraph.instance;
+  }
 }
 
-export function toString(node: Node): string {
-  switch (node.type) {
-    case 'uri':
+export function toString(node: Term): string {
+  switch (node.termType) {
+    case 'NamedNode':
       return `<${node.value}>`;
-    case 'literal': {
-      const {value, datatype, "xml:lang": lang} = node;
+    case 'BlankNode':
+      return `_:${node.value}`;
+    case 'Literal': {
+      const {value, language, datatype} = node;
       const stringLiteral = `"${value.replace(/"/, `"`)}"`;
-      if (lang) {
-        return stringLiteral + `@${lang}`;
+      if (language) {
+        return stringLiteral + `@${language}`;
       } else if (datatype) {
-        return stringLiteral + '^^' + toString({type: 'uri', value: datatype});
+        return stringLiteral + '^^' + toString(datatype);
       } else {
         return stringLiteral;
       }
     }
-    case 'bnode': {
-      return `_:${node.value}`;
-    }
+    case 'DefaultGraph':
+      return '(default graph)';
+    case 'Variable':
+      return `?${node.value}`;
   }
 }
 
-export function hash(node: Node): number {
+export function hash(node: Term): number {
   let hash = 0;
-  switch (node.type) {
-    case 'uri':
+  switch (node.termType) {
+    case 'NamedNode':
+    case 'BlankNode':
       hash = hashFnv32a(node.value);
       break;
-    case 'literal':
+    case 'Literal':
       hash = hashFnv32a(node.value);
       if (node.datatype) {
-        hash = (hash * 31 + hashFnv32a(node.datatype)) | 0;
+        hash = (hash * 31 + hashFnv32a(node.datatype.value)) | 0;
       }
-      if (node["xml:lang"]) {
-        hash = (hash * 31 + hashFnv32a(node["xml:lang"])) | 0;
+      if (node.language) {
+        hash = (hash * 31 + hashFnv32a(node.language)) | 0;
       }
       break;
-    case 'bnode':
+    case 'Variable':
       hash = hashFnv32a(node.value);
       break;
   }
   return hash;
 }
 
-export function equals(a: Node, b: Node): boolean {
-  if (a.type !== b.type) {
+export function equals(a: Term, b: Term): boolean {
+  if (a.termType !== b.termType) {
     return false;
   }
-  switch (a.type) {
-    case 'uri': {
-      const { value } = b as Iri;
+  switch (a.termType) {
+    case 'NamedNode':
+    case 'BlankNode':
+    case 'Variable':
+    case 'DefaultGraph': {
+      const {value} = b as NamedNode | BlankNode | Variable | DefaultGraph;
       return a.value === value;
     }
-    case 'literal': {
-      const { value, datatype, "xml:lang": lang } = b as Literal;
-      return a.value === value && a.datatype === datatype && a["xml:lang"] === lang;
-    }
-    case 'bnode': {
-      const { value } = b as Blank;
-      return a.value === value;
+    case 'Literal': {
+      const {value, language, datatype} = b as Literal;
+      return a.value === value
+        && a.datatype.value === datatype.value
+        && a.language === language;
     }
   }
 }

@@ -5,28 +5,18 @@ import {
 } from './shapes';
 import { rdf, xsd } from './vocabulary';
 
-export function makeNodeSet() {
-  return new HashSet<Rdf.Node>(Rdf.hash, Rdf.equals);
+export function makeTermSet() {
+  return new HashSet<Rdf.Term>(Rdf.hash, Rdf.equals);
 }
 
-export function makeNodeMap<V>() {
-  return new HashMap<Rdf.Node, V>(Rdf.hash, Rdf.equals);
-}
-
-export function randomBlankNode(prefix: string, randomBitCount: number): Rdf.Blank {
-  if (randomBitCount > 48) {
-    throw new Error(`Cannot generate random blank node with > 48 bits of randomness`);
-  }
-  const hexDigitCount = Math.ceil(randomBitCount / 4);
-  const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
-  const value = prefix + num.toString(16).padStart(hexDigitCount, '0');
-  return {type: 'bnode', value};
+export function makeTermMap<V>() {
+  return new HashMap<Rdf.Term, V>(Rdf.hash, Rdf.equals);
 }
 
 export function makeShapeResolver(
   shapes: ReadonlyArray<Shape>
 ): (shapeID: ShapeID) => Shape {
-  const contextShapes = makeNodeMap<Shape>();
+  const contextShapes = makeTermMap<Shape>();
   for (const shape of shapes) {
     contextShapes.set(shape.id, shape);
   }
@@ -43,14 +33,14 @@ export function assertUnknownShape(shape: never): never {
   throw new Error(`Unknown shape type ${(shape as Shape).type}`);
 }
 
-export function doesNodeMatch(shape: ResourceShape | LiteralShape, node: Rdf.Node): boolean {
+export function matchesTerm(shape: ResourceShape | LiteralShape, node: Rdf.Term): boolean {
   if (shape.type === 'resource') {
-    return (node.type === 'uri' || node.type === 'bnode')
+    return (node.termType === 'NamedNode' || node.termType === 'BlankNode')
       && (!shape.value || Rdf.equals(shape.value, node));
   } else {
-    return node.type === 'literal'
-      && (!shape.datatype || shape.datatype.value === node.datatype)
-      && (!shape.language || shape.language === node["xml:lang"])
+    return node.termType === 'Literal'
+      && (!shape.datatype || shape.datatype.value === node.datatype.value)
+      && (!shape.language || shape.language === node.language)
       && (!shape.value || Rdf.equals(shape.value, node));
   }
 }
@@ -63,7 +53,7 @@ const DEFAULT_LIST_TAIL: ReadonlyArray<PropertyPathSegment> =
 export interface ResolvedListShape {
   head: ReadonlyArray<PropertyPathSegment>;
   tail: ReadonlyArray<PropertyPathSegment>;
-  nil: Rdf.Iri;
+  nil: Rdf.NamedNode;
 }
 
 export function resolveListShapeDefaults(shape: ListShape): ResolvedListShape {

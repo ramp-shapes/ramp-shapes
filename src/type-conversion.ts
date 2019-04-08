@@ -2,14 +2,14 @@ import * as Rdf from './rdf-model';
 import { ResourceShape, LiteralShape } from './shapes';
 import { rdf, xsd } from './vocabulary';
 
-export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: Rdf.Node): unknown {
+export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: Rdf.Term): unknown {
   if (shape.type === 'resource') {
-    if (value.type === 'uri') {
+    if (value.termType === 'NamedNode') {
       return value.value;
-    } else if (value.type === 'bnode') {
+    } else if (value.termType === 'BlankNode') {
       return Rdf.toString(value);
     }
-  } else if (shape.type === 'literal' && shape.datatype && value.type === 'literal') {
+  } else if (shape.type === 'literal' && shape.datatype && value.termType === 'Literal') {
     if (Rdf.equals(shape.datatype, xsd.string)) {
       return value.value;
     } else if (Rdf.equals(shape.datatype, rdf.langString) && shape.language) {
@@ -26,8 +26,8 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
 export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, value: unknown): unknown {
   if (shape.type === 'resource' && typeof value === 'string') {
     return value.startsWith('_:')
-      ? Rdf.blank(value.substring(2))
-      : Rdf.iri(value);
+      ? Rdf.blankNode(value.substring(2))
+      : Rdf.namedNode(value);
   } else if (shape.type === 'literal' && shape.datatype) {
     if (Rdf.equals(shape.datatype, xsd.string) && typeof value === 'string') {
       return Rdf.literal(value);
@@ -36,7 +36,7 @@ export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, va
       && shape.language
       && typeof value === 'string'
     ) {
-      return Rdf.langString(value, shape.language);
+      return Rdf.literal(value, shape.language);
     } else if (Rdf.equals(shape.datatype, xsd.boolean) && typeof value === 'boolean') {
       return Rdf.literal(value ? 'true' : 'false', shape.datatype);
     } else if (isNumberType(shape.datatype.value) && typeof value === 'number') {
