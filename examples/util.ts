@@ -29,7 +29,12 @@ export function rdfToN3(v: Rdf.Term): N3.Term {
 }
 
 export function toJson(match: unknown): string {
-  return JSON.stringify(match, null, 2);
+  return JSON.stringify(match, (key, value) => {
+    if (typeof value === 'object' && value !== null && 'termType' in value) {
+      return (value as Rdf.Term).toString();
+    }
+    return value;
+  }, 2);
 }
 
 export function triplesToTurtleString(

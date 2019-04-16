@@ -2,7 +2,7 @@ import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference
 } from './shapes';
 import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
@@ -14,7 +14,6 @@ export interface FramingParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
   triples: ReadonlyArray<Rdf.Quad>;
-  trace?: boolean;
 }
 
 export interface FramingSolution {
@@ -23,21 +22,18 @@ export interface FramingSolution {
 }
 
 export function *frame(params: FramingParams): IterableIterator<FramingSolution> {
-  const trace = params.trace
-    ? (...args: unknown[]) => console.log(...args)
-    : () => {};
+  const keys = makeTermMap<unknown>() as HashMap<ShapeID, MapKeyContext>;
 
   const context: FramingContext = {
     triples: params.triples,
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
+    keys,
     resolveShape: makeShapeResolver(params.shapes),
     frameType: (shape, value) => {
       return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertToNativeType(shape, value as Rdf.Term)
         : value;
     },
-    enableTrace: Boolean(params.trace),
-    trace,
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -56,10 +52,15 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
 interface FramingContext {
   readonly triples: ReadonlyArray<Rdf.Quad>;
   readonly vars: HashMap<ShapeID, unknown>;
+  readonly keys: HashMap<ShapeID, MapKeyContext>;
   resolveShape(shapeID: ShapeID): Shape;
   frameType(shape: Shape, value: unknown): unknown;
-  enableTrace: boolean;
-  trace(...args: unknown[]): void;
+}
+
+interface MapKeyContext {
+  map: ShapeID;
+  reference: ShapeReference;
+  match?: unknown;
 }
 
 function *frameShape(
@@ -90,9 +91,18 @@ function *frameShape(
   })();
   
   for (const value of solutions) {
+    const keyContext = context.keys.get(shape.id);
+    if (keyContext) {
+      keyContext.match = frameKey(keyContext, shape, value);
+    }
     const typed = context.frameType(shape, value);
     context.vars.set(shape.id, typed);
+
     yield typed;
+
+    if (keyContext) {
+      keyContext.match = undefined;
+    }
     context.vars.delete(shape.id);
   }
 }
@@ -315,9 +325,13 @@ function *frameMap(
   context: FramingContext
 ): Iterable<{ [key: string]: unknown }> {
   const result: { [key: string]: unknown } = {};
+
+  let keyContext: MapKeyContext = {map: shape.id, reference: shape.key};
+  context.keys.set(shape.key.target, keyContext);
+
   const itemShape = context.resolveShape(shape.itemShape);
   for (const item of frameShape(itemShape, candidates, context)) {
-    const key = context.vars.get(shape.keyRef);
+    const key = keyContext.match;
     if (key) {
       if (typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean') {
         result[key.toString()] = item;
@@ -329,7 +343,37 @@ function *frameMap(
       }
     }
   }
+
+  context.keys.delete(shape.key.target);
   yield result;
+}
+
+function frameKey(keyContext: MapKeyContext, shape: Shape, value: unknown): unknown {
+  const {reference} = keyContext;
+  switch (reference.part) {
+    case 'value':
+      if (shape.type === 'resource' || shape.type === 'literal') {
+        return (value as Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal).value;
+      } else {
+        throw new Error(
+          `Framing term value as map key allowed only for resource or literal shapes: ` +
+          `map is ${keyContext.map}, key is ${keyContext.reference.target}`
+        );
+      }
+    case 'datatype':
+    case 'language':
+      if (shape.type === 'literal') {
+        const literal = value as Rdf.Literal;
+        return reference.part === 'datatype' ? literal.datatype : literal.language;
+      } else {
+        throw new Error(
+          `Framing term datatype or language as map key allowed only for literal shapes: ` +
+          `map is ${keyContext.map}, key is ${keyContext.reference.target}`
+        );
+      }
+    default:
+      return value;
+  }
 }
 
 function *filterResources(nodes: Iterable<Rdf.Term>) {

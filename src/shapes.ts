@@ -19,7 +19,6 @@ export interface ObjectShape {
 }
 
 export interface ObjectProperty {
-  readonly type: 'property';
   readonly name: string;
   readonly path: ReadonlyArray<PropertyPathSegment>;
   readonly valueShape: ShapeID;
@@ -78,6 +77,11 @@ export interface ListShape {
 export interface MapShape {
   readonly type: 'map';
   readonly id: ShapeID;
-  readonly keyRef: ShapeID;
+  readonly key: ShapeReference;
   readonly itemShape: ShapeID;
+}
+
+export interface ShapeReference {
+  readonly target: ShapeID;
+  readonly part?: 'value' | 'datatype' | 'language';
 }

@@ -1,5 +1,5 @@
 import * as Rdf from './rdf-model';
-import { ShapeID, Shape, ObjectProperty, PropertyPathSegment } from './shapes';
+import { ShapeID, Shape, ObjectProperty, PropertyPathSegment, ShapeReference } from './shapes';
 import { rdf } from './vocabulary';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
@@ -22,12 +22,7 @@ export class ShapeBuilder {
 
     function toField(name: string, partial: PartialProperty): ObjectProperty {
       const {path, valueShape} = partial;
-      return {
-        type: 'property',
-        name,
-        path,
-        valueShape,
-      };
+      return {name, path, valueShape};
     }
 
     function toFields(partials: { [name: string]: PartialProperty }) {
@@ -106,9 +101,9 @@ export class ShapeBuilder {
     return id;
   }
 
-  map(keyRef: ShapeID, itemShape: ShapeID): ShapeID {
+  map(key: ShapeReference, itemShape: ShapeID): ShapeID {
     const id = this.randomShapeID('map');
-    this._shapes.push({type: 'map', id, keyRef, itemShape});
+    this._shapes.push({type: 'map', id, key, itemShape});
     return id;
   }
 
