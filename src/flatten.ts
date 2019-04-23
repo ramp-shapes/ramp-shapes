@@ -12,22 +12,35 @@ export interface FlattenParams {
   value: unknown;
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
+  flattenType?: FlattenTypeHandler;
+}
+
+export interface FlattenTypeHandler {
+  (shape: Shape, value: unknown): unknown;
+}
+export namespace FlattenTypeHandler {
+  export const identity: FlattenTypeHandler = (shape, value) => value;
+  export const convertFromNativeType: FlattenTypeHandler = (shape, value) => {
+    return (shape.type === 'resource' || shape.type === 'literal')
+        ? tryConvertFromNativeType(shape, value)
+        : value;
+  };
 }
 
 export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   const context: FlattenContext = {
-    resolveShape: makeShapeResolver(params.shapes),
+    resolveShape: makeShapeResolver(params.shapes, shapeID => {
+      throw new Error(
+        `Failed to resolve shape ${Rdf.toString(shapeID)}`
+      );
+    }),
     generateSubject: shape => {
       return Rdf.randomBlankNode(shape.type, 48);
     },
     generateBlankNode: prefix => {
       return Rdf.randomBlankNode(prefix, 48);
     },
-    flattenType: (shape, value) => {
-      return (shape.type === 'resource' || shape.type === 'literal')
-        ? tryConvertFromNativeType(shape, value)
-        : value;
-    }
+    flattenType: params.flattenType || FlattenTypeHandler.convertFromNativeType,
   };
   const rootShape = context.resolveShape(params.rootShape);
   const match = flattenShape(rootShape, params.value, context);
@@ -252,8 +265,8 @@ function flattenOptional(
 ): ShapeMatch | undefined {
   const isEmpty = value === shape.emptyValue;
 
-  const valueShape = context.resolveShape(shape.valueShape);
-  const match = isEmpty ? undefined : flattenShape(valueShape, value, context);
+  const itemShape = context.resolveShape(shape.itemShape);
+  const match = isEmpty ? undefined : flattenShape(itemShape, value, context);
   if (!isEmpty && !match) {
     return undefined;
   }

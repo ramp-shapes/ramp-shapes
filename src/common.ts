@@ -14,7 +14,8 @@ export function makeTermMap<V>() {
 }
 
 export function makeShapeResolver(
-  shapes: ReadonlyArray<Shape>
+  shapes: ReadonlyArray<Shape>,
+  onFailed: (shapeID: ShapeID) => never
 ): (shapeID: ShapeID) => Shape {
   const contextShapes = makeTermMap<Shape>();
   for (const shape of shapes) {
@@ -23,7 +24,7 @@ export function makeShapeResolver(
   return shapeID => {
     const shape = contextShapes.get(shapeID);
     if (!shape) {
-      throw new Error(`Failed to resolve shape ${Rdf.toString(shapeID)}`);
+      return onFailed(shapeID);
     }
     return shape;
   };

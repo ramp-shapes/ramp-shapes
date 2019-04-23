@@ -3,23 +3,33 @@ import { ResourceShape, LiteralShape } from './shapes';
 import { rdf, xsd } from './vocabulary';
 
 export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: Rdf.Term): unknown {
+  if (shape.keepAsTerm) {
+    return value;
+  }
+  
   if (shape.type === 'resource') {
     if (value.termType === 'NamedNode') {
       return value.value;
     } else if (value.termType === 'BlankNode') {
       return Rdf.toString(value);
     }
-  } else if (shape.type === 'literal' && shape.datatype && value.termType === 'Literal') {
-    if (Rdf.equals(shape.datatype, xsd.string)) {
-      return value.value;
-    } else if (Rdf.equals(shape.datatype, rdf.langString) && shape.language) {
-      return value.value;
-    } else if (Rdf.equals(shape.datatype, xsd.boolean)) {
-      return Boolean(value.value);
-    } else if (isNumberType(shape.datatype.value)) {
-      return Number(value.value);
+  }
+  
+  if (shape.type === 'literal' && value.termType === 'Literal') {
+    const datatype = effectiveDatatype(shape);
+    if (datatype) {
+      if (Rdf.equals(datatype, xsd.string)) {
+        return value.value;
+      } else if (Rdf.equals(datatype, rdf.langString) && shape.language) {
+        return value.value;
+      } else if (Rdf.equals(datatype, xsd.boolean)) {
+        return Boolean(value.value);
+      } else if (isNumberType(datatype.value)) {
+        return Number(value.value);
+      }
     }
   }
+
   return value;
 }
 
@@ -28,22 +38,34 @@ export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, va
     return value.startsWith('_:')
       ? Rdf.blankNode(value.substring(2))
       : Rdf.namedNode(value);
-  } else if (shape.type === 'literal' && shape.datatype) {
-    if (Rdf.equals(shape.datatype, xsd.string) && typeof value === 'string') {
-      return Rdf.literal(value);
-    } else if (
-      Rdf.equals(shape.datatype, rdf.langString)
-      && shape.language
-      && typeof value === 'string'
-    ) {
-      return Rdf.literal(value, shape.language);
-    } else if (Rdf.equals(shape.datatype, xsd.boolean) && typeof value === 'boolean') {
-      return Rdf.literal(value ? 'true' : 'false', shape.datatype);
-    } else if (isNumberType(shape.datatype.value) && typeof value === 'number') {
-      return Rdf.literal(value.toString(), shape.datatype);
+  }
+  
+  if (shape.type === 'literal') {
+    const datatype = effectiveDatatype(shape);
+    if (datatype) {
+      if (Rdf.equals(datatype, xsd.string) && typeof value === 'string') {
+        return Rdf.literal(value);
+      } else if (
+        Rdf.equals(datatype, rdf.langString)
+        && shape.language
+        && typeof value === 'string'
+      ) {
+        return Rdf.literal(value, shape.language);
+      } else if (Rdf.equals(datatype, xsd.boolean) && typeof value === 'boolean') {
+        return Rdf.literal(value ? 'true' : 'false', shape.datatype);
+      } else if (isNumberType(datatype.value) && typeof value === 'number') {
+        return Rdf.literal(value.toString(), shape.datatype);
+      }
     }
   }
+
   return value;
+}
+
+function effectiveDatatype(shape: LiteralShape): Rdf.NamedNode | undefined {
+  return shape.datatype
+    || (shape.language ? rdf.langString : undefined)
+    || (shape.value ? shape.value.datatype : undefined);
 }
 
 function isNumberType(datatype: string) {

@@ -1,5 +1,3 @@
-import { Rdf } from ".";
-
 export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
 
 export class NamedNode {
@@ -7,10 +5,10 @@ export class NamedNode {
   constructor(
     readonly value: string,
   ) {}
-  equals(other: Term | undefined | null) {
-    return other && equals(this, other);
+  equals(other: Term | undefined | null): boolean {
+    return other && equals(this, other) || false;
   }
-  hashCode() {
+  hashCode?() {
     return hash(this);
   }
   toString() {
@@ -23,10 +21,10 @@ export class BlankNode {
   constructor(
     readonly value: string,
   ) {}
-  equals(other: Term | undefined | null) {
-    return other && equals(this, other);
+  equals(other: Term | undefined | null): boolean {
+    return other && equals(this, other) || false;
   }
-  hashCode() {
+  hashCode?() {
     return hash(this);
   }
   toString() {
@@ -52,10 +50,10 @@ export class Literal {
       this.datatype = languageOrDatatype || XSD_STRING;
     }
   }
-  equals(other: Term | undefined | null) {
-    return other && equals(this, other);
+  equals(other: Term | undefined | null): boolean {
+    return other && equals(this, other) || false;
   }
-  hashCode() {
+  hashCode?() {
     return hash(this);
   }
   toString() {
@@ -68,10 +66,10 @@ export class Variable {
   constructor(
     readonly value: string
   ) {}
-  equals(other: Term | undefined | null) {
-    return other && equals(this, other);
+  equals(other: Term | undefined | null): boolean {
+    return other && equals(this, other) || false;
   }
-  hashCode() {
+  hashCode?() {
     return hash(this);
   }
   toString() {
@@ -84,10 +82,10 @@ export class DefaultGraph {
   readonly termType = 'DefaultGraph';
   readonly value = '';
   constructor() {}
-  equals(other: Term | undefined | null) {
-    return other && equals(this, other);
+  equals(other: Term | undefined | null): boolean {
+    return other && equals(this, other) || false;
   }
-  hashCode() {
+  hashCode?() {
     return hash(this);
   }
   toString() {
@@ -102,10 +100,14 @@ export class Quad {
     readonly object: NamedNode | BlankNode | Literal | Variable,
     readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
   ) {}
-  get s() { return this.subject; }
-  get p() { return this.predicate; }
-  get o() { return this.object; }
-  get g() { return this.graph; }
+  equals(other: Quad | undefined | null): boolean {
+    return other
+      && equals(this.subject, other.subject)
+      && equals(this.predicate, other.predicate)
+      && equals(this.object, other.object)
+      && equals(this.graph, other.graph)
+      || false;
+  }
 }
 
 export function namedNode(value: string): NamedNode {
@@ -156,14 +158,14 @@ export function wrap(
       & { datatype: Pick<NamedNode, 'termType' | 'value'> } |
     Pick<Variable, 'termType' | 'value'> |
     Pick<DefaultGraph, 'termType'>
-): Rdf.Term | undefined {
+): Term | undefined {
   switch (v.termType) {
     case 'NamedNode':
       return new NamedNode(v.value);
     case 'BlankNode':
       return new BlankNode(v.value);
     case 'Literal':
-      return new Literal(v.value, v.language || wrap(v.datatype) as Rdf.NamedNode);
+      return new Literal(v.value, v.language || wrap(v.datatype) as NamedNode);
     case 'Variable':
       return new Variable(v.value);
     case 'DefaultGraph':

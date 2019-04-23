@@ -9,7 +9,7 @@ const triples = readTriplesFromTurtle(join(__dirname, 'annotation.ttl'));
 
 const schema = new ShapeBuilder();
 
-const xpathLiteral = schema.literal(xsd.string);
+const xpathLiteral = schema.literal({datatype: xsd.string});
 
 schema.object({
   id: oa.XPathSelector,
@@ -18,7 +18,8 @@ schema.object({
   },
   properties: {
     xpath: property(rdf.value, xpathLiteral),
-    offset: propertyPath([oa.refinedBy, oa.start], schema.literal(xsd.nonNegativeInteger)),
+    offset: propertyPath([oa.refinedBy, oa.start],
+      schema.literal({datatype: xsd.nonNegativeInteger})),
     refinedBy: property(oa.refinedBy, schema.optional(schema.resource())),
   }
 });
@@ -57,7 +58,7 @@ schema.object({
         label: property(rdfs.label, schema.map(
           {target: bodyLabel, part: 'language'}, bodyLabel
         )),
-        label_en: property(rdfs.label, schema.langLiteral('en')),
+        label_en: property(rdfs.label, schema.literal({language: 'en'})),
         nonExistentValue: property(rdf.value, schema.optional(schema.literal())),
       }
     })),

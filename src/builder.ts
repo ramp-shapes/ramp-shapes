@@ -50,24 +50,24 @@ export class ShapeBuilder {
     return id;
   }
 
-  optional(valueShape: ShapeID, emptyValue: null | undefined = undefined): ShapeID {
+  optional(itemShape: ShapeID, emptyValue: null | undefined = undefined): ShapeID {
     const id = this.randomShapeID('optional');
-    this._shapes.push({type: 'optional', id, valueShape, emptyValue});
+    this._shapes.push({type: 'optional', id, itemShape, emptyValue});
     return id;
   }
 
-  constant(value: Rdf.Term): ShapeID {
+  constant(value: Rdf.Term, options: { keepAsTerm?: boolean } = {}): ShapeID {
     let shape: Shape;
     switch (value.termType) {
       case 'NamedNode':
       case 'BlankNode': {
         const id = this.randomShapeID('resource');
-        shape = {type: 'resource', id, value};
+        shape = {type: 'resource', id, value, keepAsTerm: options.keepAsTerm};
         break;
       }
       case 'Literal': {
         const id = this.randomShapeID('literal');
-        shape = {type: 'literal', id, value};
+        shape = {type: 'literal', id, value, keepAsTerm: options.keepAsTerm};
         break;
       }
       default:
@@ -77,21 +77,25 @@ export class ShapeBuilder {
     return shape.id;
   }
 
-  resource(): ShapeID {
+  resource(options: { keepAsTerm?: boolean } = {}): ShapeID {
     const id = this.randomShapeID('resource');
-    this._shapes.push({type: 'resource', id});
+    this._shapes.push({type: 'resource', id, keepAsTerm: options.keepAsTerm});
     return id;
   }
 
-  literal(datatype?: Rdf.NamedNode): ShapeID {
+  literal(options: {
+    datatype?: Rdf.NamedNode;
+    language?: string;
+    keepAsTerm?: boolean;
+  } = {}): ShapeID {
     const id = this.randomShapeID('literal');
-    this._shapes.push({type: 'literal', id, datatype});
-    return id;
-  }
-
-  langLiteral(language: string): ShapeID {
-    const id = this.randomShapeID('langLiteral');
-    this._shapes.push({type: 'literal', id, datatype: rdf.langString, language});
+    this._shapes.push({
+      type: 'literal',
+      id,
+      datatype: options.datatype,
+      language: options.language,
+      keepAsTerm: options.keepAsTerm,
+    });
     return id;
   }
 

@@ -26,7 +26,7 @@ export interface ObjectProperty {
 
 export interface PropertyPathSegment {
   readonly predicate: Rdf.NamedNode;
-  readonly reverse: boolean;
+  readonly reverse?: boolean;
 }
 
 export interface UnionShape {
@@ -44,7 +44,7 @@ export interface SetShape {
 export interface OptionalShape {
   readonly type: 'optional';
   readonly id: ShapeID;
-  readonly valueShape: ShapeID;
+  readonly itemShape: ShapeID;
   readonly emptyValue?: null | undefined;
 }
 
@@ -52,6 +52,7 @@ export interface ResourceShape {
   readonly type: 'resource';
   readonly id: ShapeID;
   readonly value?: Rdf.NamedNode | Rdf.BlankNode;
+  readonly keepAsTerm?: boolean;
 }
 
 export interface LiteralShape {
@@ -60,6 +61,7 @@ export interface LiteralShape {
   readonly datatype?: Rdf.NamedNode;
   readonly language?: string;
   readonly value?: Rdf.Literal;
+  readonly keepAsTerm?: boolean;
 }
 
 export interface ListShape {

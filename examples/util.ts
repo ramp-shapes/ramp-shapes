@@ -43,11 +43,12 @@ export function triplesToTurtleString(
 ): Promise<string> {
   const quads: N3.Quad[] = [];
   for (const q of triples) {
-    const s = rdfToN3(q.s) as N3.Quad['subject'];
-    const p = rdfToN3(q.p) as N3.Quad['predicate'];
-    const o = rdfToN3(q.o) as N3.Quad['object'];
-    const g = rdfToN3(q.g) as N3.Quad['graph'];
-    quads.push(N3.DataFactory.quad(s, p, o, g));
+    quads.push(N3.DataFactory.quad(
+      q.subject,
+      q.predicate,
+      q.object,
+      q.graph
+    ));
   }
   
   return new Promise((resolve, reject) => {

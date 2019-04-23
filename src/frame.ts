@@ -14,6 +14,19 @@ export interface FramingParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
   triples: ReadonlyArray<Rdf.Quad>;
+  frameType?: FrameTypeHandler;
+}
+
+export interface FrameTypeHandler {
+  (shape: Shape, value: unknown): unknown;
+}
+export namespace FrameTypeHandler {
+  export const identity: FrameTypeHandler = (shape, value) => value;
+  export const convertToNativeType: FrameTypeHandler = (shape, value) => {
+    return (shape.type === 'resource' || shape.type === 'literal')
+        ? tryConvertToNativeType(shape, value as Rdf.Term)
+        : value;
+  }
 }
 
 export interface FramingSolution {
@@ -28,12 +41,13 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
     triples: params.triples,
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
     keys,
-    resolveShape: makeShapeResolver(params.shapes),
-    frameType: (shape, value) => {
-      return (shape.type === 'resource' || shape.type === 'literal')
-        ? tryConvertToNativeType(shape, value as Rdf.Term)
-        : value;
-    },
+    resolveShape: makeShapeResolver(params.shapes, shapeID => {
+      throw new Error(
+        `Failed to resolve shape ${Rdf.toString(shapeID)} at ` +
+        formatShapeStack(context)
+      );
+    }),
+    frameType: params.frameType || FrameTypeHandler.convertToNativeType,
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -121,8 +135,9 @@ function *frameObject(
       }
       if (missing && missing.length > 0) {
         throw new Error(
-          `Invalid entity ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
-          `failed to match properties: ${missing.map(p => `"${p.name}"`).join(', ')}.`
+          `Invalid subject ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
+          `failed to match properties: ${missing.map(p => `"${p.name}"`).join(', ')} at ` +
+          formatShapeStack(context)
         );
       }
     }
@@ -184,7 +199,7 @@ function findByPropertyPath(
   current.add(candidate);
 
   for (const segment of path) {
-    for (const {s, p, o} of context.triples) {
+    for (const {subject: s, predicate: p, object: o} of context.triples) {
       if (!Rdf.equals(p, segment.predicate)) {
         continue;
       }
@@ -234,8 +249,8 @@ function *frameOptional(
   context: FramingContext
 ): Iterable<unknown> {
   let found = false;
-  const valueShape = context.resolveShape(shape.valueShape);
-  for (const value of frameShape(valueShape, candidates, context)) {
+  const itemShape = context.resolveShape(shape.itemShape);
+  for (const value of frameShape(itemShape, candidates, context)) {
     found = true;
     yield value;
   }
@@ -305,7 +320,7 @@ function *frameListItems(
       if (!foundTail) {
         throw new Error(
           `Missing tail for list ${Rdf.toString(list.origin.id)} ` +
-          `at ${Rdf.toString(candidate)}`
+          `for subject ${Rdf.toString(candidate)} at ` + formatShapeStack(context)
         );
       }
       list.template.pop();
@@ -314,7 +329,7 @@ function *frameListItems(
   if (required && !foundHead) {
     throw new Error(
       `Missing head or nil for list ${Rdf.toString(list.origin.id)} ` +
-      `at ${Rdf.toString(candidate)}`
+      `for subject ${Rdf.toString(candidate)} at ` + formatShapeStack(context)
     );
   }
 }
@@ -338,7 +353,7 @@ function *frameMap(
       } else {
         throw new Error(
           `Cannot use non-primitive value as a key of map ${Rdf.toString(shape.id)}: ` +
-          `(${typeof key}) ${key}`
+          `(${typeof key}) ${key} at ` + formatShapeStack(context)
         );
       }
     }
@@ -386,11 +401,17 @@ function *filterResources(nodes: Iterable<Rdf.Term>) {
 
 function findAllCandidates(triples: ReadonlyArray<Rdf.Quad>) {
   const candidates = makeTermSet();
-  for (const {s, p, o} of triples) {
-    candidates.add(s);
-    candidates.add(o);
+  for (const {subject, object} of triples) {
+    candidates.add(subject);
+    candidates.add(object);
   }
   return candidates;
+}
+
+function formatShapeStack(context: FramingContext) {
+  // TODO implement
+  // return context.stack.map(s => `${s.type} ${Rdf.toString(s.id)}`).join(' |> ');
+  return '<framing stack (not implemented yet)>';
 }
 
 function toTraceString(value: unknown) {
