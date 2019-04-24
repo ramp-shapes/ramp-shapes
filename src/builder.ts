@@ -10,8 +10,22 @@ export interface ObjectShapeProps {
   properties?: { [name: string]: PartialProperty };
 }
 
+export interface ShapeBuilderOptions {
+  blankUniqueKey?: string;
+}
+
 export class ShapeBuilder {
   private _shapes: Shape[] = [];
+
+  private readonly blankUniqueKey: string | undefined;
+  private blankSequence = 1;
+
+  constructor(options: ShapeBuilderOptions = {}) {
+    const {
+      blankUniqueKey = Rdf.randomBlankNode('', 24).value,
+    } = options;
+    this.blankUniqueKey = blankUniqueKey;
+  }
 
   get shapes(): ReadonlyArray<Shape> {
     return this._shapes;
@@ -112,7 +126,8 @@ export class ShapeBuilder {
   }
 
   private randomShapeID(prefix: string): Rdf.BlankNode {
-    return Rdf.randomBlankNode(prefix, 24);
+    const index = this.blankSequence++;
+    return Rdf.blankNode(`${prefix}_${this.blankUniqueKey}_${index}`);
   }
 }
 

@@ -1,6 +1,6 @@
-import { FlattenTypeHandler, Rdf, ShapesForShapes, UnionShape, flatten, vocabulary } from '../src/index';
+import { FlattenTypeHandler, Rdf, ShapesForShapes, UnionShape, frame, flatten, vocabulary } from '../src/index';
 import { rdf } from './namespaces';
-import { triplesToTurtleString } from './util';
+import { triplesToTurtleString, toJson } from './util';
 
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
@@ -38,8 +38,14 @@ async function main() {
       value: shape,
       flattenType,
     });
-    const shapeTurtle = await triplesToTurtleString(quads, PREFIXES);
+
+    const triples = [...quads];
+    const shapeTurtle = await triplesToTurtleString(triples, PREFIXES);
     console.log(shapeTurtle);
+
+    for (const {value} of frame({shapes: ShapesForShapes, rootShape: BASE_SHAPE.id, triples})) {
+      console.log(toJson(value));
+    }
   }
 }
 

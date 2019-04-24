@@ -3,7 +3,7 @@ import * as Rdf from './rdf-model';
 import { Shape } from './shapes';
 import { rdf, rxj, xsd } from './vocabulary';
 
-const schema = new ShapeBuilder();
+const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
 
 const Shape: Shape = {
   type: 'union',
