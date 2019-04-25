@@ -39,6 +39,7 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
 
   const context: FramingContext = {
     triples: params.triples,
+    indexedTriples: indexTriples(params.triples),
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
     keys,
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
@@ -62,8 +63,39 @@ export function *frame(params: FramingParams): IterableIterator<FramingSolution>
   }
 }
 
+interface IndexKey {
+  readonly source: Rdf.Term;
+  readonly predicate: Rdf.Term;
+}
+namespace IndexKey {
+  export function hashCode(key: IndexKey): number {
+    return (Rdf.hash(key.source) * 31 + Rdf.hash(key.predicate)) | 0;
+  }
+  export function equals(a: IndexKey, b: IndexKey): boolean {
+    return Rdf.equals(a.source, b.source) && Rdf.equals(a.predicate, b.predicate);
+  }
+}
+
+function indexTriples(triples: ReadonlyArray<Rdf.Quad>) {
+  const indexed = new HashMap<IndexKey, Rdf.Quad[]>(IndexKey.hashCode, IndexKey.equals);
+  const put = (key: IndexKey, quad: Rdf.Quad) => {
+    let items = indexed.get(key);
+    if (!items) {
+      items = [];
+      indexed.set(key, items);
+    }
+    items.push(quad);
+  };
+  for (const t of triples) {
+    put({source: t.subject, predicate: t.predicate}, t);
+    put({source: t.object, predicate: t.predicate}, t);
+  }
+  return indexed;
+}
+
 interface FramingContext {
   readonly triples: ReadonlyArray<Rdf.Quad>;
+  readonly indexedTriples: ReadonlyHashMap<IndexKey, Rdf.Quad[]>;
   readonly vars: HashMap<ShapeID, unknown>;
   readonly keys: HashMap<ShapeID, MapKeyContext>;
   resolveShape(shapeID: ShapeID): Shape;
@@ -244,30 +276,27 @@ function findByPropertyPath(
     return [candidate];
   }
 
-  let current = makeTermSet();
-  let next = makeTermSet();
-  current.add(candidate);
+  let current: Rdf.Term[] = [candidate];
+  let next: Rdf.Term[] = [];
 
   for (const segment of path) {
-    for (const {subject: s, predicate: p, object: o} of context.triples) {
-      if (!Rdf.equals(p, segment.predicate)) {
-        continue;
-      }
-      let source: Rdf.Term = s;
-      let target: Rdf.Term = o;
-      if (segment.reverse) {
-        source = o;
-        target = s;
-      }
-      if (current.has(source)) {
-        next.add(target);
+    for (const source of current) {
+      const key: IndexKey = {source, predicate: segment.predicate};
+      const triples = context.indexedTriples.get(key);
+      if (triples) {
+        for (const t of triples) {
+          if (segment.reverse && Rdf.equals(source, t.object)) {
+            next.push(t.subject);
+          } else if (!segment.reverse && Rdf.equals(source, t.subject)) {
+            next.push(t.object);
+          }
+        }
       }
     }
-
-    const previous = current;
-    previous.clear();
+    const temp = current;
     current = next;
-    next = previous;
+    next = temp;
+    next.length = 0;
   }
 
   return current;
