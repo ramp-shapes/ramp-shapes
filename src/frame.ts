@@ -299,7 +299,15 @@ function findByPropertyPath(
     next.length = 0;
   }
 
-  return current;
+  if (current.length > 1) {
+    const set = makeTermSet();
+    for (const value of current) {
+      set.add(value);
+    }
+    return set;
+  } else {
+    return current;
+  }
 }
 
 function *frameUnion(

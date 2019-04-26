@@ -30,21 +30,32 @@ export class HashMap<K, V> implements ReadonlyHashMap<K, V> {
   has(key: K): boolean {
     const items = this.map.get(this.hashCode(key));
     if (!items) { return false; }
-    return Boolean(items.find(p => this.equals(p.key, key)));
+    for (const item of items) {
+      if (this.equals(item.key, key)) { return true }
+    }
+    return false;
   }
 
   get(key: K): V | undefined {
     const items = this.map.get(this.hashCode(key));
     if (!items) { return undefined; }
-    const pair = items.find(p => this.equals(p.key, key));
-    return pair ? pair.value : undefined;
+    for (const item of items) {
+      if (this.equals(item.key, key)) { return item.value; }
+    }
+    return undefined;
   }
 
   set(key: K, value: V): this {
     const hash = this.hashCode(key);
     let items = this.map.get(hash);
     if (items) {
-      const index = items.findIndex(p => this.equals(p.key, key));
+      let index = -1;
+      for (let i = 0; i < items.length; i++) {
+        if (this.equals(items[i].key, key)) {
+          index = i;
+          break;
+        }
+      }
       if (index >= 0) {
         items.splice(index, 1);
       } else {
@@ -62,14 +73,14 @@ export class HashMap<K, V> implements ReadonlyHashMap<K, V> {
   delete(key: K): boolean {
     const items = this.map.get(this.hashCode(key));
     if (!items) { return false; }
-    const index = items.findIndex(p => this.equals(p.key, key));
-    if (index >= 0) {
-      items.splice(index, 1);
-      this._size--;
-      return true;
-    } else {
-      return false;
+    for (let i = 0; i < items.length; i++) {
+      if (this.equals(items[i].key, key)) {
+        items.splice(i, 1);
+        this._size--;
+        return true;
+      }
     }
+    return false;
   }
 
   clear(): void {
