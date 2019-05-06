@@ -13,7 +13,7 @@ const ROOT_SHAPES = [
   ...BASE_SHAPE.variants.map(variant => ShapesForShapes.find(s => Rdf.equals(s.id, variant))!)
 ];
 
-const flattenType: FlattenTypeHandler = (shape, value) => {
+const flattenType: FlattenTypeHandler = (value, shape) => {
   if (shape.type === 'resource') {
     switch (value) {
       case 'object': return vocabulary.ObjectShape;
@@ -26,7 +26,7 @@ const flattenType: FlattenTypeHandler = (shape, value) => {
       case 'map': return vocabulary.MapShape;
     }
   }
-  return FlattenTypeHandler.convertFromNativeType(shape, value);
+  return FlattenTypeHandler.convertFromNativeType(value, shape);
 };
 
 async function main() {

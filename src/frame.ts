@@ -18,11 +18,11 @@ export interface FramingParams {
 }
 
 export interface FrameTypeHandler {
-  (shape: Shape, value: unknown): unknown;
+  (value: unknown, shape: Shape): unknown;
 }
 export namespace FrameTypeHandler {
-  export const identity: FrameTypeHandler = (shape, value) => value;
-  export const convertToNativeType: FrameTypeHandler = (shape, value) => {
+  export const identity: FrameTypeHandler = value => value;
+  export const convertToNativeType: FrameTypeHandler = (value, shape) => {
     return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertToNativeType(shape, value as Rdf.Term)
         : value;
@@ -99,7 +99,7 @@ interface FramingContext {
   readonly vars: HashMap<ShapeID, unknown>;
   readonly keys: HashMap<ShapeID, MapKeyContext>;
   resolveShape(shapeID: ShapeID): Shape;
-  frameType(shape: Shape, value: unknown): unknown;
+  frameType(value: unknown, shape: Shape): unknown;
 }
 
 class StackFrame {
@@ -155,7 +155,7 @@ function *frameShape(
     if (keyContext) {
       keyContext.match = frameKey(keyContext, shape, value, nextStack);
     }
-    const typed = context.frameType(shape, value);
+    const typed = context.frameType(value, shape);
     context.vars.set(shape.id, typed);
 
     yield typed;

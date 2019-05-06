@@ -16,11 +16,11 @@ export interface FlattenParams {
 }
 
 export interface FlattenTypeHandler {
-  (shape: Shape, value: unknown): unknown;
+  (value: unknown, shape: Shape): unknown;
 }
 export namespace FlattenTypeHandler {
-  export const identity: FlattenTypeHandler = (shape, value) => value;
-  export const convertFromNativeType: FlattenTypeHandler = (shape, value) => {
+  export const identity: FlattenTypeHandler = value => value;
+  export const convertFromNativeType: FlattenTypeHandler = (value, shape) => {
     return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertFromNativeType(shape, value)
         : value;
@@ -56,7 +56,7 @@ interface FlattenContext {
   resolveShape: (shapeID: ShapeID) => Shape;
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
-  flattenType: (shape: Shape, value: unknown) => unknown;
+  flattenType: (value: unknown, shape: Shape) => unknown;
 }
 
 interface ShapeMatch {
@@ -69,7 +69,7 @@ function flattenShape(
   value: unknown,
   context: FlattenContext
 ): ShapeMatch | undefined {
-  const converted = context.flattenType(shape, value);
+  const converted = context.flattenType(value, shape);
   switch (shape.type) {
     case 'object':
       return flattenObject(shape, converted, context);
@@ -126,8 +126,8 @@ function flattenObject(
   }
   const subject = memo.resolve(context);
 
-  function *nodes(): Iterable<RdfNode> {
-    yield subject;
+  function nodes(): Iterable<RdfNode> {
+    return [subject];
   }
 
   function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
@@ -271,16 +271,12 @@ function flattenOptional(
     return undefined;
   }
 
-  function *nodes(): Iterable<RdfNode> {
-    if (match) {
-      yield* match.nodes();
-    }
+  function nodes(): Iterable<RdfNode> {
+    return match ? match.nodes() : [];
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
-    if (match) {
-      yield* match.generate(edge);
-    }
+  function generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+    return match ? match.generate(edge) : [];
   }
 
   return {nodes, generate};
@@ -295,11 +291,11 @@ function flattenNode(
     return undefined;
   }
   const node = value as RdfNode;
-  function *nodes(): Iterable<RdfNode> {
-    yield node;
+  function nodes(): Iterable<RdfNode> {
+    return [node];
   }
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
-    yield* flattenEdge(edge, node, context);
+  function generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+    return flattenEdge(edge, node, context);
   }
   return {nodes, generate};
 }
