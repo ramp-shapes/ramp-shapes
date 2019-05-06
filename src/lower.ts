@@ -8,27 +8,27 @@ import {
 } from './common';
 import { tryConvertFromNativeType } from './type-conversion';
 
-export interface FlattenParams {
+export interface LowerParams {
   value: unknown;
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
-  flattenType?: FlattenTypeHandler;
+  lowerType?: LowerTypeHandler;
 }
 
-export interface FlattenTypeHandler {
+export interface LowerTypeHandler {
   (value: unknown, shape: Shape): unknown;
 }
-export namespace FlattenTypeHandler {
-  export const identity: FlattenTypeHandler = value => value;
-  export const convertFromNativeType: FlattenTypeHandler = (value, shape) => {
+export namespace LowerTypeHandler {
+  export const identity: LowerTypeHandler = value => value;
+  export const convertFromNativeType: LowerTypeHandler = (value, shape) => {
     return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertFromNativeType(shape, value)
         : value;
   };
 }
 
-export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
-  const context: FlattenContext = {
+export function lower(params: LowerParams): Iterable<Rdf.Quad> {
+  const context: LowerContext = {
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
@@ -40,10 +40,10 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
     generateBlankNode: prefix => {
       return Rdf.randomBlankNode(prefix, 48);
     },
-    flattenType: params.flattenType || FlattenTypeHandler.convertFromNativeType,
+    lowerType: params.lowerType || LowerTypeHandler.convertFromNativeType,
   };
   const rootShape = context.resolveShape(params.rootShape);
-  const match = flattenShape(rootShape, params.value, context);
+  const match = lowerShape(rootShape, params.value, context);
   if (!match) {
     throw new Error(`Failed to match root shape ${Rdf.toString(rootShape.id)}`);
   }
@@ -52,11 +52,11 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
 
 type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
 
-interface FlattenContext {
+interface LowerContext {
   resolveShape: (shapeID: ShapeID) => Shape;
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
-  flattenType: (value: unknown, shape: Shape) => unknown;
+  lowerType: (value: unknown, shape: Shape) => unknown;
 }
 
 interface ShapeMatch {
@@ -64,37 +64,37 @@ interface ShapeMatch {
   generate: (edge: Edge | undefined) => Iterable<Rdf.Quad>;
 }
 
-function flattenShape(
+function lowerShape(
   shape: Shape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
-  const converted = context.flattenType(value, shape);
+  const converted = context.lowerType(value, shape);
   switch (shape.type) {
     case 'object':
-      return flattenObject(shape, converted, context);
+      return lowerObject(shape, converted, context);
     case 'union':
-      return flattenUnion(shape, converted, context);
+      return lowerUnion(shape, converted, context);
     case 'set':
-      return flattenSet(shape, converted, context);
+      return lowerSet(shape, converted, context);
     case 'optional':
-      return flattenOptional(shape, converted, context);
+      return lowerOptional(shape, converted, context);
     case 'resource':
     case 'literal':
-      return flattenNode(shape, converted, context);
+      return lowerNode(shape, converted, context);
     case 'list':
-      return flattenList(shape, converted, context);
+      return lowerList(shape, converted, context);
     case 'map':
-      return flattenMap(shape, converted, context);
+      return lowerMap(shape, converted, context);
     default:
       return assertUnknownShape(shape);
   }
 }
 
-function flattenObject(
+function lowerObject(
   shape: ObjectShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   if (!(typeof value === 'object' && value)) {
     return undefined;
@@ -131,7 +131,7 @@ function flattenObject(
   }
 
   function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
-    yield* flattenEdge(edge, subject, context);
+    yield* generateEdge(edge, subject, context);
     for (const {property, match} of matches) {
       yield* match.generate({subject, path: property.path});
     }
@@ -145,12 +145,12 @@ function matchProperties(
   value: { [propertyName: string]: unknown },
   matches: Array<{ property: ObjectProperty; match: ShapeMatch }>,
   missing: Array<ObjectProperty> | undefined,
-  context: FlattenContext
+  context: LowerContext
 ): boolean {
   for (const property of properties) {
     const propertyValue = value[property.name];
     const valueShape = context.resolveShape(property.valueShape);
-    const match = flattenShape(valueShape, propertyValue, context);
+    const match = lowerShape(valueShape, propertyValue, context);
     if (match) {
       matches.push({property, match});
     } else {
@@ -169,19 +169,19 @@ interface Edge {
   path: ReadonlyArray<PropertyPathSegment>;
 }
 
-function flattenEdge(
+function generateEdge(
   edge: Edge | undefined,
   object: RdfNode,
-  context: FlattenContext
+  context: LowerContext
 ): Iterable<Rdf.Quad> {
-  return edge ? flattenPropertyPath(edge.subject, edge.path, object, context) : [];
+  return edge ? generatePropertyPath(edge.subject, edge.path, object, context) : [];
 }
 
-function *flattenPropertyPath(
+function *generatePropertyPath(
   subject: Rdf.NamedNode | Rdf.BlankNode,
   path: ReadonlyArray<PropertyPathSegment>,
   object: RdfNode,
-  context: FlattenContext
+  context: LowerContext
 ): Iterable<Rdf.Quad> {
   if (path.length === 0) {
     return;
@@ -210,14 +210,14 @@ function isSelfProperty(property: ObjectProperty) {
   return property.path.length === 0;
 }
 
-function flattenUnion(
+function lowerUnion(
   shape: UnionShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
-    const match = flattenShape(variantShape, value, context);
+    const match = lowerShape(variantShape, value, context);
     if (match) {
       return match;
     }
@@ -225,10 +225,10 @@ function flattenUnion(
   return undefined;
 }
 
-function flattenSet(
+function lowerSet(
   shape: SetShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -236,7 +236,7 @@ function flattenSet(
   const itemShape = context.resolveShape(shape.itemShape);
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = flattenShape(itemShape, item, context);
+    const match = lowerShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
@@ -258,15 +258,15 @@ function flattenSet(
   return {nodes, generate};
 }
 
-function flattenOptional(
+function lowerOptional(
   shape: OptionalShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   const isEmpty = value === shape.emptyValue;
 
   const itemShape = context.resolveShape(shape.itemShape);
-  const match = isEmpty ? undefined : flattenShape(itemShape, value, context);
+  const match = isEmpty ? undefined : lowerShape(itemShape, value, context);
   if (!isEmpty && !match) {
     return undefined;
   }
@@ -282,10 +282,10 @@ function flattenOptional(
   return {nodes, generate};
 }
 
-function flattenNode(
+function lowerNode(
   shape: ResourceShape | LiteralShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   if (!(looksLikeRdfNode(value) && matchesTerm(shape, value))) {
     return undefined;
@@ -295,15 +295,15 @@ function flattenNode(
     return [node];
   }
   function generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
-    return flattenEdge(edge, node, context);
+    return generateEdge(edge, node, context);
   }
   return {nodes, generate};
 }
 
-function flattenList(
+function lowerList(
   shape: ListShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ): ShapeMatch | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -314,7 +314,7 @@ function flattenList(
 
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = flattenShape(itemShape, item, context);
+    const match = lowerShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
@@ -328,14 +328,14 @@ function flattenList(
   }
 
   function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
-    yield* flattenEdge(edge, list, context);
+    yield* generateEdge(edge, list, context);
     let current = list;
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
       yield* match.generate({subject: current, path: head});
       const next = i === matches.length - 1
         ? nil : context.generateBlankNode('list');
-      yield* flattenPropertyPath(current, tail, next, context);
+      yield* generatePropertyPath(current, tail, next, context);
       current = next;
     }
   }
@@ -343,10 +343,10 @@ function flattenList(
   return {nodes, generate};
 }
 
-function flattenMap(
+function lowerMap(
   shape: MapShape,
   value: unknown,
-  context: FlattenContext
+  context: LowerContext
 ) {
   if (typeof value !== 'object') {
     return undefined;
@@ -358,7 +358,7 @@ function flattenMap(
   for (const key in value) {
     if (!Object.hasOwnProperty.call(value, key)) { continue; }
     const item = (value as { [key: string]: unknown })[key];
-    const match = flattenShape(itemShape, item, context);
+    const match = lowerShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
@@ -399,7 +399,7 @@ class SubjectMemo {
     }
   }
 
-  resolve(context: FlattenContext) {
+  resolve(context: LowerContext) {
     return this.iri || this.lastBlank || context.generateSubject(this.shape);
   }
 }
