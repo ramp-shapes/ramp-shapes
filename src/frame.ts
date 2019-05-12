@@ -10,34 +10,34 @@ import {
 } from './common';
 import { tryConvertToNativeType } from './type-conversion';
 
-export interface LiftParams {
+export interface FrameParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
   triples: ReadonlyArray<Rdf.Quad>;
-  liftType?: LiftTypeHandler;
+  convertType?: FrameTypeHandler;
 }
 
-export interface LiftTypeHandler {
+export interface FrameTypeHandler {
   (value: unknown, shape: Shape): unknown;
 }
-export namespace LiftTypeHandler {
-  export const identity: LiftTypeHandler = value => value;
-  export const convertToNativeType: LiftTypeHandler = (value, shape) => {
+export namespace FrameTypeHandler {
+  export const identity: FrameTypeHandler = value => value;
+  export const convertToNativeType: FrameTypeHandler = (value, shape) => {
     return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertToNativeType(shape, value as Rdf.Term)
         : value;
   }
 }
 
-export interface LiftSolution {
+export interface FrameSolution {
   readonly value: unknown;
   readonly vars: ReadonlyHashMap<ShapeID, unknown>;
 }
 
-export function *lift(params: LiftParams): IterableIterator<LiftSolution> {
+export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   const keys = makeTermMap<unknown>() as HashMap<ShapeID, MapKeyContext>;
 
-  const context: LiftContext = {
+  const context: FrameContext = {
     triples: params.triples,
     indexedTriples: indexTriples(params.triples),
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
@@ -47,7 +47,7 @@ export function *lift(params: LiftParams): IterableIterator<LiftSolution> {
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
       );
     }),
-    liftType: params.liftType || LiftTypeHandler.convertToNativeType,
+    convertType: params.convertType || FrameTypeHandler.convertToNativeType,
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -56,7 +56,7 @@ export function *lift(params: LiftParams): IterableIterator<LiftSolution> {
     value: undefined,
     vars: context.vars,
   };
-  for (const value of liftShape(rootShape, allCandidates, undefined, context)) {
+  for (const value of frameShape(rootShape, allCandidates, undefined, context)) {
     solution.value = value;
     yield solution;
     solution.value = undefined;
@@ -93,13 +93,13 @@ function indexTriples(triples: ReadonlyArray<Rdf.Quad>) {
   return indexed;
 }
 
-interface LiftContext {
+interface FrameContext {
   readonly triples: ReadonlyArray<Rdf.Quad>;
   readonly indexedTriples: ReadonlyHashMap<IndexKey, Rdf.Quad[]>;
   readonly vars: HashMap<ShapeID, unknown>;
   readonly keys: HashMap<ShapeID, MapKeyContext>;
   resolveShape(shapeID: ShapeID): Shape;
-  liftType(value: unknown, shape: Shape): unknown;
+  convertType(value: unknown, shape: Shape): unknown;
 }
 
 class StackFrame {
@@ -120,31 +120,31 @@ interface MapKeyContext {
   match?: unknown;
 }
 
-function *liftShape(
+function *frameShape(
   shape: Shape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame | undefined,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown> {
   const nextStack = (stack && stack.hasEdge()) ? stack : new StackFrame(stack, shape);
 
   const solutions = (() => {
     switch (shape.type) {
       case 'object':
-        return liftObject(shape, candidates, nextStack, context);
+        return frameObject(shape, candidates, nextStack, context);
       case 'union':
-        return liftUnion(shape, candidates, nextStack, context);
+        return frameUnion(shape, candidates, nextStack, context);
       case 'set':
-        return liftSet(shape, candidates, nextStack, context);
+        return frameSet(shape, candidates, nextStack, context);
       case 'optional':
-        return liftOptional(shape, candidates, nextStack, context);
+        return frameOptional(shape, candidates, nextStack, context);
       case 'resource':
       case 'literal':
-        return liftNode(shape, candidates, nextStack, context);
+        return frameNode(shape, candidates, nextStack, context);
       case 'list':
-        return liftList(shape, candidates, nextStack, context);
+        return frameList(shape, candidates, nextStack, context);
       case 'map':
-        return liftMap(shape, candidates, nextStack, context);
+        return frameMap(shape, candidates, nextStack, context);
       default:
         return assertUnknownShape(shape);
     }
@@ -153,9 +153,9 @@ function *liftShape(
   for (const value of solutions) {
     const keyContext = context.keys.get(shape.id);
     if (keyContext) {
-      keyContext.match = liftKey(keyContext, shape, value, nextStack);
+      keyContext.match = frameKey(keyContext, shape, value, nextStack);
     }
-    const typed = context.liftType(value, shape);
+    const typed = context.convertType(value, shape);
     context.vars.set(shape.id, typed);
 
     yield typed;
@@ -167,20 +167,20 @@ function *liftShape(
   }
 }
 
-function *liftObject(
+function *frameObject(
   shape: ObjectShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<{ [fieldName: string]: unknown }> {
   for (const candidate of filterResources(candidates)) {
     const template = {};
-    if (liftProperties(shape.typeProperties, template, candidate, undefined, stack, context)) {
+    if (frameProperties(shape.typeProperties, template, candidate, undefined, stack, context)) {
       // stores failed to match properties to produce diagnostics
       const errors: PropertyMatchError[] | undefined =
         shape.typeProperties.length > 0 ? [] : undefined;
 
-      if (liftProperties(shape.properties, template, candidate, errors, stack, context)) {
+      if (frameProperties(shape.properties, template, candidate, errors, stack, context)) {
         yield template;
       } else if (errors && errors.length > 0) {
         const propertyErrors: string[] = [];
@@ -219,19 +219,19 @@ interface PropertyMatchError {
   property: ObjectProperty;
 }
 
-function liftProperties(
+function frameProperties(
   properties: ReadonlyArray<ObjectProperty>,
   template: { [fieldName: string]: unknown },
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   errors: PropertyMatchError[] | undefined,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): boolean {
   for (const property of properties) {
     const valueShape = context.resolveShape(property.valueShape);
 
     let found = false;
-    for (const value of liftProperty(property, valueShape, candidate, stack, context)) {
+    for (const value of frameProperty(property, valueShape, candidate, stack, context)) {
       if (found) {
         if (errors) {
           errors.push({property, type: 'multiple-matches'});
@@ -255,22 +255,22 @@ function liftProperties(
   return errors ? errors.length === 0 : true;
 }
 
-function *liftProperty(
+function *frameProperty(
   property: ObjectProperty,
   valueShape: Shape,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown> {
   const values = findByPropertyPath(property.path, candidate, context);
   const nextStack = new StackFrame(stack, valueShape, property);
-  yield* liftShape(valueShape, values, nextStack, context);
+  yield* frameShape(valueShape, values, nextStack, context);
 }
 
 function findByPropertyPath(
   path: ReadonlyArray<PropertyPathSegment>,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<Rdf.Term> {
   if (path.length === 0) {
     return [candidate];
@@ -310,37 +310,37 @@ function findByPropertyPath(
   }
 }
 
-function *liftUnion(
+function *frameUnion(
   shape: UnionShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown> {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
-    yield* liftShape(variantShape, candidates, stack, context);
+    yield* frameShape(variantShape, candidates, stack, context);
   }
 }
 
-function *liftSet(
+function *frameSet(
   shape: SetShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
-  yield Array.from(liftShape(itemShape, candidates, stack, context));
+  yield Array.from(frameShape(itemShape, candidates, stack, context));
 }
 
-function *liftOptional(
+function *frameOptional(
   shape: OptionalShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown> {
   let found = false;
   const itemShape = context.resolveShape(shape.itemShape);
-  for (const value of liftShape(itemShape, candidates, stack, context)) {
+  for (const value of frameShape(itemShape, candidates, stack, context)) {
     found = true;
     yield value;
   }
@@ -349,11 +349,11 @@ function *liftOptional(
   }
 }
 
-function *liftNode(
+function *frameNode(
   shape: ResourceShape | LiteralShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<Rdf.Term> {
   for (const candidate of candidates) {
     if (matchesTerm(shape, candidate)) {
@@ -362,11 +362,11 @@ function *liftNode(
   }
 }
 
-function *liftList(
+function *frameList(
   shape: ListShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<unknown[]> {
   const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
   const itemShape = context.resolveShape(shape.itemShape);
@@ -409,7 +409,7 @@ function *liftList(
 
       const nextStack = new StackFrame(stack, itemShape, undefined, index);
       let hasItemMatch = false;
-      for (const item of liftShape(itemShape, [foundHead], nextStack, context)) {
+      for (const item of frameShape(itemShape, [foundHead], nextStack, context)) {
         if (hasItemMatch) {
           // fail to match item if multiple matches found
           hasItemMatch = false;
@@ -460,11 +460,11 @@ function formatListMatchPosition(
   );
 }
 
-function *liftMap(
+function *frameMap(
   shape: MapShape,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
-  context: LiftContext
+  context: FrameContext
 ): Iterable<{ [key: string]: unknown }> {
   const result: { [key: string]: unknown } = {};
 
@@ -472,7 +472,7 @@ function *liftMap(
   context.keys.set(shape.key.target, keyContext);
 
   const itemShape = context.resolveShape(shape.itemShape);
-  for (const item of liftShape(itemShape, candidates, stack, context)) {
+  for (const item of frameShape(itemShape, candidates, stack, context)) {
     const key = keyContext.match;
     if (key) {
       if (typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean') {
@@ -490,7 +490,7 @@ function *liftMap(
   yield result;
 }
 
-function liftKey(keyContext: MapKeyContext, shape: Shape, value: unknown, stack: StackFrame): unknown {
+function frameKey(keyContext: MapKeyContext, shape: Shape, value: unknown, stack: StackFrame): unknown {
   const {reference} = keyContext;
   switch (reference.part) {
     case 'value':

@@ -1,4 +1,4 @@
-import { LowerTypeHandler, Rdf, ShapesForShapes, UnionShape, lift, lower, vocabulary } from '../src/index';
+import { FlattenTypeHandler, Rdf, ShapesForShapes, UnionShape, frame, flatten, vocabulary } from '../src/index';
 import { rdf } from './namespaces';
 import { triplesToTurtleString, toJson } from './util';
 
@@ -13,7 +13,7 @@ const ROOT_SHAPES = [
   ...BASE_SHAPE.variants.map(variant => ShapesForShapes.find(s => Rdf.equals(s.id, variant))!)
 ];
 
-const lowerType: LowerTypeHandler = (value, shape) => {
+const convertShapeType: FlattenTypeHandler = (value, shape) => {
   if (shape.type === 'resource') {
     switch (value) {
       case 'object': return vocabulary.ObjectShape;
@@ -26,24 +26,24 @@ const lowerType: LowerTypeHandler = (value, shape) => {
       case 'map': return vocabulary.MapShape;
     }
   }
-  return LowerTypeHandler.convertFromNativeType(value, shape);
+  return FlattenTypeHandler.convertFromNativeType(value, shape);
 };
 
 async function main() {
   for (const shape of ROOT_SHAPES) {
     console.log('### ', Rdf.toString(shape.id), '###');
-    const quads = lower({
+    const quads = flatten({
       rootShape: vocabulary.Shape,
       shapes: ShapesForShapes,
       value: shape,
-      lowerType,
+      convertType: convertShapeType,
     });
 
     const triples = [...quads];
     const shapeTurtle = await triplesToTurtleString(triples, PREFIXES);
     console.log(shapeTurtle);
 
-    for (const {value} of lift({shapes: ShapesForShapes, rootShape: BASE_SHAPE.id, triples})) {
+    for (const {value} of frame({shapes: ShapesForShapes, rootShape: BASE_SHAPE.id, triples})) {
       console.log(toJson(value));
     }
   }

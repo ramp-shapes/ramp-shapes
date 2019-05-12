@@ -3,6 +3,6 @@ export { Rdf };
 export * from './shapes';
 export { ShapesForShapes } from './shapes-for-shapes';
 export * from './builder';
-export { LiftParams, LiftTypeHandler, LiftSolution, lift } from './lift';
-export { LowerParams, LowerTypeHandler, lower } from './lower';
+export { FrameParams, FrameTypeHandler, FrameSolution, frame } from './frame';
+export { FlattenParams, FlattenTypeHandler, flatten } from './flatten';
 export { rxj as vocabulary } from './vocabulary';

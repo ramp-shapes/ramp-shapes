@@ -8,26 +8,26 @@ import {
 } from './common';
 import { tryConvertFromNativeType } from './type-conversion';
 
-export interface LowerParams {
+export interface FlattenParams {
   value: unknown;
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
-  lowerType?: LowerTypeHandler;
+  convertType?: FlattenTypeHandler;
 }
 
-export interface LowerTypeHandler {
+export interface FlattenTypeHandler {
   (value: unknown, shape: Shape): unknown;
 }
-export namespace LowerTypeHandler {
-  export const identity: LowerTypeHandler = value => value;
-  export const convertFromNativeType: LowerTypeHandler = (value, shape) => {
+export namespace FlattenTypeHandler {
+  export const identity: FlattenTypeHandler = value => value;
+  export const convertFromNativeType: FlattenTypeHandler = (value, shape) => {
     return (shape.type === 'resource' || shape.type === 'literal')
         ? tryConvertFromNativeType(shape, value)
         : value;
   };
 }
 
-export function lower(params: LowerParams): Iterable<Rdf.Quad> {
+export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   const context: LowerContext = {
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
@@ -40,10 +40,10 @@ export function lower(params: LowerParams): Iterable<Rdf.Quad> {
     generateBlankNode: prefix => {
       return Rdf.randomBlankNode(prefix, 48);
     },
-    lowerType: params.lowerType || LowerTypeHandler.convertFromNativeType,
+    convertType: params.convertType || FlattenTypeHandler.convertFromNativeType,
   };
   const rootShape = context.resolveShape(params.rootShape);
-  const match = lowerShape(rootShape, params.value, context);
+  const match = flattenShape(rootShape, params.value, context);
   if (!match) {
     throw new Error(`Failed to match root shape ${Rdf.toString(rootShape.id)}`);
   }
@@ -56,7 +56,7 @@ interface LowerContext {
   resolveShape: (shapeID: ShapeID) => Shape;
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
-  lowerType: (value: unknown, shape: Shape) => unknown;
+  convertType: (value: unknown, shape: Shape) => unknown;
 }
 
 interface ShapeMatch {
@@ -64,34 +64,34 @@ interface ShapeMatch {
   generate: (edge: Edge | undefined) => Iterable<Rdf.Quad>;
 }
 
-function lowerShape(
+function flattenShape(
   shape: Shape,
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  const converted = context.lowerType(value, shape);
+  const converted = context.convertType(value, shape);
   switch (shape.type) {
     case 'object':
-      return lowerObject(shape, converted, context);
+      return flattenObject(shape, converted, context);
     case 'union':
-      return lowerUnion(shape, converted, context);
+      return flattenUnion(shape, converted, context);
     case 'set':
-      return lowerSet(shape, converted, context);
+      return flattenSet(shape, converted, context);
     case 'optional':
-      return lowerOptional(shape, converted, context);
+      return flattenOptional(shape, converted, context);
     case 'resource':
     case 'literal':
-      return lowerNode(shape, converted, context);
+      return flattenNode(shape, converted, context);
     case 'list':
-      return lowerList(shape, converted, context);
+      return flattenList(shape, converted, context);
     case 'map':
-      return lowerMap(shape, converted, context);
+      return flattenMap(shape, converted, context);
     default:
       return assertUnknownShape(shape);
   }
 }
 
-function lowerObject(
+function flattenObject(
   shape: ObjectShape,
   value: unknown,
   context: LowerContext
@@ -150,7 +150,7 @@ function matchProperties(
   for (const property of properties) {
     const propertyValue = value[property.name];
     const valueShape = context.resolveShape(property.valueShape);
-    const match = lowerShape(valueShape, propertyValue, context);
+    const match = flattenShape(valueShape, propertyValue, context);
     if (match) {
       matches.push({property, match});
     } else {
@@ -210,14 +210,14 @@ function isSelfProperty(property: ObjectProperty) {
   return property.path.length === 0;
 }
 
-function lowerUnion(
+function flattenUnion(
   shape: UnionShape,
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
-    const match = lowerShape(variantShape, value, context);
+    const match = flattenShape(variantShape, value, context);
     if (match) {
       return match;
     }
@@ -225,7 +225,7 @@ function lowerUnion(
   return undefined;
 }
 
-function lowerSet(
+function flattenSet(
   shape: SetShape,
   value: unknown,
   context: LowerContext
@@ -236,7 +236,7 @@ function lowerSet(
   const itemShape = context.resolveShape(shape.itemShape);
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = lowerShape(itemShape, item, context);
+    const match = flattenShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
@@ -258,7 +258,7 @@ function lowerSet(
   return {nodes, generate};
 }
 
-function lowerOptional(
+function flattenOptional(
   shape: OptionalShape,
   value: unknown,
   context: LowerContext
@@ -266,7 +266,7 @@ function lowerOptional(
   const isEmpty = value === shape.emptyValue;
 
   const itemShape = context.resolveShape(shape.itemShape);
-  const match = isEmpty ? undefined : lowerShape(itemShape, value, context);
+  const match = isEmpty ? undefined : flattenShape(itemShape, value, context);
   if (!isEmpty && !match) {
     return undefined;
   }
@@ -282,7 +282,7 @@ function lowerOptional(
   return {nodes, generate};
 }
 
-function lowerNode(
+function flattenNode(
   shape: ResourceShape | LiteralShape,
   value: unknown,
   context: LowerContext
@@ -300,7 +300,7 @@ function lowerNode(
   return {nodes, generate};
 }
 
-function lowerList(
+function flattenList(
   shape: ListShape,
   value: unknown,
   context: LowerContext
@@ -314,7 +314,7 @@ function lowerList(
 
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = lowerShape(itemShape, item, context);
+    const match = flattenShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
@@ -343,7 +343,7 @@ function lowerList(
   return {nodes, generate};
 }
 
-function lowerMap(
+function flattenMap(
   shape: MapShape,
   value: unknown,
   context: LowerContext
@@ -358,7 +358,7 @@ function lowerMap(
   for (const key in value) {
     if (!Object.hasOwnProperty.call(value, key)) { continue; }
     const item = (value as { [key: string]: unknown })[key];
-    const match = lowerShape(itemShape, item, context);
+    const match = flattenShape(itemShape, item, context);
     if (!match) {
       return undefined;
     }
