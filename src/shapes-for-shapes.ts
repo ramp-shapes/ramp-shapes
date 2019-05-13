@@ -1,6 +1,7 @@
 import { ShapeBuilder, property, self } from './builder';
 import * as Rdf from './rdf-model';
 import { Shape } from './shapes';
+import { FrameTypeHandler, frame } from './frame';
 import { rdf, rxj, xsd } from './vocabulary';
 
 const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
@@ -156,3 +157,36 @@ schema.object({
 });
 
 export const ShapesForShapes = [Shape, ShapeID, ...schema.shapes];
+
+const convertShapeType: FrameTypeHandler = (value, shape) => {
+  if (shape.type === 'resource') {
+    const term = value as Rdf.Term;
+    if (term.termType === 'NamedNode') {
+      switch (term.value) {
+        case rxj.ObjectShape.value: return 'object';
+        case rxj.UnionShape.value: return 'union';
+        case rxj.SetShape.value: return 'set';
+        case rxj.OptionalShape.value: return 'optional';
+        case rxj.ResourceShape.value: return 'resource';
+        case rxj.LiteralShape.value: return 'literal';
+        case rxj.ListShape.value: return 'list';
+        case rxj.MapShape.value: return 'map';
+      }
+    }
+  }
+  return FrameTypeHandler.convertToNativeType(value, shape);
+};
+
+export function frameShapes(graph: ReadonlyArray<Rdf.Quad>): Shape[] {
+  const framingResults = frame({
+    rootShape: rxj.Shape,
+    shapes: ShapesForShapes,
+    triples: graph,
+    convertType: convertShapeType,
+  });
+  const shapes: Shape[] = [];
+  for (const {value} of framingResults) {
+    shapes.push(value as Shape);
+  }
+  return shapes;
+}
