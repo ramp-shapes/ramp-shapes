@@ -3,12 +3,12 @@
 **rdfxjson** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
 
 ## Features
-**rdfxjson** introduces a language based on RDF which allows to describe runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
+**rdfxjson** introduces a language based on RDF which allows to describe a runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
 
  * Map RDF graph data into JS objects.
  * Generate RDF quad/triple data from JS objects.
- * *(In the future)* Validate runtime object structure matches specified shape.
- * *(In the future)* Construct SPARQL query to fetch neccesary data for shape.
+ * *(In the future)* Validate that runtime object structure matches specified shape.
+ * *(In the future)* Construct SPARQL queries to fetch necessary data for given shapes.
 
 ## Example
 
@@ -53,7 +53,7 @@ for (const match of matches) {
     */
 }
 
-// lift JS object value into RDF graph quads
+// lift JS object value into an RDF graph quads
 const quads = rxj.flatten({shapes, rootShape: ex.Selector, value: ...});
 /* quads is Iterable<rxj.Rdf.Quad>, e.g.:
    @prefix ex: <http://example.com/schema#>
@@ -64,3 +64,7 @@ const quads = rxj.flatten({shapes, rootShape: ex.Selector, value: ...});
    _:b3 ex:start "(20,30)"^^ex:Point.
 */
 ```
+
+## References
+A publication which describes this work is currently under review at 
+Semantics-2019 conference.
