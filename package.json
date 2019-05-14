@@ -13,7 +13,9 @@
   "devDependencies": {
     "@types/n3": "^1.0.7",
     "@types/node": "^11.11.3",
+    "@types/sparqljs": "^2.1.0",
     "n3": "^1.0.4",
+    "sparqljs": "^2.2.3",
     "ts-node": "^8.0.3",
     "typescript": "^3.3.3333"
   }

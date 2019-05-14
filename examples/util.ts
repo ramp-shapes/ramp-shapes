@@ -11,7 +11,7 @@ export function readTriplesFromTurtle(path: string): Rdf.Quad[] {
 export function toJson(match: unknown): string {
   return JSON.stringify(match, (key, value) => {
     if (typeof value === 'object' && value !== null && 'termType' in value) {
-      return (value as Rdf.Term).toString();
+      return Rdf.toString(value as Rdf.Term);
     }
     return value;
   }, 2);

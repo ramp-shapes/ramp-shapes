@@ -1,0 +1,4050 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:  <http://purl.org/dc/elements/1.1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix fn:  <http://www.w3.org/2005/xpath-functions#> .
+@prefix sc:  <http://iiif.io/api/presentation/2#> .
+@prefix exif:  <http://www.w3.org/2003/12/exif/ns#> .
+@prefix oa:  <http://www.w3.org/ns/oa#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix doap:  <http://usefulinc.com/ns/doap#> .
+@prefix svcs:  <http://rdfs.org/sioc/services#> .
+@prefix as:  <http://www.w3.org/ns/activitystreams#> .
+@prefix cnt:  <http://www.w3.org/2011/content#> .
+@prefix iiif:  <http://iiif.io/api/image/2#> .
+@prefix dcmit:  <http://purl.org/dc/dcmitype/> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b0    rdf:rest   _:b1 ;
+        rdf:first  _:b2 .
+
+_:b2    rdfs:label  "Date" ;
+        rdf:value   "1888" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b1    rdf:rest   _:b22 ;
+        rdf:first  _:b23 .
+
+_:b23   rdfs:label  "Classification" ;
+        rdf:value   "Paintings" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b22   rdf:rest   _:b24 ;
+        rdf:first  _:b25 .
+
+_:b25   rdfs:label  "Credit Line" ;
+        rdf:value   "Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b24   rdf:rest   _:b26 ;
+        rdf:first  _:b27 .
+
+_:b27   rdfs:label  "Object Number" ;
+        rdf:value   "1951.65" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b26   rdf:rest   _:b28 ;
+        rdf:first  _:b29 .
+
+_:b29   rdfs:label  "People" ;
+        rdf:value   "Artist: Vincent van Gogh, Dutch, 1853 - 1890" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b28   rdf:rest   _:b30 ;
+        rdf:first  _:b31 .
+
+_:b31   rdfs:label  "Medium" ;
+        rdf:value   "Oil on canvas" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b30   rdf:rest   _:b32 ;
+        rdf:first  _:b33 .
+
+_:b33   rdfs:label  "Dimensions" ;
+        rdf:value   "61.5 x 50.3 cm (24 3/16 x 19 13/16 in.)\r\nframed: 90.4 x 79.7 x 8.3 cm (35 9/16 x 31 3/8 x 3 1/4 in.)" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b4    rdf:rest   _:b5 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "1" ;
+        exif:width              2087 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b6 .
+
+_:b6    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174896>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2087 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174896>
+        sc:hasLists  _:b7 .
+
+_:b7    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174896>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b5    rdf:rest   _:b8 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "2" ;
+        exif:width              2088 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b9 .
+
+_:b9    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-18737483>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/18737483> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/18737483/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2088 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-18737483>
+        sc:hasLists  _:b10 .
+
+_:b10   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/18737483>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b8    rdf:rest   _:b11 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "3" ;
+        exif:width              2259 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b12 .
+
+_:b12   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-47174892>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174892> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174892/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2259 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-47174892>
+        sc:hasLists  _:b13 .
+
+_:b13   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/47174892>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b11   rdf:rest   _:b14 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "4" ;
+        exif:width              2100 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b15 .
+
+_:b15   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43182083>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43182083> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43182083/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2100 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43182083>
+        sc:hasLists  _:b16 .
+
+_:b16   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43182083>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b14   rdf:rest   _:b17 ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "5" ;
+        exif:width              2082 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b18 .
+
+_:b18   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183405>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183405> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183405/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2082 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183405>
+        sc:hasLists  _:b19 .
+
+_:b19   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183405>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        rdf:type           sc:Manifest ;
+        rdfs:label         "Self-Portrait Dedicated to Paul Gauguin" ;
+        sc:metadataLabels  _:b0 .
+
+_:b32   rdf:rest   rdf:nil ;
+        rdf:first  _:b34 .
+
+_:b34   rdfs:label  "Provenance" ;
+        rdf:value   "Vincent van Gogh, Arles, (1888,) gift;  to Paul Gauguin, (1888-1897) sold. [Ambroise Vollard, Paris.] [Paul Cassirer Gallery, Berlin.] Dr. Hugo von Tschudi, Berlin, (1906-1911), by descent; to his widow, Angela von Tschudi, Munich (1911-1919),  to Neue Staatsgalerie, Munich (1919-1938); removed from the collection by the National Socialist (Nazi) authorities in 1938, consigned; to [Theodor Fischer Gallery, Lucerne, Switzerland, for sale June 30, 1939, lot 45]; to Maurice Wertheim (1939-1951) bequest; to Fogg Art Museum, 1951.\r\n\r\n \r\n\r\nNotes:\r\nGauguin sold the painting for Fr 300\r\nHugo von Tschudi bought the painting for the Nationalgalerie, Berlin, with funds from sponsors, but did not submit it to the Kaiser for pre-approval. He took the painting to Munich when he assumed a post there.\r\nAccording to Stephanie Barron, the van Gogh was removed from the Neue Staatsgalerie on March 27, 1938 and stored at Schloss Niederschönhausen in August of that year. (Barron, 1990,pp. 135-146)\r\n" .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        sc:attributionLabel  "Harvard Art Museums" ;
+        dc:description       "" ;
+        sc:hasSequences      _:b3 .
+
+_:b3    rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        rdf:type        sc:Sequence ;
+        sc:hasCanvases  _:b4 .
+
+_:b17   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        rdf:type                sc:Canvas ;
+        rdfs:label              "6" ;
+        exif:width              2093 ;
+        exif:height             2550 ;
+        sc:hasImageAnnotations  _:b20 .
+
+_:b20   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/annotation/anno-43183422>
+        rdf:type        oa:Annotation ;
+        oa:motivatedBy  sc:painting ;
+        oa:hasTarget    <https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422> ;
+        oa:hasBody      <https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        rdf:type          dcmit:Image ;
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/43183422> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://ids.lib.harvard.edu/ids/iiif/43183422/full/full/0/native.jpg>
+        dc:format    "image/jpeg" ;
+        exif:width   2093 ;
+        exif:height  2550 .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/canvas/canvas-43183422>
+        sc:hasLists  _:b21 .
+
+_:b21   rdf:rest   rdf:nil ;
+        rdf:first  <https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/list/43183422>
+        rdf:type  sc:AnnotationList .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843/sequence/normal>
+        sc:viewingHint  sc:individualsHint .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:thumbnail  <https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896/full/!170,170/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/47174896> .
+
+<https://ids.lib.harvard.edu/ids/iiif/47174896>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .
+
+<https://iiif.harvardartmuseums.org/manifests/object/299843>
+        foaf:logo  <https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013/full/!800,800/0/native.jpg>
+        svcs:has_service  <https://ids.lib.harvard.edu/ids/iiif/437958013> .
+
+<https://ids.lib.harvard.edu/ids/iiif/437958013>
+        doap:implements  <http://iiif.io/api/image/2/level2.json> .

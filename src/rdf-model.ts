@@ -181,7 +181,7 @@ export function toString(node: Term): string {
       return `_:${node.value}`;
     case 'Literal': {
       const {value, language, datatype} = node;
-      const stringLiteral = `"${value.replace(/"/, `"`)}"`;
+      const stringLiteral = `"${escapeLiteralValue(value)}"`;
       if (language) {
         return stringLiteral + `@${language}`;
       } else if (datatype) {
@@ -195,6 +195,14 @@ export function toString(node: Term): string {
     case 'Variable':
       return `?${node.value}`;
   }
+}
+
+function escapeLiteralValue(value: string): string {
+  return value
+    .replace('"', '\\"')
+    .replace('\t', '\\t')
+    .replace('\r', '\\r')
+    .replace('\n', '\\n');
 }
 
 export function hash(node: Term): number {
