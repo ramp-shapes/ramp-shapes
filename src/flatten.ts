@@ -28,18 +28,21 @@ export namespace FlattenTypeHandler {
 }
 
 export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
+  const blankUniqueKey = Rdf.randomBlankNode('', 24).value;
+  let blankIndex = 1;
+  const generateBlankNode = (prefix: string) => {
+    const index = blankIndex++;
+    return Rdf.blankNode(`${prefix}_${blankUniqueKey}_${index}`);
+  }
+
   const context: LowerContext = {
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
       );
     }),
-    generateSubject: shape => {
-      return Rdf.randomBlankNode(shape.type, 48);
-    },
-    generateBlankNode: prefix => {
-      return Rdf.randomBlankNode(prefix, 48);
-    },
+    generateSubject: shape => generateBlankNode(shape.type),
+    generateBlankNode,
     convertType: params.convertType || FlattenTypeHandler.convertFromNativeType,
   };
   const rootShape = context.resolveShape(params.rootShape);
