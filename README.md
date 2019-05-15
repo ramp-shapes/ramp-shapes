@@ -7,8 +7,8 @@
 
  * Map RDF graph data into JS objects.
  * Generate RDF quad/triple data from JS objects.
+ * Construct SPARQL queries to fetch necessary data for given shapes.
  * *(In the future)* Validate that runtime object structure matches specified shape.
- * *(In the future)* Construct SPARQL queries to fetch necessary data for given shapes.
 
 ## Example
 
