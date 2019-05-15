@@ -101,12 +101,7 @@ export class Quad {
     readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
   ) {}
   equals(other: Quad | undefined | null): boolean {
-    return other
-      && equals(this.subject, other.subject)
-      && equals(this.predicate, other.predicate)
-      && equals(this.object, other.object)
-      && equals(this.graph, other.graph)
-      || false;
+    return other && equalsQuad(this, other) || false;
   }
 }
 
@@ -247,6 +242,24 @@ export function equals(a: Term, b: Term): boolean {
         && a.language === language;
     }
   }
+}
+
+export function hashQuad(quad: Quad): number {
+  let h = 0;
+  h = (h * 31 + hash(quad.subject)) | 0;
+  h = (h * 31 + hash(quad.predicate)) | 0;
+  h = (h * 31 + hash(quad.object)) | 0;
+  h = (h * 31 + hash(quad.graph)) | 0;
+  return h;
+}
+
+export function equalsQuad(a: Quad, b: Quad): boolean {
+  return (
+    equals(a.subject, b.subject) &&
+    equals(a.predicate, b.predicate) &&
+    equals(a.object, b.object) &&
+    equals(a.graph, b.graph)
+  );
 }
 
 /**

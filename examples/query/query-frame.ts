@@ -26,6 +26,12 @@ const PREFIXES: { [prefix: string]: string } = {
   rxj: rxj.vocabulary.NAMESPACE,
 };
 
+const set = new rxj.HashSet(rxj.Rdf.hashQuad, rxj.Rdf.equalsQuad);
+for (const quad of data) {
+  set.add(quad);
+}
+console.log('Unique quads: ' + set.size);
+
 const iterator = rxj.frame({
   rootShape: rxj.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
   shapes,

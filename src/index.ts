@@ -1,3 +1,4 @@
+export { HashSet, ReadonlyHashSet, HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf-model';
 export { Rdf };
 export * from './shapes';
