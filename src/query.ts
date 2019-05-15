@@ -188,16 +188,14 @@ function generateForShape(
     case 'union':
       return generateForUnion(shape, edge, out, context);
     case 'set':
-      return generateForSet(shape, edge, out, context);
     case 'optional':
-      return generateForOptional(shape, edge, out, context);
+    case 'map':
+      return generateForSetLikeShape(shape, edge, out, context);
     case 'resource':
     case 'literal':
       return generateForNode(shape, edge, out, context);
     case 'list':
       return generateForList(shape, edge, out, context);
-    case 'map':
-      return generateForMap(shape, edge, out, context);
     default:
       return assertUnknownShape(shape);
   }
@@ -256,30 +254,19 @@ function generateForUnion(
   return subject;
 }
 
-function generateForSet(
-  shape: SetShape,
+function generateForSetLikeShape(
+  shape: SetShape | OptionalShape | MapShape,
   edge: Edge | undefined,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ): SparqlJs.Term {
   const itemShape = context.resolveShape(shape.itemShape);
-  return generateForShape(itemShape, edge, out, context);
-}
-
-function generateForOptional(
-  shape: OptionalShape,
-  edge: Edge | undefined,
-  out: SparqlJs.Pattern[],
-  context: GenerateQueryContext,
-): SparqlJs.Term {
-  const itemShape = context.resolveShape(shape.itemShape);
-  const optionalPatterns: SparqlJs.Pattern[] = [];
-  const optional: SparqlJs.BlockPattern = {
-    type: 'optional',
-    patterns: optionalPatterns,
-  };
-  out.push(optional);
-  return generateForShape(itemShape, edge, optionalPatterns, context);
+  const patterns: SparqlJs.Pattern[] = [];
+  const object = generateForShape(itemShape, edge, patterns, context);
+  if (patterns.length > 0) {
+    out.push({type: 'optional', patterns});
+  }
+  return object;
 }
 
 function generateForNode(
@@ -330,14 +317,4 @@ function generateForList(
   generateForShape(itemShape, {subject: listNode, path: headPath}, out, context);
 
   return subject;
-}
-
-function generateForMap(
-  shape: MapShape,
-  edge: Edge | undefined,
-  out: SparqlJs.Pattern[],
-  context: GenerateQueryContext,
-): SparqlJs.Term {
-  const itemShape = context.resolveShape(shape.itemShape);
-  return generateForShape(itemShape, edge, out, context);
 }

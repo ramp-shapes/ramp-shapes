@@ -170,7 +170,11 @@ sc:AnnotationList a :ObjectShape;
         :shape [ a :ResourceShape; :termValue sc:AnnotationList ]
     ];
     :property _:idProperty;
-    :property [ a :OptionalShape; :item _:labelProperty ].
+    :property [
+        :name "label";
+        :path ([ :predicate rdfs:label ]);
+        :shape [ a :OptionalShape; :item [ a :LiteralShape; :termDatatype xsd:string ] ]
+    ].
 
 sc:Range a :ObjectShape;
     :typeProperty [
