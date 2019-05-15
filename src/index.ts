@@ -7,4 +7,4 @@ export * from './builder';
 export { FrameParams, FrameTypeHandler, FrameSolution, frame } from './frame';
 export { FlattenParams, FlattenTypeHandler, flatten } from './flatten';
 export { GenerateQueryParams, generateQuery } from './query';
-export { rxj as vocabulary } from './vocabulary';
+export { ram as vocabulary } from './vocabulary';

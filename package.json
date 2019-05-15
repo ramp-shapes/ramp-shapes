@@ -1,6 +1,6 @@
 {
-  "name": "rdfxjson",
-  "version": "0.2.0",
+  "name": "ram-shapes",
+  "version": "0.3.0",
   "description": "",
   "main": "dist/lib/index.js",
   "types": "dist/types/index.d.ts",
@@ -18,5 +18,6 @@
     "sparqljs": "^2.2.3",
     "ts-node": "^8.0.3",
     "typescript": "^3.3.3333"
-  }
+  },
+  "dependencies": {}
 }

@@ -10,7 +10,7 @@
 @prefix sc: <http://iiif.io/api/presentation/2#>.
 @prefix svcs: <http://rdfs.org/sioc/services#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
-@prefix : <http://rdfxjson.github.io/schema#>.
+@prefix : <http://ram-shapes.github.io/schema#>.
 
 sc:Manifest a :ObjectShape;
     :typeProperty [

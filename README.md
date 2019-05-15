@@ -1,9 +1,9 @@
-# rdfxjson: Declarative RDF ↔ ADT mapping
+# RAM shapes: Declarative RDF ↔ ADT mapping
 
-**rdfxjson** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
+**RAM** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
 
 ## Features
-**rdfxjson** introduces a language based on RDF which allows to describe a runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
+**RAM** introduces a language based on RDF which allows to describe a runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
 
  * Map RDF graph data into JS objects.
  * Generate RDF quad/triple data from JS objects.
@@ -13,11 +13,11 @@
 ## Example
 
 ```ts
-import * as rxj from 'rdfxjson';
+import * as Ram from 'ram-shapes';
 import * as N3 from 'n3';
 
-const shapes = rxj.frameShapes(new N3.Parser().parse(`
-  @prefix : <http://rdfxjson.github.io/schema#>.
+const shapes = Ram.frameShapes(new N3.Parser().parse(`
+  @prefix : <http://ram-shapes.github.io/schema#>.
   @prefix ex: <http://example.com/schema#>.
 
   ex:Selector a :UnionShape; :variant ex:Range, ex:Point.
@@ -39,11 +39,11 @@ const shapes = rxj.frameShapes(new N3.Parser().parse(`
 // define simple vocabulary for our custom namespace
 namespace ex {
     export const NAMESPACE = 'http://example.com/schema#';
-    export const Selector = rxj.Rdf.namedNode(NAMESPACE + 'Selector');
+    export const Selector = Ram.Rdf.namedNode(NAMESPACE + 'Selector');
 }
 
 // lower RDF graph quads into JS objects
-const matches = rxj.frame({shapes, rootShape: ex.Selector, graph: ...}));
+const matches = Ram.frame({shapes, rootShape: ex.Selector, graph: ...}));
 for (const match of matches) {
     /* match.value object has ex.Selector, e.g.:
        {
@@ -54,8 +54,8 @@ for (const match of matches) {
 }
 
 // lift JS object value into an RDF graph quads
-const quads = rxj.flatten({shapes, rootShape: ex.Selector, value: ...});
-/* quads is Iterable<rxj.Rdf.Quad>, e.g.:
+const quads = Ram.flatten({shapes, rootShape: ex.Selector, value: ...});
+/* quads is Iterable<Ram.Rdf.Quad>, e.g.:
    @prefix ex: <http://example.com/schema#>
    _:b1 ex:start _:b2.
    _:b2 ex:start "(1,1)"^^ex:Point.

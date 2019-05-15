@@ -1,8 +1,8 @@
 import { join } from 'path';
-import * as rxj from '../../src/index';
+import * as Ram from '../../src/index';
 import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
 
-const shapes = rxj.frameShapes(
+const shapes = Ram.frameShapes(
   readTriplesFromTurtle(join(__dirname, 'query-shapes.ttl'))
 );
 const data = readTriplesFromTurtle(join(__dirname, 'query-result.ttl'));
@@ -23,17 +23,17 @@ const PREFIXES: { [prefix: string]: string } = {
   "xsd": "http://www.w3.org/2001/XMLSchema#",
   "svcs": "http://rdfs.org/sioc/services#",
   "as": "http://www.w3.org/ns/activitystreams#",
-  rxj: rxj.vocabulary.NAMESPACE,
+  ram: Ram.vocabulary.NAMESPACE,
 };
 
-const set = new rxj.HashSet(rxj.Rdf.hashQuad, rxj.Rdf.equalsQuad);
+const set = new Ram.HashSet(Ram.Rdf.hashQuad, Ram.Rdf.equalsQuad);
 for (const quad of data) {
   set.add(quad);
 }
 console.log('Unique quads: ' + set.size);
 
-const iterator = rxj.frame({
-  rootShape: rxj.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
+const iterator = Ram.frame({
+  rootShape: Ram.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
   shapes,
   triples: data,
 });

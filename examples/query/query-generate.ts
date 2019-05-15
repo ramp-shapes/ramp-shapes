@@ -1,10 +1,10 @@
 import { join } from 'path';
 import * as SparqlJs from 'sparqljs';
-import * as rxj from '../../src/index';
+import * as Ram from '../../src/index';
 import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
 
 const triples = readTriplesFromTurtle(join(__dirname, 'query-shapes.ttl'));
-const shapes = rxj.frameShapes(triples);
+const shapes = Ram.frameShapes(triples);
 
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",
@@ -22,11 +22,11 @@ const PREFIXES: { [prefix: string]: string } = {
   "xsd": "http://www.w3.org/2001/XMLSchema#",
   "svcs": "http://rdfs.org/sioc/services#",
   "as": "http://www.w3.org/ns/activitystreams#",
-  rxj: rxj.vocabulary.NAMESPACE,
+  ram: Ram.vocabulary.NAMESPACE,
 };
 
-const query = rxj.generateQuery({
-  rootShape: rxj.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
+const query = Ram.generateQuery({
+  rootShape: Ram.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
   shapes: shapes,
   prefixes: PREFIXES,
 });

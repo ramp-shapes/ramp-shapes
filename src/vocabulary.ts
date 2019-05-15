@@ -20,8 +20,8 @@ export namespace xsd {
   export const dateTime = Rdf.namedNode(NAMESPACE + 'dateTime');
 }
 
-export namespace rxj {
-  export const NAMESPACE = 'http://rdfxjson.github.io/schema#';
+export namespace ram {
+  export const NAMESPACE = 'http://ram-shapes.github.io/schema#';
   export const ListShape = Rdf.namedNode(NAMESPACE + 'ListShape');
   export const LiteralShape = Rdf.namedNode(NAMESPACE + 'LiteralShape');
   export const MapShape = Rdf.namedNode(NAMESPACE + 'MapShape');
