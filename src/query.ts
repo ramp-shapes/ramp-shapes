@@ -56,6 +56,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     }
   }
 
+  const subjects = makeTermMap<SparqlJs.Term>();
   let varIndex = 1;
 
   const context: GenerateQueryContext = {
@@ -65,13 +66,21 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
       );
     }),
+    resolveSubject: (shape: Shape) => {
+      let subject = subjects.get(shape.id);
+      if (!subject) {
+        subject = findSubject(shape, context);
+        subjects.set(shape.id, subject);
+      }
+      return subject;
+    },
     makeVariable: prefix => {
       const index = varIndex++;
       return `?${prefix}_${index}` as SparqlJs.Term;
     },
-    addEdge: (edge, object) => {
-      if (edge && !isEmptyPath(edge.path)) {
-        for (const triple of tryGeneratePropertyPath(edge.subject, edge.path, object)) {
+    addEdge: edge => {
+      if (edge.subject && edge.path && !isEmptyPath(edge.path)) {
+        for (const triple of tryGeneratePropertyPath(edge.subject, edge.path, edge.object)) {
           templateTriples.push(triple);
         }
       }
@@ -79,7 +88,8 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   };
 
   const rootShape = context.resolveShape(params.rootShape);
-  generateForShape(rootShape, undefined, wherePatterns, context);
+  const object = context.resolveSubject(rootShape);
+  generateForShape(rootShape, {object}, wherePatterns, context);
   return query;
 }
 
@@ -94,27 +104,25 @@ function isEmptyPath(predicate: SparqlJs.PropertyPath | SparqlJs.Term) {
 interface GenerateQueryContext {
   currentShapes: HashSet<ShapeID>;
   resolveShape(shapeID: ShapeID): Shape;
+  resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
-  addEdge(edge: Edge | undefined, object: SparqlJs.Term): void;
+  addEdge(edge: Edge): void;
 }
 
 interface Edge {
-  subject: SparqlJs.Term;
-  path: SparqlJs.PropertyPath | SparqlJs.Term;
+  subject?: SparqlJs.Term;
+  path?: SparqlJs.PropertyPath | SparqlJs.Term;
+  object: SparqlJs.Term;
 }
 
-function generateEdge(
-  edge: Edge | undefined,
-  object: SparqlJs.Term,
-  out: SparqlJs.Pattern[]
-) {
-  if (edge && !isEmptyPath(edge.path)) {
+function generateEdge(edge: Edge, out: SparqlJs.Pattern[]) {
+  if (edge.subject && edge.path && !isEmptyPath(edge.path)) {
     out.push({
       type: 'bgp',
       triples: [{
         subject: edge.subject,
         predicate: edge.path,
-        object,
+        object: edge.object,
       }]
     });
   }
@@ -171,48 +179,61 @@ function propertyPathToSparql(
 
 function generateForShape(
   shape: Shape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
+): void {
   if (context.currentShapes.has(shape.id)) {
-    const unresolvedObject = context.makeVariable(shape.type + '_un');
-    generateEdge(edge, unresolvedObject, out);
-    context.addEdge(edge, unresolvedObject);
-    return unresolvedObject;
+    const unresolvedEdge: Edge = {
+      subject: edge.subject,
+      path: edge.path,
+      object: context.makeVariable(shape.type + '_un'),
+    }
+    generateEdge(unresolvedEdge, out);
+    context.addEdge(unresolvedEdge);
+    return;
   }
 
+  context.currentShapes.add(shape.id);
   switch (shape.type) {
     case 'object':
-      return generateForObject(shape, edge, out, context);
+      generateForObject(shape, edge, out, context);
+      break;
     case 'union':
-      return generateForUnion(shape, edge, out, context);
+      generateForUnion(shape, edge, out, context);
+      break;
     case 'set':
     case 'optional':
     case 'map':
-      return generateForSetLikeShape(shape, edge, out, context);
+      generateForSetLikeShape(shape, edge, out, context);
+      break;
     case 'resource':
     case 'literal':
-      return generateForNode(shape, edge, out, context);
+      generateForNode(shape, edge, out, context);
+      break;
     case 'list':
-      return generateForList(shape, edge, out, context);
+      generateForList(shape, edge, out, context);
+      break;
     default:
-      return assertUnknownShape(shape);
+      assertUnknownShape(shape);
+      break;
   }
+  context.currentShapes.delete(shape.id);
 }
 
 function generateForObject(
   shape: ObjectShape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
-  const subject = context.makeVariable(shape.type);
-  generateEdge(edge, subject, out);
-  context.addEdge(edge, subject);
-  generateForProperties(subject, shape.typeProperties, out, context);
-  generateForProperties(subject, shape.properties, out, context);
-  return subject;
+): void {
+  generateEdge(edge, out);
+  context.addEdge(edge);
+
+  const subject = edge.object;
+  const object = generateRecursiveAlternatives(shape, subject, out, context);
+  generateForProperties(object || subject, shape.typeProperties, out, context);
+  generateForProperties(object || subject, shape.properties, out, context);
 }
 
 function generateForProperties(
@@ -226,24 +247,68 @@ function generateForProperties(
     const edge: Edge = {
       subject,
       path: propertyPathToSparql(property.path),
+      object: context.resolveSubject(shape),
     };
     generateForShape(shape, edge, out, context);
   }
 }
 
+function generateRecursiveAlternatives(
+  shape: ObjectShape,
+  subject: SparqlJs.Term,
+  out: SparqlJs.Pattern[],
+  context: GenerateQueryContext
+): SparqlJs.Term | undefined {
+  const alternatives = [...findRecursivePaths(shape, context)];
+  if (alternatives.length === 0) {
+    return undefined;
+  }
+
+  const object = context.makeVariable(shape.type + "_r");
+
+  const sparqlAlternatives: Array<SparqlJs.Term | SparqlJs.PropertyPath> = [];
+  for (const alternative of alternatives) {
+    const fullPath: PropertyPathSegment[] = [];
+    for (const property of alternative) {
+      for (const segement of property.path) {
+        fullPath.push(segement);
+      }
+    }
+    const sparqlPath = propertyPathToSparql(fullPath);
+    sparqlAlternatives.push(sparqlPath);
+  }
+  
+  out.push({
+    type: 'bgp',
+    triples: [{
+      subject: subject,
+      predicate: {
+        type: 'path',
+        pathType: '*',
+        items: sparqlAlternatives.length > 1 ? [{
+          type: 'path',
+          pathType: '|',
+          items: sparqlAlternatives,
+        }] : sparqlAlternatives,
+      },
+      object: object,
+    }]
+  });
+
+  return object;
+}
+
 function generateForUnion(
   shape: UnionShape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
-  const subject = context.makeVariable(shape.type);
+): void {
   const unionBlocks: SparqlJs.Pattern[] = [];
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     const blockPatterns: SparqlJs.Pattern[] = [];
-    const object = generateForShape(variantShape, edge, blockPatterns, context);
-    // generateEdge({subject, path: propertyPathToSparql([])}, object, blockPatterns);
+    generateForShape(variantShape, edge, blockPatterns, context);
     if (blockPatterns.length > 0) {
       unionBlocks.push({type: 'group', patterns: blockPatterns});
     }
@@ -251,49 +316,52 @@ function generateForUnion(
   if (unionBlocks.length > 0) {
     out.push({type: 'union', patterns: unionBlocks});
   }
-  return subject;
 }
 
 function generateForSetLikeShape(
   shape: SetShape | OptionalShape | MapShape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
+): void {
   const itemShape = context.resolveShape(shape.itemShape);
   const patterns: SparqlJs.Pattern[] = [];
-  const object = generateForShape(itemShape, edge, patterns, context);
+  generateForShape(itemShape, edge, patterns, context);
   if (patterns.length > 0) {
     out.push({type: 'optional', patterns});
   }
-  return object;
 }
 
 function generateForNode(
   shape: ResourceShape | LiteralShape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
-  const object = shape.value
-    ? rdfTermToSparqlTerm(shape.value)
-    : context.makeVariable(shape.type);
-  generateEdge(edge, object, out);
-  context.addEdge(edge, object);
-  return object;
+): void {
+  const {value} = shape;
+  let nodeEdge = edge;
+  if (value && (value.termType === 'NamedNode' || value.termType === 'BlankNode')) {
+    nodeEdge = {
+      subject: edge.subject,
+      path: edge.path,
+      object: rdfTermToSparqlTerm(value),
+    };
+  }
+  generateEdge(edge, out);
+  context.addEdge(edge);
 }
 
 function generateForList(
   shape: ListShape,
-  edge: Edge | undefined,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
-): SparqlJs.Term {
+): void {
   const {head, tail, nil} = resolveListShapeDefaults(shape);
 
-  const subject = context.makeVariable(shape.type);
-  generateEdge(edge, subject, out);
-  context.addEdge(edge, subject);
+  const subject = edge.object;
+  generateEdge(edge, out);
+  context.addEdge(edge);
   
   const nextPath = propertyPathToSparql(tail);
   const nodePath: SparqlJs.PropertyPath = {
@@ -303,18 +371,135 @@ function generateForList(
   };
 
   const listNode = context.makeVariable('listNode');
-  const listNodeEdge: Edge = {subject, path: nodePath};
-  generateEdge(listNodeEdge, listNode, out);
-  context.addEdge(listNodeEdge, listNode);
+  const listNodeEdge: Edge = {subject, path: nodePath, object: listNode};
+  generateEdge(listNodeEdge, out);
+  context.addEdge(listNodeEdge);
 
   const nextNode = context.makeVariable('nextNode');
-  const nextEdge: Edge = {subject: listNode, path: nextPath};
-  generateEdge(nextEdge, nextNode, out);
-  context.addEdge(nextEdge, nextNode);
+  const nextEdge: Edge = {subject: listNode, path: nextPath, object: nextNode};
+  generateEdge(nextEdge, out);
+  context.addEdge(nextEdge);
 
   const itemShape = context.resolveShape(shape.itemShape);
   const headPath = propertyPathToSparql(head);
-  generateForShape(itemShape, {subject: listNode, path: headPath}, out, context);
+  const object = context.resolveSubject(shape);
+  const headEdge: Edge = {subject: listNode, path: headPath, object};
+  generateForShape(itemShape, headEdge, out, context);
+}
 
-  return subject;
+function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
+  const visiting = makeTermSet();
+  const path: ObjectProperty[] = [];
+
+  function *visit(shape: Shape): Iterable<ObjectProperty[]> {
+    if (!Rdf.equals(shape.id, origin.id) && context.currentShapes.has(shape.id)) {
+      return;
+    }
+    if (visiting.has(shape.id)) {
+      if (Rdf.equals(shape.id, origin.id)) {
+        yield [...path];
+      }
+      return;
+    }
+    visiting.add(shape.id);
+    switch (shape.type) {
+      case 'object':
+        yield* visitProperties(shape.typeProperties);
+        yield* visitProperties(shape.properties);
+        break;
+      case 'union':
+        for (const variant of shape.variants) {
+          const variantShape = context.resolveShape(variant);
+          yield* visit(variantShape);
+        }
+        break;
+      case 'set':
+      case 'optional':
+      case 'map':
+      case 'list':
+        const itemShape = context.resolveShape(shape.itemShape);
+        yield* visit(itemShape);
+        break;
+      case 'resource':
+      case 'literal':
+        break;
+      default:
+        assertUnknownShape(shape);
+    }
+    visiting.delete(shape.id);
+  }
+
+  function *visitProperties(
+    properties: ReadonlyArray<ObjectProperty>
+  ): Iterable<ObjectProperty[]>  {
+    for (const property of properties) {
+      path.push(property);
+      const valueShape = context.resolveShape(property.valueShape);
+      yield* visit(valueShape);
+      path.pop();
+    }
+  }
+
+  return visit(origin);
+}
+
+function findSubject(shape: Shape, context: GenerateQueryContext) {
+  const visiting = makeTermSet();
+
+  function *visit(shape: Shape): Iterable<Rdf.NamedNode> {
+    if (visiting.has(shape.id)) { return; }
+    visiting.add(shape.id);
+    switch (shape.type) {
+      case 'object':
+        yield* visitProperties(shape.typeProperties);
+        yield* visitProperties(shape.properties);
+        break;
+      case 'union':
+        for (const variant of shape.variants) {
+          const variantShape = context.resolveShape(variant);
+          yield* visit(variantShape);
+        }
+        break;
+      case 'set':
+      case 'optional':
+      case 'map':
+        const itemShape = context.resolveShape(shape.itemShape);
+        yield* visit(itemShape);
+        break;
+      case 'resource':
+        if (shape.value && shape.value.termType === 'NamedNode') {
+          yield shape.value;
+        }
+        break;
+      case 'literal':
+      case 'list':
+        break;
+      default:
+        assertUnknownShape(shape);
+        break;
+    }
+    visiting.delete(shape.id);
+  }
+
+  function *visitProperties(
+    properties: ReadonlyArray<ObjectProperty>
+  ): Iterable<Rdf.NamedNode>  {
+    for (const property of properties) {
+      if (property.path.length === 0) {
+        const valueShape = context.resolveShape(property.valueShape);
+        yield* visit(valueShape);
+      }
+    }
+  }
+
+  let term: Rdf.NamedNode | undefined;
+  for (const subject of visit(shape)) {
+    if (term) {
+      term = undefined;
+      break;
+    }
+    term = subject;
+  }
+
+  return term ? rdfTermToSparqlTerm(term) : context.makeVariable(shape.type);
 }

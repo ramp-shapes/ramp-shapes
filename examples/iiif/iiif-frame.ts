@@ -3,9 +3,9 @@ import * as Ram from '../../src/index';
 import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
 
 const shapes = Ram.frameShapes(
-  readTriplesFromTurtle(join(__dirname, 'query-shapes.ttl'))
+  readTriplesFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
 );
-const data = readTriplesFromTurtle(join(__dirname, 'query-result.ttl'));
+const data = readTriplesFromTurtle(join(__dirname, 'iiif-result.ttl'));
 
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",

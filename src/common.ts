@@ -64,3 +64,27 @@ export function resolveListShapeDefaults(shape: ListShape): ResolvedListShape {
     nil: shape.nil || rdf.nil,
   };
 }
+
+export class SubjectMemo {
+  private iri: Rdf.NamedNode | undefined;
+  private lastBlank: Rdf.BlankNode | undefined;
+
+  constructor(private shape: Shape) {}
+
+  set(node: Rdf.Term) {
+    if (node.termType === 'NamedNode') {
+      if (this.iri) {
+        throw new Error(
+          `Inconsistent self reference for object shape ${Rdf.toString(this.shape.id)}`
+        );
+      }
+      this.iri = node;
+    } else if (node.termType === 'BlankNode') {
+      this.lastBlank = node;
+    }
+  }
+
+  resolve() {
+    return this.iri || this.lastBlank;
+  }
+}

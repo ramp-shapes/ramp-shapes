@@ -4,7 +4,7 @@ import {
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes';
 import {
-  makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm
+  SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm
 } from './common';
 import { tryConvertFromNativeType } from './type-conversion';
 
@@ -127,7 +127,7 @@ function flattenObject(
       }
     }
   }
-  const subject = memo.resolve(context);
+  const subject = memo.resolve() || context.generateSubject(shape);
 
   function nodes(): Iterable<RdfNode> {
     return [subject];
@@ -381,30 +381,6 @@ function flattenMap(
   }
 
   return {nodes, generate};
-}
-
-class SubjectMemo {
-  private iri: Rdf.NamedNode | undefined;
-  private lastBlank: Rdf.BlankNode | undefined;
-
-  constructor(private shape: Shape) {}
-
-  set(node: Rdf.Term) {
-    if (node.termType === 'NamedNode') {
-      if (this.iri) {
-        throw new Error(
-          `Inconsistent self reference for object shape ${Rdf.toString(this.shape.id)}`
-        );
-      }
-      this.iri = node;
-    } else if (node.termType === 'BlankNode') {
-      this.lastBlank = node;
-    }
-  }
-
-  resolve(context: LowerContext) {
-    return this.iri || this.lastBlank || context.generateSubject(this.shape);
-  }
 }
 
 function looksLikeRdfNode(value: unknown): value is Rdf.Term {

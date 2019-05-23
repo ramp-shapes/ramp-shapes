@@ -3,7 +3,7 @@ import * as SparqlJs from 'sparqljs';
 import * as Ram from '../../src/index';
 import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
 
-const triples = readTriplesFromTurtle(join(__dirname, 'query-shapes.ttl'));
+const triples = readTriplesFromTurtle(join(__dirname, 'iiif-shapes.ttl'));
 const shapes = Ram.frameShapes(triples);
 
 const PREFIXES: { [prefix: string]: string } = {

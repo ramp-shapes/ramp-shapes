@@ -1,0 +1,53 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema>.
+@prefix : <http://ram-shapes.github.io/schema#>.
+
+ex:Selector a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate rdf:type ]);
+        :shape [ a :ResourceShape; :termValue ex:Selector ]
+    ];
+    :property [
+        :name "body";
+        :path ([ :predicate ex:body ]);
+        :shape [
+            a :UnionShape;
+            :variant ex:Range, ex:Point
+        ]
+    ].
+
+ex:Range a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate rdf:type ]);
+        :shape [ a :ResourceShape; :termValue ex:Range ]
+    ];
+    :property [
+        :name "start";
+        :path ([ :predicate ex:start ]);
+        :shape ex:Selector
+    ];
+    :property [
+        :name "end";
+        :path ([ :predicate ex:end ]);
+        :shape ex:Selector
+    ].
+
+ex:Point a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate rdf:type ]);
+        :shape [ a :ResourceShape; :termValue ex:Point ]
+    ];
+    :property [
+        :name "position";
+        :path ([ :predicate ex:position ]);
+        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+    ];
+    :property [
+        :name "plus";
+        :path ([ :predicate ex:plus ]);
+        :shape [ a :OptionalShape; :item ex:Point ]
+    ].

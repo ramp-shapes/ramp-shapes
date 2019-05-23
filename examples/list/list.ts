@@ -1,8 +1,8 @@
 import { join } from 'path';
-import * as Ram from '../src/index';
-import { Rdf, property, inverseProperty, self } from '../src/index';
-import { rdf } from './namespaces';
-import { toJson, readTriplesFromTurtle, triplesToTurtleString } from './util';
+import * as Ram from '../../src/index';
+import { Rdf, property, inverseProperty, self } from '../../src/index';
+import { rdf } from '../namespaces';
+import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
 
 const triples = readTriplesFromTurtle(join(__dirname, 'list.ttl'));
 

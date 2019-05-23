@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "description": "",
   "scripts": {
-    "build": "tsc && tsc --project tsconfig.cjs.json",
+    "build": "tsc --project tsconfig.json && tsc --project tsconfig.module.json",
     "test": "npm run build"
   },
   "author": "Alexey Morozov <alexey.morozov@live.ru>",
