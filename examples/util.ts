@@ -1,6 +1,19 @@
 import * as fs from 'fs';
+import { promisify } from 'util';
 import * as N3 from 'n3';
 import { Rdf } from "../src/index";
+
+export const exists = promisify(fs.exists);
+export const mkdir = promisify(fs.mkdir);
+export const readdir = promisify(fs.readdir);
+export const readFile = promisify(fs.readFile);
+export const writeFile = promisify(fs.writeFile);
+
+export async function makeDirectoryIfNotExists(path: string) {
+  if (!(await exists(path))) {
+    await mkdir(path);
+  }
+}
 
 export function readTriplesFromTurtle(path: string): Rdf.Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});

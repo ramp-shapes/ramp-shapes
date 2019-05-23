@@ -56,7 +56,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     }
   }
 
-  const subjects = makeTermMap<SparqlJs.Term>();
+  const subjects = makeTermMap<SparqlJs.Term | null>();
   let varIndex = 1;
 
   const context: GenerateQueryContext = {
@@ -68,11 +68,11 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     }),
     resolveSubject: (shape: Shape) => {
       let subject = subjects.get(shape.id);
-      if (!subject) {
+      if (subject === undefined) {
         subject = findSubject(shape, context);
         subjects.set(shape.id, subject);
       }
-      return subject;
+      return subject === null ? context.makeVariable(shape.type) : subject;
     },
     makeVariable: prefix => {
       const index = varIndex++;
@@ -188,10 +188,20 @@ function generateForShape(
       subject: edge.subject,
       path: edge.path,
       object: context.makeVariable(shape.type + '_un'),
+    };
+    const patterns: SparqlJs.Pattern[] = [];
+    generateEdge(unresolvedEdge, patterns);
+    if (patterns.length > 0) {
+      // TODO: fix nested OPTIONAL blocks
+      out.push({type: 'optional', patterns});
+      context.addEdge(unresolvedEdge);
     }
-    generateEdge(unresolvedEdge, out);
-    context.addEdge(unresolvedEdge);
     return;
+  }
+
+  const recursiveObject = generateRecursiveAlternatives(shape, edge, out, context);
+  if (recursiveObject) {
+    edge = {object: recursiveObject};
   }
 
   context.currentShapes.add(shape.id);
@@ -229,11 +239,8 @@ function generateForObject(
 ): void {
   generateEdge(edge, out);
   context.addEdge(edge);
-
-  const subject = edge.object;
-  const object = generateRecursiveAlternatives(shape, subject, out, context);
-  generateForProperties(object || subject, shape.typeProperties, out, context);
-  generateForProperties(object || subject, shape.properties, out, context);
+  generateForProperties(edge.object, shape.typeProperties, out, context);
+  generateForProperties(edge.object, shape.properties, out, context);
 }
 
 function generateForProperties(
@@ -254,8 +261,8 @@ function generateForProperties(
 }
 
 function generateRecursiveAlternatives(
-  shape: ObjectShape,
-  subject: SparqlJs.Term,
+  shape: Shape,
+  edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext
 ): SparqlJs.Term | undefined {
@@ -278,10 +285,13 @@ function generateRecursiveAlternatives(
     sparqlAlternatives.push(sparqlPath);
   }
   
+  generateEdge(edge, out);
+  context.addEdge(edge);
+
   out.push({
     type: 'bgp',
     triples: [{
-      subject: subject,
+      subject: edge.object,
       predicate: {
         type: 'path',
         pathType: '*',
@@ -501,5 +511,5 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
     term = subject;
   }
 
-  return term ? rdfTermToSparqlTerm(term) : context.makeVariable(shape.type);
+  return term ? rdfTermToSparqlTerm(term) : null;
 }

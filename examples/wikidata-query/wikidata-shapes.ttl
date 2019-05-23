@@ -1,0 +1,27 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix wd: <http://www.wikidata.org/entity/>.
+@prefix wdt: <http://www.wikidata.org/prop/direct/>.
+@prefix : <http://ram-shapes.github.io/schema#>.
+
+# Human
+wd:Q5 a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate wdt:P31 ]);
+        :shape [ a :ResourceShape; :termValue wd:Q5 ]
+    ];
+    :property [
+        :name "iri";
+        :path ();
+        :shape [ a :ResourceShape ]
+    ];
+    :property [
+        :name "label";
+        :path ([ :predicate rdfs:label ]);
+        :shape [ a :SetShape; :item [ a :LiteralShape ] ]
+    ];
+    :property [
+        :name "children";
+        :path ([ :predicate wdt:P40 ]);
+        :shape [ a :SetShape; :item wd:Q5 ]
+    ].
