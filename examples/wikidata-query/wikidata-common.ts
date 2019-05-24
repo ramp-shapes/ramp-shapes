@@ -6,8 +6,9 @@ const triples = readTriplesFromTurtle(join(__dirname, 'wikidata-shapes.ttl'));
 const shapes = Ram.frameShapes(triples);
 
 export const Prefixes: { [prefix: string]: string } = {
-  wd: "http://www.wikidata.org/entity/",
-  wdt: "http://www.wikidata.org/prop/direct/",
+  rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+  wd: 'http://www.wikidata.org/entity/',
+  wdt: 'http://www.wikidata.org/prop/direct/',
 };
 export namespace vocab {
   export const wd = (s: string) => Ram.Rdf.namedNode(Prefixes['wd'] + s);

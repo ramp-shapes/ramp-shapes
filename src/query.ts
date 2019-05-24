@@ -60,7 +60,8 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   let varIndex = 1;
 
   const context: GenerateQueryContext = {
-    currentShapes: makeTermSet() as HashSet<ShapeID>,
+    visitingShapes: makeTermSet() as HashSet<ShapeID>,
+    stack: [],
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
@@ -102,7 +103,8 @@ function isEmptyPath(predicate: SparqlJs.PropertyPath | SparqlJs.Term) {
 }
 
 interface GenerateQueryContext {
-  currentShapes: HashSet<ShapeID>;
+  readonly visitingShapes: HashSet<ShapeID>;
+  readonly stack: Shape[];
   resolveShape(shapeID: ShapeID): Shape;
   resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
@@ -159,9 +161,11 @@ function escapeSparqlLiteralValue(value: string): string {
     .replace('\n', '\\n');
 }
 
+type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.Term;
+
 function propertyPathToSparql(
   path: ReadonlyArray<PropertyPathSegment>
-): SparqlJs.PropertyPath | SparqlJs.Term {
+): SparqlJsPredicate {
   if (path.length === 1 && !path[0].reverse) {
     return rdfTermToSparqlTerm(path[0].predicate);
   }
@@ -177,34 +181,53 @@ function propertyPathToSparql(
   };
 }
 
+function concatSparqlPaths(
+  pathType: '/' | '|',
+  parts: SparqlJsPredicate[]
+): SparqlJsPredicate {
+  if (parts.length === 0) {
+    throw new Error('Cannot concat zero path parts');
+  } else if (parts.length === 1) {
+    return parts[0];
+  } else {
+    const items: SparqlJsPredicate[] = [];
+    for (const part of parts) {
+      if (isSparqlPropertyPath(part) && part.pathType === pathType) {
+        for (const item of part.items) {
+          items.push(item);
+        }
+      } else {
+        items.push(part);
+      }
+    }
+    return {type: 'path', pathType, items};
+  }
+}
+
+function isSparqlPropertyPath(predicate: SparqlJsPredicate): predicate is SparqlJs.PropertyPath {
+  return typeof predicate === 'object';
+}
+
 function generateForShape(
   shape: Shape,
   edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ): void {
-  if (context.currentShapes.has(shape.id)) {
+  if (shouldBreakRecursion(shape, context)) {
     const unresolvedEdge: Edge = {
       subject: edge.subject,
       path: edge.path,
       object: context.makeVariable(shape.type + '_un'),
     };
-    const patterns: SparqlJs.Pattern[] = [];
-    generateEdge(unresolvedEdge, patterns);
-    if (patterns.length > 0) {
-      // TODO: fix nested OPTIONAL blocks
-      out.push({type: 'optional', patterns});
-      context.addEdge(unresolvedEdge);
-    }
+    generateEdge(unresolvedEdge, out);
+    context.addEdge(unresolvedEdge);
     return;
   }
 
-  const recursiveObject = generateRecursiveAlternatives(shape, edge, out, context);
-  if (recursiveObject) {
-    edge = {object: recursiveObject};
-  }
+  context.visitingShapes.add(shape.id);
+  context.stack.push(shape);
 
-  context.currentShapes.add(shape.id);
   switch (shape.type) {
     case 'object':
       generateForObject(shape, edge, out, context);
@@ -228,7 +251,9 @@ function generateForShape(
       assertUnknownShape(shape);
       break;
   }
-  context.currentShapes.delete(shape.id);
+
+  context.visitingShapes.delete(shape.id);
+  context.stack.pop();
 }
 
 function generateForObject(
@@ -239,6 +264,11 @@ function generateForObject(
 ): void {
   generateEdge(edge, out);
   context.addEdge(edge);
+
+  if (isBreakingPointShape(shape)) {
+    edge = generateRecursiveEdge(shape, edge, out, context);
+  }
+
   generateForProperties(edge.object, shape.typeProperties, out, context);
   generateForProperties(edge.object, shape.properties, out, context);
 }
@@ -260,34 +290,18 @@ function generateForProperties(
   }
 }
 
-function generateRecursiveAlternatives(
+function generateRecursiveEdge(
   shape: Shape,
   edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext
-): SparqlJs.Term | undefined {
+): Edge {
   const alternatives = [...findRecursivePaths(shape, context)];
   if (alternatives.length === 0) {
-    return undefined;
+    return edge;
   }
 
   const object = context.makeVariable(shape.type + "_r");
-
-  const sparqlAlternatives: Array<SparqlJs.Term | SparqlJs.PropertyPath> = [];
-  for (const alternative of alternatives) {
-    const fullPath: PropertyPathSegment[] = [];
-    for (const property of alternative) {
-      for (const segement of property.path) {
-        fullPath.push(segement);
-      }
-    }
-    const sparqlPath = propertyPathToSparql(fullPath);
-    sparqlAlternatives.push(sparqlPath);
-  }
-  
-  generateEdge(edge, out);
-  context.addEdge(edge);
-
   out.push({
     type: 'bgp',
     triples: [{
@@ -295,17 +309,44 @@ function generateRecursiveAlternatives(
       predicate: {
         type: 'path',
         pathType: '*',
-        items: sparqlAlternatives.length > 1 ? [{
-          type: 'path',
-          pathType: '|',
-          items: sparqlAlternatives,
-        }] : sparqlAlternatives,
+        items: [concatSparqlPaths('|', alternatives)],
       },
-      object: object,
+      object,
     }]
   });
 
-  return object;
+  return {object};
+}
+
+function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): boolean {
+  if (context.visitingShapes.has(shape.id)) {
+    if (isBreakingPointShape(shape)) {
+      return true;
+    }
+    for (let i = context.stack.length - 1; i >= 0; i--) {
+      const frame = context.stack[i];
+      if (isBreakingPointShape(frame)) {
+        // if we found a "breaking point" shape somewhere between current shape
+        // and the previous instance of it then we should wait
+        // for second instance of that shape, and only then break
+        return false;
+      } else if (Rdf.equals(frame.id, shape.id)) {
+        // break on recursive shapes without an object shape in-between
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isBreakingPointShape(shape: Shape) {
+  if (shape.type === 'object') {
+    return true;
+  } else if (shape.type === 'list') {
+    const {head} = resolveListShapeDefaults(shape);
+    return head.length > 0;
+  }
+  return false;
 }
 
 function generateForUnion(
@@ -372,6 +413,10 @@ function generateForList(
   const subject = edge.object;
   generateEdge(edge, out);
   context.addEdge(edge);
+
+  if (isBreakingPointShape(shape)) {
+    edge = generateRecursiveEdge(shape, edge, out, context);
+  }
   
   const nextPath = propertyPathToSparql(tail);
   const nodePath: SparqlJs.PropertyPath = {
@@ -380,7 +425,8 @@ function generateForList(
     items: [nextPath],
   };
 
-  const listNode = context.makeVariable('listNode');
+  const listNode = head.length === 0
+    ? edge.object : context.makeVariable('listNode');
   const listNodeEdge: Edge = {subject, path: nodePath, object: listNode};
   generateEdge(listNodeEdge, out);
   context.addEdge(listNodeEdge);
@@ -389,26 +435,33 @@ function generateForList(
   const nextEdge: Edge = {subject: listNode, path: nextPath, object: nextNode};
   generateEdge(nextEdge, out);
   context.addEdge(nextEdge);
-
+  
   const itemShape = context.resolveShape(shape.itemShape);
-  const headPath = propertyPathToSparql(head);
-  const object = context.resolveSubject(shape);
-  const headEdge: Edge = {subject: listNode, path: headPath, object};
-  generateForShape(itemShape, headEdge, out, context);
+  if (head.length === 0) {
+    generateForShape(itemShape, {object: listNode}, out, context);
+  } else {
+    const headPath = propertyPathToSparql(head);
+    const object = context.resolveSubject(shape);
+    const headEdge: Edge = {subject: listNode, path: headPath, object};
+    generateForShape(itemShape, headEdge, out, context);
+  }
 }
 
 function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
   const visiting = makeTermSet();
-  const path: ObjectProperty[] = [];
+  const path: SparqlJsPredicate[] = [];
 
-  function *visit(shape: Shape): Iterable<ObjectProperty[]> {
-    if (!Rdf.equals(shape.id, origin.id) && context.currentShapes.has(shape.id)) {
-      return;
-    }
+  function *visit(shape: Shape): Iterable<SparqlJsPredicate> {
     if (visiting.has(shape.id)) {
       if (Rdf.equals(shape.id, origin.id)) {
-        yield [...path];
+        yield concatSparqlPaths('/', path);
       }
+      return;
+    }
+    if (!Rdf.equals(shape.id, origin.id)
+      && context.visitingShapes.has(shape.id)
+      && isBreakingPointShape(shape)
+    ) {
       return;
     }
     visiting.add(shape.id);
@@ -425,11 +478,29 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
         break;
       case 'set':
       case 'optional':
-      case 'map':
-      case 'list':
+      case 'map': {
         const itemShape = context.resolveShape(shape.itemShape);
         yield* visit(itemShape);
         break;
+      }
+      case 'list': {
+        const {head, tail} = resolveListShapeDefaults(shape);
+        path.push({
+          type: 'path',
+          pathType: '*',
+          items: [propertyPathToSparql(tail)],
+        });
+        if (head.length > 0) {
+          path.push(propertyPathToSparql(head));
+        }
+        const itemShape = context.resolveShape(shape.itemShape);
+        yield* visit(itemShape);
+        if (head.length > 0) {
+          path.pop();
+        }
+        path.pop();
+        break;
+      }
       case 'resource':
       case 'literal':
         break;
@@ -441,9 +512,9 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
 
   function *visitProperties(
     properties: ReadonlyArray<ObjectProperty>
-  ): Iterable<ObjectProperty[]>  {
+  ): Iterable<SparqlJsPredicate>  {
     for (const property of properties) {
-      path.push(property);
+      path.push(propertyPathToSparql(property.path));
       const valueShape = context.resolveShape(property.valueShape);
       yield* visit(valueShape);
       path.pop();

@@ -11,3 +11,6 @@ const query = Ram.generateQuery({
 const generator = new SparqlJs.Generator();
 const queryString = generator.stringify(query);
 console.log(queryString);
+console.log(
+  '# NOTE: Add FILTER(lang(?var) = "en") to fetch only english labels'
+);

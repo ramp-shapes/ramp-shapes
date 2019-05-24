@@ -15,7 +15,7 @@ export interface ShapeBuilderOptions {
 }
 
 export class ShapeBuilder {
-  private _shapes: Shape[] = [];
+  private readonly _shapes: Shape[] = [];
 
   private readonly blankUniqueKey: string | undefined;
   private blankSequence = 1;
@@ -27,7 +27,7 @@ export class ShapeBuilder {
     this.blankUniqueKey = blankUniqueKey;
   }
 
-  get shapes(): ReadonlyArray<Shape> {
+  get shapes(): Shape[] {
     return this._shapes;
   }
 

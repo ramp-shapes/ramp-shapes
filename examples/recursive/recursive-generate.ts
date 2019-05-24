@@ -7,7 +7,8 @@ const triples = readTriplesFromTurtle(join(__dirname, 'recursive-shapes.ttl'));
 const shapes = Ram.frameShapes(triples);
 
 const PREFIXES: { [prefix: string]: string } = {
-  'ex': 'http://example.com/schema',
+  rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  ex: 'http://example.com/schema',
   ram: Ram.vocabulary.NAMESPACE,
 };
 
