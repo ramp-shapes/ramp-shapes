@@ -284,7 +284,7 @@ function generateForProperties(
     const edge: Edge = {
       subject,
       path: propertyPathToSparql(property.path),
-      object: context.resolveSubject(shape),
+      object: property.path.length === 0 ? subject : context.resolveSubject(shape),
     };
     generateForShape(shape, edge, out, context);
   }
@@ -410,7 +410,6 @@ function generateForList(
 ): void {
   const {head, tail, nil} = resolveListShapeDefaults(shape);
 
-  const subject = edge.object;
   generateEdge(edge, out);
   context.addEdge(edge);
 
@@ -427,7 +426,7 @@ function generateForList(
 
   const listNode = head.length === 0
     ? edge.object : context.makeVariable('listNode');
-  const listNodeEdge: Edge = {subject, path: nodePath, object: listNode};
+  const listNodeEdge: Edge = {subject: edge.object, path: nodePath, object: listNode};
   generateEdge(listNodeEdge, out);
   context.addEdge(listNodeEdge);
 

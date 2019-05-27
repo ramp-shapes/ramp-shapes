@@ -20,8 +20,19 @@ schema.shapes.push({
   )
 });
 
+const rootListIri = Ram.Rdf.namedNode(PREFIXES['ex'] + 'rootList');
+
+const rootShape = schema.object({
+  typeProperties: {
+    iri: Ram.self(schema.constant(rootListIri)),
+  },
+  properties: {
+    body: Ram.self(listShapeId),
+  }
+});
+
 const query = Ram.generateQuery({
-  rootShape: listShapeId,
+  rootShape,
   shapes: schema.shapes,
   prefixes: PREFIXES,
 });
