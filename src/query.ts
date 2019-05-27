@@ -16,6 +16,7 @@ export interface GenerateQueryParams {
   shapes: ReadonlyArray<Shape>;
   base?: Rdf.NamedNode;
   prefixes?: { [prefix: string]: string };
+  unstable_onEmit?: (shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]) => void;
 }
 
 export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQuery {
@@ -86,6 +87,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
         }
       }
     },
+    onEmit: params.unstable_onEmit || ((shape, subject, out) => {}),
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -109,6 +111,7 @@ interface GenerateQueryContext {
   resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
   addEdge(edge: Edge): void;
+  onEmit(shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]): void;
 }
 
 interface Edge {
@@ -251,6 +254,8 @@ function generateForShape(
       assertUnknownShape(shape);
       break;
   }
+
+  context.onEmit(shape, edge.object, out);
 
   context.visitingShapes.delete(shape.id);
   context.stack.pop();

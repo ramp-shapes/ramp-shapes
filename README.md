@@ -17,7 +17,20 @@ import * as Ram from 'ram-shapes';
 import * as N3 from 'n3';
 import * as SparqlJs from 'sparqljs';
 
-// parse RAM shapes from Turtle syntax
+// get graph triples (source data)
+const graph = new N3.Parser().parse(`
+    @prefix ex: <http://example.com/schema/>.
+    @prefix : <http://example.com/data/>.
+
+    :anno1 a ex:Annotation;
+        ex:start :point1;
+        ex:end ("1" "2").
+
+    :point1 a ex:Point;
+        ex:position 42.
+`);
+
+// define custom RAM shapes using Turtle syntax
 const shapes = Ram.frameShapes(new N3.Parser().parse(`
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
@@ -66,24 +79,11 @@ const shapes = Ram.frameShapes(new N3.Parser().parse(`
         :item [ a :LiteralShape; :termDatatype xsd:string ].
 `));
 
-// get graph triples
-const graph = new N3.Parser().parse(`
-    @prefix ex: <http://example.com/schema/>.
-    @prefix : <http://example.com/data/>.
-
-    :anno1 a ex:Annotation;
-        ex:start :point1;
-        ex:end ("1" "2").
-
-    :point1 a ex:Point;
-        ex:position 42.
-`);
-
-// define entry point shape
+// choose entry point shape
 const rootShape = Ram.Rdf.namedNode(
   'http://example.com/schema#Annotation'
 );
-// define prefixes for Turtle and SPARQL
+// (optionally) specify prefixes for Turtle and SPARQL
 const prefixes = {
   rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
@@ -92,7 +92,7 @@ const prefixes = {
   "": "http://example.com/data/",
 };
 
-// lower RDF graph quads into JS objects
+// use defined shapes to lower RDF graph into JS objects...
 const matches = Ram.frame({shapes, rootShape, triples: graph}));
 for (const match of matches) {
   /* match.value object has ex:Annotation shape, e.g.:
@@ -107,7 +107,7 @@ for (const match of matches) {
     }
   */
 
-  // lift JS object value into an RDF graph quads
+  // ... and lift JS object back into an RDF graph
   const quads = Ram.flatten({
     shapes,
     rootShape,
@@ -128,7 +128,8 @@ for (const match of matches) {
   */
 }
 
-// generate CONSTRUCT query to fetch graph data for shapes
+// another application of defined shapes is to generate a CONSTRUCT query
+// to get necessary graph data for framing
 const query = Ram.generateQuery({shapes, rootShape, prefixes});
 const queryString = new SparqlJs.Generator().stringify(query);
 /* query is a CONSTRUCT query in SPARQL.js runtime format:
