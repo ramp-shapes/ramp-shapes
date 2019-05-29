@@ -1,41 +1,20 @@
 import * as path from 'path';
 import * as Ram from '../../src/index';
-import { writeFile, makeDirectoryIfNotExists, toJson } from '../util';
-import { Shapes, PeterTheGreatShape, Prefixes } from './wikidata-common';
+import { writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse } from '../util';
+import { Shapes, PeterTheGreatDescendants } from './wikidata-common';
 
-const bindings = require('../../out/wikidata-query-result.json').results.bindings;
-
-function toRdfTerm(value: any): Ram.Rdf.Term | null {
-  return (
-    value.type === 'uri' ? Ram.Rdf.namedNode(value.value) :
-    value.type === 'literal' ? Ram.Rdf.literal(
-      value.value,
-      value['xml:lang'] ? value['xml:lang'] :
-      value.datatype ? toRdfTerm(value.datatype) :
-      undefined
-    ) :
-    value.type === 'bnode' ? Ram.Rdf.blankNode(value.value) :
-    null
-  );
-}
+const queryResult = require('../../out/wikidata-query-result.json');
 
 (async function main() {
-  const set = new Ram.HashSet(Ram.Rdf.hashQuad, Ram.Rdf.equalsQuad);
-  for (const {subject, predicate, object} of bindings) {
-    const quad = Ram.Rdf.quad(
-      toRdfTerm(subject) as Ram.Rdf.Quad['subject'],
-      toRdfTerm(predicate) as Ram.Rdf.Quad['predicate'],
-      toRdfTerm(object) as Ram.Rdf.Quad['object'],
-    );
-    set.add(quad);
-  }
+  const bindings = queryResult.results.bindings;
+  const quads = parseJsonQueryResponse(bindings);
   console.log('Total quads: ' + bindings.length);
-  console.log('Unique quads: ' + set.size);
+  console.log('Unique quads: ' + quads.size);
 
   const iterator = Ram.frame({
-    rootShape: PeterTheGreatShape.id,
+    rootShape: PeterTheGreatDescendants,
     shapes: Shapes,
-    triples: [...set],
+    triples: [...quads],
   });
 
   const outDir = path.join(__dirname, '../../out');

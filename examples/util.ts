@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { promisify } from 'util';
 import * as N3 from 'n3';
-import { Rdf } from "../src/index";
+import { Rdf, HashSet } from "../src/index";
 
 export const exists = promisify(fs.exists);
 export const mkdir = promisify(fs.mkdir);
@@ -55,4 +55,31 @@ export function triplesToTurtleString(
       }
     });
   });
+}
+
+function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
+  return (
+    value.type === 'uri' ? Rdf.namedNode(value.value) :
+    value.type === 'literal' ? Rdf.literal(
+      value.value,
+      value['xml:lang'] ? value['xml:lang'] :
+      value.datatype ? jsonQueryResultTermToRdf(value.datatype) :
+      undefined
+    ) :
+    value.type === 'bnode' ? Rdf.blankNode(value.value) :
+    null
+  );
+}
+
+export function parseJsonQueryResponse(bindings: any[]): HashSet<Rdf.Quad> {
+  const set = new HashSet(Rdf.hashQuad, Rdf.equalsQuad);
+  for (const {subject, predicate, object} of bindings) {
+    const quad = Rdf.quad(
+      jsonQueryResultTermToRdf(subject) as Rdf.Quad['subject'],
+      jsonQueryResultTermToRdf(predicate) as Rdf.Quad['predicate'],
+      jsonQueryResultTermToRdf(object) as Rdf.Quad['object'],
+    );
+    set.add(quad);
+  }
+  return set;
 }

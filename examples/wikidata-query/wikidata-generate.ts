@@ -1,9 +1,9 @@
 import * as SparqlJs from 'sparqljs';
 import * as Ram from '../../src/index';
-import { Shapes, PeterTheGreatShape, Prefixes } from './wikidata-common';
+import { Shapes, PeterTheGreatDescendants, Prefixes } from './wikidata-common';
 
 const query = Ram.generateQuery({
-  rootShape: PeterTheGreatShape.id,
+  rootShape: PeterTheGreatDescendants,
   shapes: Shapes,
   prefixes: Prefixes,
   unstable_onEmit: (shape, subject, out) => {
@@ -30,4 +30,6 @@ const query = Ram.generateQuery({
 
 const generator = new SparqlJs.Generator();
 const queryString = generator.stringify(query);
+
+console.log('# Execute the following query at https://query.wikidata.org/')
 console.log(queryString);
