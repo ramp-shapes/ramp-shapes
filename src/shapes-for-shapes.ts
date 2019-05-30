@@ -115,6 +115,9 @@ schema.object({
     datatype: property(ram.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
     language: property(ram.termLanguage, schema.optional(schema.literal({datatype: xsd.string}))),
     value: property(ram.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
+    keepAsTerm: property(ram.keepAsTerm, schema.optional(
+      schema.literal({datatype: xsd.boolean})
+    )),
   }
 });
 
