@@ -34,7 +34,7 @@ schema.object({
   }
 });
 
-const bodyLabel = schema.literal();
+const bodyLabel = schema.literal({datatype: rdf.langString});
 
 schema.object({
   id: oa.Annotation,
@@ -54,8 +54,9 @@ schema.object({
     })),
     body: property(oa.hasBody, schema.object({
       properties: {
-        label: property(rdfs.label, schema.map(
-          {target: bodyLabel, part: 'language'}, bodyLabel
+        label: property(rdfs.label, schema.mapValue(
+          {target: bodyLabel, part: 'language'},
+          {target: bodyLabel, part: 'value'}
         )),
         label_en: property(rdfs.label, schema.literal({language: 'en'})),
         nonExistentValue: property(rdf.value, schema.optional(schema.literal())),

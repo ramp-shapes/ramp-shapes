@@ -53,6 +53,7 @@ export interface ResourceShape {
   readonly id: ShapeID;
   readonly value?: Rdf.NamedNode | Rdf.BlankNode;
   readonly keepAsTerm?: boolean;
+  readonly vocabulary?: Vocabulary;
 }
 
 export interface LiteralShape {
@@ -80,10 +81,15 @@ export interface MapShape {
   readonly type: 'map';
   readonly id: ShapeID;
   readonly key: ShapeReference;
+  readonly value?: ShapeReference;
   readonly itemShape: ShapeID;
 }
 
 export interface ShapeReference {
   readonly target: ShapeID;
   readonly part?: 'value' | 'datatype' | 'language';
+}
+
+export interface Vocabulary {
+  terms: { [literal: string]: Rdf.NamedNode };
 }

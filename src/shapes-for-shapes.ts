@@ -1,7 +1,7 @@
 import { ShapeBuilder, property, self } from './builder';
 import * as Rdf from './rdf-model';
-import { Shape } from './shapes';
-import { FrameTypeHandler, frame } from './frame';
+import { Shape, Vocabulary } from './shapes';
+import { frame } from './frame';
 import { rdf, ram, xsd } from './vocabulary';
 
 const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
@@ -27,10 +27,25 @@ const ShapeID: Shape = {
   keepAsTerm: true,
 };
 
+const ShapeTypeVocabulary: Vocabulary = {
+  terms: {
+    'object': ram.ObjectShape,
+    'union': ram.UnionShape,
+    'set': ram.SetShape,
+    'optional': ram.OptionalShape,
+    'resource': ram.ResourceShape,
+    'literal': ram.LiteralShape,
+    'list': ram.ListShape,
+    'map': ram.MapShape,
+  }
+};
+
 schema.object({
   id: ram.ObjectShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.ObjectShape)),
+    type: property(rdf.type, schema.constant(
+      ram.ObjectShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -61,7 +76,9 @@ schema.object({
 schema.object({
   id: ram.UnionShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.UnionShape)),
+    type: property(rdf.type, schema.constant(
+      ram.UnionShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -72,7 +89,9 @@ schema.object({
 schema.object({
   id: ram.SetShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.SetShape)),
+    type: property(rdf.type, schema.constant(
+      ram.SetShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -83,7 +102,9 @@ schema.object({
 schema.object({
   id: ram.OptionalShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.OptionalShape)),
+    type: property(rdf.type, schema.constant(
+      ram.OptionalShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -94,7 +115,9 @@ schema.object({
 schema.object({
   id: ram.ResourceShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.ResourceShape)),
+    type: property(rdf.type, schema.constant(
+      ram.ResourceShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -102,13 +125,39 @@ schema.object({
     keepAsTerm: property(ram.keepAsTerm, schema.optional(
       schema.literal({datatype: xsd.boolean})
     )),
+    vocabulary: property(ram.vocabulary, schema.optional(ram.Vocabulary)),
+  }
+});
+
+const VocabularyItemKey = schema.literal({datatype: xsd.string});
+const VocabularyItemTerm = schema.resource({keepAsTerm: true});
+const VocabularyItem = schema.object({
+  id: schema.makeShapeID('VocabularyItem'),
+  typeProperties: {
+    key: property(ram.vocabKey, VocabularyItemKey),
+  },
+  properties: {
+    term: property(ram.termValue, VocabularyItemTerm),
+  }
+});
+
+schema.object({
+  id: ram.Vocabulary,
+  properties: {
+    terms: property(ram.vocabItem, schema.mapValue(
+      {target: VocabularyItemKey},
+      {target: VocabularyItemTerm},
+      VocabularyItem,
+    )),
   }
 });
 
 schema.object({
   id: ram.LiteralShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.LiteralShape)),
+    type: property(rdf.type, schema.constant(
+      ram.LiteralShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -124,7 +173,9 @@ schema.object({
 schema.object({
   id: ram.ListShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.ListShape)),
+    type: property(rdf.type, schema.constant(
+      ram.ListShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
@@ -138,54 +189,45 @@ schema.object({
 schema.object({
   id: ram.MapShape,
   typeProperties: {
-    type: property(rdf.type, schema.constant(ram.MapShape)),
+    type: property(rdf.type, schema.constant(
+      ram.MapShape, {vocabulary: ShapeTypeVocabulary}
+    )),
   },
   properties: {
     id: self(ram.ShapeID),
-    key: property(ram.key, ram.ShapeReference),
+    key: property(ram.mapKey, ram.ShapeReference),
+    value: property(ram.mapValue, schema.optional(ram.ShapeReference)),
     itemShape: property(ram.item, ram.ShapeID),
   }
 });
+
+const TermPartVocabulary: Vocabulary = {
+  terms: {
+    'datatype': ram.TermDatatype,
+    'value': ram.TermValue,
+    'language': ram.TermLanguage,
+  }
+};
 
 schema.object({
   id: ram.ShapeReference,
   properties: {
     target: property(ram.shape, ram.ShapeID),
     part: property(ram.termPart, schema.optional(schema.union(
-      schema.constant(Rdf.literal("value")),
-      schema.constant(Rdf.literal("datatype")),
-      schema.constant(Rdf.literal("language"))
+      schema.constant(ram.TermDatatype, {vocabulary: TermPartVocabulary}),
+      schema.constant(ram.TermLanguage, {vocabulary: TermPartVocabulary}),
+      schema.constant(ram.TermValue, {vocabulary: TermPartVocabulary}),
     )))
   }
 });
 
 export const ShapesForShapes = [Shape, ShapeID, ...schema.shapes];
 
-const convertShapeType: FrameTypeHandler = (value, shape) => {
-  if (shape.type === 'resource') {
-    const term = value as Rdf.Term;
-    if (term.termType === 'NamedNode') {
-      switch (term.value) {
-        case ram.ObjectShape.value: return 'object';
-        case ram.UnionShape.value: return 'union';
-        case ram.SetShape.value: return 'set';
-        case ram.OptionalShape.value: return 'optional';
-        case ram.ResourceShape.value: return 'resource';
-        case ram.LiteralShape.value: return 'literal';
-        case ram.ListShape.value: return 'list';
-        case ram.MapShape.value: return 'map';
-      }
-    }
-  }
-  return FrameTypeHandler.convertToNativeType(value, shape);
-};
-
 export function frameShapes(graph: ReadonlyArray<Rdf.Quad>): Shape[] {
   const framingResults = frame({
     rootShape: ram.Shape,
     shapes: ShapesForShapes,
     triples: graph,
-    convertType: convertShapeType,
   });
   const shapes: Shape[] = [];
   for (const {value} of framingResults) {

@@ -7,6 +7,7 @@ export namespace rdf {
   export const first = Rdf.namedNode(NAMESPACE + 'first');
   export const rest = Rdf.namedNode(NAMESPACE + 'rest');
   export const nil = Rdf.namedNode(NAMESPACE + 'nil');
+  export const langString = Rdf.namedNode(NAMESPACE + 'langString');
 }
 
 export namespace rdfs {

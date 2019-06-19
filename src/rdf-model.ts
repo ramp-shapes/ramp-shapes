@@ -262,6 +262,10 @@ export function equalsQuad(a: Quad, b: Quad): boolean {
   );
 }
 
+export function hashString(str: string): number {
+  return hashFnv32a(str);
+}
+
 /**
 * Calculate a 32 bit FNV-1a hash
 * Found here: https://gist.github.com/vaiorabbit/5657561

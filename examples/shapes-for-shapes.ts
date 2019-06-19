@@ -15,22 +15,6 @@ const ROOT_SHAPES = [
   ...BASE_SHAPE.variants.map(variant => Ram.ShapesForShapes.find(s => Rdf.equals(s.id, variant))!)
 ];
 
-const convertShapeType: Ram.FlattenTypeHandler = (value, shape) => {
-  if (shape.type === 'resource') {
-    switch (value) {
-      case 'object': return ram.ObjectShape;
-      case 'union': return ram.UnionShape;
-      case 'set': return ram.SetShape;
-      case 'optional': return ram.OptionalShape;
-      case 'resource': return ram.ResourceShape;
-      case 'literal': return ram.LiteralShape;
-      case 'list': return ram.ListShape;
-      case 'map': return ram.MapShape;
-    }
-  }
-  return Ram.FlattenTypeHandler.convertFromNativeType(value, shape);
-};
-
 async function main() {
   for (const shape of ROOT_SHAPES) {
     console.log('### ', Rdf.toString(shape.id), '###');
@@ -38,7 +22,6 @@ async function main() {
       rootShape: ram.Shape,
       shapes: Ram.ShapesForShapes,
       value: shape,
-      convertType: convertShapeType,
     });
 
     const triples = [...quads];

@@ -1,5 +1,5 @@
 import * as Rdf from './rdf-model';
-import { ShapeID, Shape, ObjectProperty, PropertyPathSegment, ShapeReference } from './shapes';
+import { ShapeID, Shape, ObjectProperty, PropertyPathSegment, ShapeReference, Vocabulary } from './shapes';
 import { rdf } from './vocabulary';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
@@ -32,7 +32,7 @@ export class ShapeBuilder {
   }
 
   object(props: ObjectShapeProps): ShapeID {
-    const {id = this.randomShapeID('object'), typeProperties, properties} = props;
+    const {id = this.makeShapeID('object'), typeProperties, properties} = props;
 
     function toField(name: string, partial: PartialProperty): ObjectProperty {
       const {path, valueShape} = partial;
@@ -53,35 +53,39 @@ export class ShapeBuilder {
   }
 
   union(...variants: ShapeID[]): ShapeID {
-    const id = this.randomShapeID('union');
+    const id = this.makeShapeID('union');
     this._shapes.push({type: 'union', id, variants});
     return id;
   }
 
   set(itemShape: ShapeID): ShapeID {
-    const id = this.randomShapeID('set');
+    const id = this.makeShapeID('set');
     this._shapes.push({type: 'set', id, itemShape});
     return id;
   }
 
   optional(itemShape: ShapeID, emptyValue: null | undefined = undefined): ShapeID {
-    const id = this.randomShapeID('optional');
+    const id = this.makeShapeID('optional');
     this._shapes.push({type: 'optional', id, itemShape, emptyValue});
     return id;
   }
 
-  constant(value: Rdf.Term, options: { keepAsTerm?: boolean } = {}): ShapeID {
+  constant(value: Rdf.Term, options: {
+    keepAsTerm?: boolean;
+    vocabulary?: Vocabulary;
+  } = {}): ShapeID {
+    const {keepAsTerm, vocabulary} = options;
     let shape: Shape;
     switch (value.termType) {
       case 'NamedNode':
       case 'BlankNode': {
-        const id = this.randomShapeID('resource');
-        shape = {type: 'resource', id, value, keepAsTerm: options.keepAsTerm};
+        const id = this.makeShapeID('resource');
+        shape = {type: 'resource', id, value, keepAsTerm, vocabulary};
         break;
       }
       case 'Literal': {
-        const id = this.randomShapeID('literal');
-        shape = {type: 'literal', id, value, keepAsTerm: options.keepAsTerm};
+        const id = this.makeShapeID('literal');
+        shape = {type: 'literal', id, value, keepAsTerm};
         break;
       }
       default:
@@ -91,9 +95,13 @@ export class ShapeBuilder {
     return shape.id;
   }
 
-  resource(options: { keepAsTerm?: boolean } = {}): ShapeID {
-    const id = this.randomShapeID('resource');
-    this._shapes.push({type: 'resource', id, keepAsTerm: options.keepAsTerm});
+  resource(options: {
+    keepAsTerm?: boolean;
+    vocabulary?: Vocabulary;
+  } = {}): ShapeID {
+    const {keepAsTerm, vocabulary} = options;
+    const id = this.makeShapeID('resource');
+    this._shapes.push({type: 'resource', id, keepAsTerm, vocabulary});
     return id;
   }
 
@@ -102,7 +110,7 @@ export class ShapeBuilder {
     language?: string;
     keepAsTerm?: boolean;
   } = {}): ShapeID {
-    const id = this.randomShapeID('literal');
+    const id = this.makeShapeID('literal');
     this._shapes.push({
       type: 'literal',
       id,
@@ -114,18 +122,24 @@ export class ShapeBuilder {
   }
 
   list(itemShape: ShapeID): ShapeID {
-    const id = this.randomShapeID('list');
+    const id = this.makeShapeID('list');
     this._shapes.push({type: 'list', id, itemShape});
     return id;
   }
 
   map(key: ShapeReference, itemShape: ShapeID): ShapeID {
-    const id = this.randomShapeID('map');
+    const id = this.makeShapeID('map');
     this._shapes.push({type: 'map', id, key, itemShape});
     return id;
   }
 
-  private randomShapeID(prefix: string): Rdf.BlankNode {
+  mapValue(key: ShapeReference, value: ShapeReference, itemShape?: ShapeID): ShapeID {
+    const id = this.makeShapeID('map');
+    this._shapes.push({type: 'map', id, key, value, itemShape: itemShape || value.target});
+    return id;
+  }
+
+  makeShapeID(prefix: string): Rdf.BlankNode {
     const index = this.blankSequence++;
     return Rdf.blankNode(`${prefix}_${this.blankUniqueKey}_${index}`);
   }

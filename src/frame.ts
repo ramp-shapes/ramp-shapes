@@ -1,4 +1,4 @@
-import { HashMap, ReadonlyHashMap } from './hash-map';
+import { HashMap, ReadonlyHashMap,  } from './hash-map';
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
@@ -8,25 +8,14 @@ import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
   resolveListShapeDefaults, matchesTerm
 } from './common';
-import { tryConvertToNativeType } from './type-conversion';
+import { compactByReference } from './synthesize';
+import { ValueMapper } from './value-mapping';
 
 export interface FrameParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
   triples: ReadonlyArray<Rdf.Quad>;
-  convertType?: FrameTypeHandler;
-}
-
-export interface FrameTypeHandler {
-  (value: unknown, shape: Shape): unknown;
-}
-export namespace FrameTypeHandler {
-  export const identity: FrameTypeHandler = value => value;
-  export const convertToNativeType: FrameTypeHandler = (value, shape) => {
-    return (shape.type === 'resource' || shape.type === 'literal')
-        ? tryConvertToNativeType(shape, value as Rdf.Term)
-        : value;
-  }
+  mapper?: ValueMapper;
 }
 
 export interface FrameSolution {
@@ -35,19 +24,19 @@ export interface FrameSolution {
 }
 
 export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
-  const keys = makeTermMap<unknown>() as HashMap<ShapeID, MapKeyContext>;
+  const refs = makeTermMap<unknown>() as HashMap<ShapeID, RefContext[]>;
 
   const context: FrameContext = {
+    mapper: params.mapper || ValueMapper.mapByDefault(),
     triples: params.triples,
     indexedTriples: indexTriples(params.triples),
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
-    keys,
+    refs,
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
       );
     }),
-    convertType: params.convertType || FrameTypeHandler.convertToNativeType,
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -94,12 +83,12 @@ function indexTriples(triples: ReadonlyArray<Rdf.Quad>) {
 }
 
 interface FrameContext {
+  readonly mapper: ValueMapper;
   readonly triples: ReadonlyArray<Rdf.Quad>;
   readonly indexedTriples: ReadonlyHashMap<IndexKey, Rdf.Quad[]>;
   readonly vars: HashMap<ShapeID, unknown>;
-  readonly keys: HashMap<ShapeID, MapKeyContext>;
+  readonly refs: HashMap<ShapeID, RefContext[]>;
   resolveShape(shapeID: ShapeID): Shape;
-  convertType(value: unknown, shape: Shape): unknown;
 }
 
 class StackFrame {
@@ -114,8 +103,8 @@ class StackFrame {
   }
 }
 
-interface MapKeyContext {
-  map: ShapeID;
+interface RefContext {
+  source: ShapeID;
   reference: ShapeReference;
   match?: unknown;
 }
@@ -151,17 +140,21 @@ function *frameShape(
   })();
   
   for (const value of solutions) {
-    const keyContext = context.keys.get(shape.id);
-    if (keyContext) {
-      keyContext.match = frameKey(keyContext, shape, value, nextStack);
+    const matchingRefs = context.refs.get(shape.id);
+    if (matchingRefs) {
+      for (const ref of matchingRefs) {
+        ref.match = value;
+      }
     }
-    const typed = context.convertType(value, shape);
+    const typed = context.mapper.fromRdf(value, shape);
     context.vars.set(shape.id, typed);
 
     yield typed;
 
-    if (keyContext) {
-      keyContext.match = undefined;
+    if (matchingRefs) {
+      for (const ref of matchingRefs) {
+        ref.match = undefined;
+      }
     }
     context.vars.delete(shape.id);
   }
@@ -468,55 +461,51 @@ function *frameMap(
 ): Iterable<{ [key: string]: unknown }> {
   const result: { [key: string]: unknown } = {};
 
-  let keyContext: MapKeyContext = {map: shape.id, reference: shape.key};
-  context.keys.set(shape.key.target, keyContext);
+  const keyContext: RefContext = {source: shape.id, reference: shape.key};
+  pushRef(context.refs, keyContext);
+
+  let valueContext: RefContext | undefined;
+  if (shape.value) {
+    valueContext = {source: shape.id, reference: shape.value};
+    pushRef(context.refs, valueContext);
+  }
 
   const itemShape = context.resolveShape(shape.itemShape);
   for (const item of frameShape(itemShape, candidates, stack, context)) {
-    const key = keyContext.match;
-    if (key) {
-      if (typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean') {
-        result[key.toString()] = item;
-      } else {
+    const key = frameByReference(keyContext, stack, context);
+    const value = valueContext ? frameByReference(valueContext, stack, context) : item;
+    if (key !== undefined && value !== undefined) {
+      if (!(typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean')) {
         throw new Error(
           `Cannot use non-primitive value as a key of map ${Rdf.toString(shape.id)}: ` +
           `(${typeof key}) ${key} at ` + formatShapeStack(stack)
         );
       }
+      result[key.toString()] = value;
     }
   }
 
-  context.keys.delete(shape.key.target);
+  if (valueContext) {
+    popRef(context.refs, valueContext);
+  }
+  popRef(context.refs, keyContext);
   yield result;
 }
 
-function frameKey(keyContext: MapKeyContext, shape: Shape, value: unknown, stack: StackFrame): unknown {
-  const {reference} = keyContext;
-  switch (reference.part) {
-    case 'value':
-      if (shape.type === 'resource' || shape.type === 'literal') {
-        return (value as Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal).value;
-      } else {
-        throw new Error(
-          `Framing term value as map key allowed only for resource or literal shapes: ` +
-          `map is ${keyContext.map}, key is ${keyContext.reference.target} at ` +
-          formatShapeStack(stack)
-        );
-      }
-    case 'datatype':
-    case 'language':
-      if (shape.type === 'literal') {
-        const literal = value as Rdf.Literal;
-        return reference.part === 'datatype' ? literal.datatype : literal.language;
-      } else {
-        throw new Error(
-          `Framing term datatype or language as map key allowed only for literal shapes: ` +
-          `map is ${keyContext.map}, key is ${keyContext.reference.target} at ` +
-          formatShapeStack(stack)
-        );
-      }
-    default:
-      return value;
+function frameByReference(
+  refContext: RefContext,
+  stack: StackFrame,
+  context: FrameContext
+): unknown {
+  if (refContext.match === undefined) {
+    return undefined;
+  }
+  const shape = context.resolveShape(refContext.reference.target);
+  try {
+    return compactByReference(refContext.match, shape, refContext.reference);
+  } catch (e) {
+    const message = e.message || `Error compacting value of shape ${Rdf.toString(shape.id)}`;
+    throw new Error(`${message} at ${formatShapeStack(stack)}`);
   }
 }
 
@@ -550,6 +539,26 @@ function formatShapeStack(stack: StackFrame) {
     frame = frame.parent;
   }
   return result;
+}
+
+function pushRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
+  let items = map.get(ref.reference.target);
+  if (!items) {
+    items = [];
+    map.set(ref.reference.target, items);
+  }
+  items.push(ref);
+}
+
+function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
+  const items = map.get(ref.reference.target);
+  if (!items) {
+    throw new Error('Cannot remove ref context');
+  }
+  const removed = items.pop();
+  if (removed !== ref) {
+    throw new Error('Encountered non-matching ref operations');
+  }
 }
 
 function toTraceString(value: unknown) {

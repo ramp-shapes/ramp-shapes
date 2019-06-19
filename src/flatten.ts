@@ -1,30 +1,19 @@
 import * as Rdf from './rdf-model';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
 } from './shapes';
 import {
-  SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm
+  SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm, makeTermMap
 } from './common';
-import { tryConvertFromNativeType } from './type-conversion';
+import { ReferenceMatch, synthesizeShape } from './synthesize';
+import { ValueMapper, looksLikeRdfNode } from './value-mapping';
 
 export interface FlattenParams {
   value: unknown;
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
-  convertType?: FlattenTypeHandler;
-}
-
-export interface FlattenTypeHandler {
-  (value: unknown, shape: Shape): unknown;
-}
-export namespace FlattenTypeHandler {
-  export const identity: FlattenTypeHandler = value => value;
-  export const convertFromNativeType: FlattenTypeHandler = (value, shape) => {
-    return (shape.type === 'resource' || shape.type === 'literal')
-        ? tryConvertFromNativeType(shape, value)
-        : value;
-  };
+  mapper?: ValueMapper;
 }
 
 export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
@@ -36,6 +25,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   }
 
   const context: LowerContext = {
+    mapper: params.mapper || ValueMapper.mapByDefault(),
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
       throw new Error(
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
@@ -43,7 +33,6 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
     }),
     generateSubject: shape => generateBlankNode(shape.type),
     generateBlankNode,
-    convertType: params.convertType || FlattenTypeHandler.convertFromNativeType,
   };
   const rootShape = context.resolveShape(params.rootShape);
   const match = flattenShape(rootShape, params.value, context);
@@ -56,10 +45,10 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
 type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
 
 interface LowerContext {
+  readonly mapper: ValueMapper;
   resolveShape: (shapeID: ShapeID) => Shape;
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
-  convertType: (value: unknown, shape: Shape) => unknown;
 }
 
 interface ShapeMatch {
@@ -72,7 +61,7 @@ function flattenShape(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  const converted = context.convertType(value, shape);
+  const converted = context.mapper.toRdf(value, shape);
   switch (shape.type) {
     case 'object':
       return flattenObject(shape, converted, context);
@@ -99,7 +88,7 @@ function flattenObject(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  if (!(typeof value === 'object' && value)) {
+  if (!isObjectWithProperties(value)) {
     return undefined;
   }
 
@@ -141,6 +130,10 @@ function flattenObject(
   }
 
   return {nodes, generate};
+}
+
+function isObjectWithProperties(obj: unknown): obj is { [propertyName: string]: unknown } {
+  return Boolean(typeof obj === 'object' && obj);
 }
 
 function matchProperties(
@@ -360,7 +353,21 @@ function flattenMap(
   const matches: ShapeMatch[] = [];
   for (const key in value) {
     if (!Object.hasOwnProperty.call(value, key)) { continue; }
-    const item = (value as { [key: string]: unknown })[key];
+    const valueAtKey = (value as { [key: string]: unknown })[key];
+
+    let item = valueAtKey;
+    if (shape.value) {
+      const matches = makeTermMap<ReadonlyArray<ReferenceMatch>>();
+      matches.set(shape.key.target, [
+        {ref: shape.key, match: key},
+        {ref: shape.value, match: valueAtKey},
+      ]);
+      item = synthesizeShape(itemShape, {
+        matches,
+        resolveShape: context.resolveShape,
+      });
+    }
+
     const match = flattenShape(itemShape, item, context);
     if (!match) {
       return undefined;
@@ -381,12 +388,4 @@ function flattenMap(
   }
 
   return {nodes, generate};
-}
-
-function looksLikeRdfNode(value: unknown): value is Rdf.Term {
-  if (!(typeof value === 'object' && value && 'termType' in value)) {
-    return false;
-  }
-  const {termType} = value as Rdf.Term;
-  return termType === 'NamedNode' || termType === 'BlankNode' || termType === 'Literal';
 }

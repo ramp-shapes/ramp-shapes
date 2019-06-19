@@ -22,35 +22,62 @@ export namespace xsd {
 
 export namespace ram {
   export const NAMESPACE = 'http://ram-shapes.github.io/schema#';
-  export const ListShape = Rdf.namedNode(NAMESPACE + 'ListShape');
-  export const LiteralShape = Rdf.namedNode(NAMESPACE + 'LiteralShape');
-  export const MapShape = Rdf.namedNode(NAMESPACE + 'MapShape');
-  export const ObjectShape = Rdf.namedNode(NAMESPACE + 'ObjectShape');
-  export const ObjectProperty = Rdf.namedNode(NAMESPACE + 'ObjectProperty');
-  export const OptionalShape = Rdf.namedNode(NAMESPACE + 'OptionalShape');
-  export const PropertyPathSegment = Rdf.namedNode(NAMESPACE + 'PropertyPathSegment');
-  export const ResourceShape = Rdf.namedNode(NAMESPACE + 'ResourceShape');
-  export const ShapeReference = Rdf.namedNode(NAMESPACE + 'ShapeReference');
-  export const SetShape = Rdf.namedNode(NAMESPACE + 'SetShape');
+
   export const Shape = Rdf.namedNode(NAMESPACE + 'Shape');
   export const ShapeID = Rdf.namedNode(NAMESPACE + 'ShapeID');
-  export const UnionShape = Rdf.namedNode(NAMESPACE + 'UnionShape');
-  export const headPath = Rdf.namedNode(NAMESPACE + 'headPath');
-  export const inverse = Rdf.namedNode(NAMESPACE + 'inverse');
-  export const item = Rdf.namedNode(NAMESPACE + 'item');
-  export const keepAsTerm = Rdf.namedNode(NAMESPACE + 'keepAsTerm');
-  export const key = Rdf.namedNode(NAMESPACE + 'key');
-  export const name = Rdf.namedNode(NAMESPACE + 'name');
-  export const nil = Rdf.namedNode(NAMESPACE + 'nil');
-  export const tailPath = Rdf.namedNode(NAMESPACE + 'tailPath');
-  export const termDatatype = Rdf.namedNode(NAMESPACE + 'termDatatype');
-  export const termLanguage = Rdf.namedNode(NAMESPACE + 'termLanguage');
-  export const termPart = Rdf.namedNode(NAMESPACE + 'termPart');
-  export const termValue = Rdf.namedNode(NAMESPACE + 'termValue');
+  
+  // Object
+  export const ObjectShape = Rdf.namedNode(NAMESPACE + 'ObjectShape');
   export const typeProperty = Rdf.namedNode(NAMESPACE + 'typeProperty');
+  export const property = Rdf.namedNode(NAMESPACE + 'property');
+
+  // ObjectProperty
+  export const ObjectProperty = Rdf.namedNode(NAMESPACE + 'ObjectProperty');
+  export const PropertyPathSegment = Rdf.namedNode(NAMESPACE + 'PropertyPathSegment');
+  export const name = Rdf.namedNode(NAMESPACE + 'name');
+  export const shape = Rdf.namedNode(NAMESPACE + 'shape');
   export const path = Rdf.namedNode(NAMESPACE + 'path');
   export const predicate = Rdf.namedNode(NAMESPACE + 'predicate');
-  export const property = Rdf.namedNode(NAMESPACE + 'property');
-  export const shape = Rdf.namedNode(NAMESPACE + 'shape');
+  export const inverse = Rdf.namedNode(NAMESPACE + 'inverse');
+
+  // Resource and Literal
+  export const ResourceShape = Rdf.namedNode(NAMESPACE + 'ResourceShape');
+  export const LiteralShape = Rdf.namedNode(NAMESPACE + 'LiteralShape');
+  export const termDatatype = Rdf.namedNode(NAMESPACE + 'termDatatype');
+  export const termLanguage = Rdf.namedNode(NAMESPACE + 'termLanguage');
+  export const termValue = Rdf.namedNode(NAMESPACE + 'termValue');
+  export const keepAsTerm = Rdf.namedNode(NAMESPACE + 'keepAsTerm');
+  
+  // Union
+  export const UnionShape = Rdf.namedNode(NAMESPACE + 'UnionShape');
   export const variant = Rdf.namedNode(NAMESPACE + 'variant');
+
+  // Optional and Set
+  export const OptionalShape = Rdf.namedNode(NAMESPACE + 'OptionalShape');
+  export const SetShape = Rdf.namedNode(NAMESPACE + 'SetShape');
+  export const item = Rdf.namedNode(NAMESPACE + 'item');
+
+  // List; also uses "item"
+  export const ListShape = Rdf.namedNode(NAMESPACE + 'ListShape');
+  export const headPath = Rdf.namedNode(NAMESPACE + 'headPath');
+  export const tailPath = Rdf.namedNode(NAMESPACE + 'tailPath');
+  export const nil = Rdf.namedNode(NAMESPACE + 'nil');
+
+  // Map; also uses "item"
+  export const MapShape = Rdf.namedNode(NAMESPACE + 'MapShape');
+  export const mapKey = Rdf.namedNode(NAMESPACE + 'mapKey');
+  export const mapValue = Rdf.namedNode(NAMESPACE + 'mapValue');
+
+  // ShapeReference
+  export const ShapeReference = Rdf.namedNode(NAMESPACE + 'ShapeReference');
+  export const TermDatatype = Rdf.namedNode(NAMESPACE + 'TermDatatype');
+  export const TermLanguage = Rdf.namedNode(NAMESPACE + 'TermLanguage');
+  export const TermValue = Rdf.namedNode(NAMESPACE + 'TermValue');
+  export const termPart = Rdf.namedNode(NAMESPACE + 'termPart');
+
+  // Vocabulary; also uses "termValue"
+  export const Vocabulary = Rdf.namedNode(NAMESPACE + 'Vocabulary');
+  export const vocabulary = Rdf.namedNode(NAMESPACE + 'vocabulary');
+  export const vocabItem = Rdf.namedNode(NAMESPACE + 'vocabItem');
+  export const vocabKey = Rdf.namedNode(NAMESPACE + 'vocabKey');
 }
