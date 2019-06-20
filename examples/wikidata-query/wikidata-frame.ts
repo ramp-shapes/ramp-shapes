@@ -7,14 +7,14 @@ const queryResult = require('../../out/wikidata-query-result.json');
 
 (async function main() {
   const bindings = queryResult.results.bindings;
-  const quads = parseJsonQueryResponse(bindings);
+  const dataset = Ram.Rdf.dataset(parseJsonQueryResponse(bindings));
   console.log('Total quads: ' + bindings.length);
-  console.log('Unique quads: ' + quads.size);
+  console.log('Unique quads: ' + dataset.size);
 
   const iterator = Ram.frame({
     rootShape: PeterTheGreatDescendants,
     shapes: Shapes,
-    triples: [...quads],
+    dataset,
   });
 
   const outDir = path.join(__dirname, '../../out');

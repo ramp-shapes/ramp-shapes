@@ -1,16 +1,16 @@
 import { HashMap, HashSet } from './hash-map';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import {
   ShapeID, Shape, PropertyPathSegment, ResourceShape, LiteralShape, ListShape
 } from './shapes';
 import { rdf, xsd } from './vocabulary';
 
 export function makeTermSet() {
-  return new HashSet<Rdf.Term>(Rdf.hash, Rdf.equals);
+  return new HashSet<Rdf.Term>(Rdf.hashTerm, Rdf.equalTerms);
 }
 
 export function makeTermMap<V>() {
-  return new HashMap<Rdf.Term, V>(Rdf.hash, Rdf.equals);
+  return new HashMap<Rdf.Term, V>(Rdf.hashTerm, Rdf.equalTerms);
 }
 
 export function makeShapeResolver(
@@ -37,12 +37,12 @@ export function assertUnknownShape(shape: never): never {
 export function matchesTerm(shape: ResourceShape | LiteralShape, node: Rdf.Term): boolean {
   if (shape.type === 'resource') {
     return (node.termType === 'NamedNode' || node.termType === 'BlankNode')
-      && (!shape.value || Rdf.equals(shape.value, node));
+      && (!shape.value || Rdf.equalTerms(shape.value, node));
   } else {
     return node.termType === 'Literal'
       && (!shape.datatype || shape.datatype.value === node.datatype.value)
       && (!shape.language || shape.language === node.language)
-      && (!shape.value || Rdf.equals(shape.value, node));
+      && (!shape.value || Rdf.equalTerms(shape.value, node));
   }
 }
 

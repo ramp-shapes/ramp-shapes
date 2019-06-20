@@ -1,6 +1,6 @@
 import { makeTermMap } from './common';
 import { ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import { Shape, ResourceShape, LiteralShape, Vocabulary } from './shapes';
 import { rdf, xsd } from './vocabulary';
 
@@ -155,11 +155,11 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
   if (shape.type === 'literal' && value.termType === 'Literal') {
     const datatype = effectiveDatatype(shape);
     if (datatype) {
-      if (Rdf.equals(datatype, xsd.string)) {
+      if (Rdf.equalTerms(datatype, xsd.string)) {
         return value.value;
-      } else if (Rdf.equals(datatype, rdf.langString) && shape.language) {
+      } else if (Rdf.equalTerms(datatype, rdf.langString) && shape.language) {
         return value.value;
-      } else if (Rdf.equals(datatype, xsd.boolean)) {
+      } else if (Rdf.equalTerms(datatype, xsd.boolean)) {
         return Boolean(value.value);
       } else if (isNumberType(datatype.value)) {
         return Number(value.value);
@@ -180,15 +180,15 @@ export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, va
   if (shape.type === 'literal') {
     const datatype = effectiveDatatype(shape);
     if (datatype) {
-      if (Rdf.equals(datatype, xsd.string) && typeof value === 'string') {
+      if (Rdf.equalTerms(datatype, xsd.string) && typeof value === 'string') {
         return Rdf.literal(value);
       } else if (
-        Rdf.equals(datatype, rdf.langString)
+        Rdf.equalTerms(datatype, rdf.langString)
         && shape.language
         && typeof value === 'string'
       ) {
         return Rdf.literal(value, shape.language);
-      } else if (Rdf.equals(datatype, xsd.boolean) && typeof value === 'boolean') {
+      } else if (Rdf.equalTerms(datatype, xsd.boolean) && typeof value === 'boolean') {
         return Rdf.literal(value ? 'true' : 'false', shape.datatype);
       } else if (isNumberType(datatype.value) && typeof value === 'number') {
         return Rdf.literal(value.toString(), shape.datatype);

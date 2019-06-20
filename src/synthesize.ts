@@ -1,5 +1,5 @@
 import { ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import {
   ObjectProperty, LiteralShape, ResourceShape, Shape, ShapeID, ShapeReference
 } from './shapes';
@@ -80,7 +80,7 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
     return shape.value;
   }
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equals(match.ref.target, shape.id)) {
+    if (Rdf.equalTerms(match.ref.target, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;
@@ -115,7 +115,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
   let language = shape.language;
 
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equals(match.ref.target, shape.id)) {
+    if (Rdf.equalTerms(match.ref.target, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;
@@ -134,7 +134,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
   
   assertPart(shape, 'value', value);
   assertPart(shape, 'datatype', datatype);
-  if (datatype && Rdf.equals(datatype, rdf.langString)) {
+  if (datatype && Rdf.equalTerms(datatype, rdf.langString)) {
     assertPart(shape, 'language', language);
     return Rdf.literal(value!, language);
   } else {

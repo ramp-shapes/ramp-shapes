@@ -1,4 +1,4 @@
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,

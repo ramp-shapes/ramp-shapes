@@ -1,7 +1,7 @@
 import * as SparqlJs from 'sparqljs';
 
 import { HashSet } from './hash-map';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference
@@ -335,7 +335,7 @@ function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): bool
         // and the previous instance of it then we should wait
         // for second instance of that shape, and only then break
         return false;
-      } else if (Rdf.equals(frame.id, shape.id)) {
+      } else if (Rdf.equalTerms(frame.id, shape.id)) {
         // break on recursive shapes without an object shape in-between
         return true;
       }
@@ -457,12 +457,12 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
 
   function *visit(shape: Shape): Iterable<SparqlJsPredicate> {
     if (visiting.has(shape.id)) {
-      if (Rdf.equals(shape.id, origin.id)) {
+      if (Rdf.equalTerms(shape.id, origin.id)) {
         yield concatSparqlPaths('/', path);
       }
       return;
     }
-    if (!Rdf.equals(shape.id, origin.id)
+    if (!Rdf.equalTerms(shape.id, origin.id)
       && context.visitingShapes.has(shape.id)
       && isBreakingPointShape(shape)
     ) {

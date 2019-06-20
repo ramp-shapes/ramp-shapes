@@ -1,5 +1,5 @@
-import { HashMap, ReadonlyHashMap,  } from './hash-map';
-import * as Rdf from './rdf-model';
+import { HashMap, ReadonlyHashMap } from './hash-map';
+import * as Rdf from './rdf';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference
@@ -14,7 +14,7 @@ import { ValueMapper } from './value-mapping';
 export interface FrameParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
-  triples: ReadonlyArray<Rdf.Quad>;
+  dataset: Rdf.Dataset;
   mapper?: ValueMapper;
 }
 
@@ -28,8 +28,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
 
   const context: FrameContext = {
     mapper: params.mapper || ValueMapper.mapByDefault(),
-    triples: params.triples,
-    indexedTriples: indexTriples(params.triples),
+    dataset: params.dataset,
     vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
     refs,
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
@@ -40,7 +39,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   };
 
   const rootShape = context.resolveShape(params.rootShape);
-  const allCandidates = findAllCandidates(params.triples);
+  const allCandidates = findAllCandidates(params.dataset);
   const solution: { value: unknown; vars: typeof context.vars } = {
     value: undefined,
     vars: context.vars,
@@ -52,40 +51,9 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   }
 }
 
-interface IndexKey {
-  readonly source: Rdf.Term;
-  readonly predicate: Rdf.Term;
-}
-namespace IndexKey {
-  export function hashCode(key: IndexKey): number {
-    return (Rdf.hash(key.source) * 31 + Rdf.hash(key.predicate)) | 0;
-  }
-  export function equals(a: IndexKey, b: IndexKey): boolean {
-    return Rdf.equals(a.source, b.source) && Rdf.equals(a.predicate, b.predicate);
-  }
-}
-
-function indexTriples(triples: ReadonlyArray<Rdf.Quad>) {
-  const indexed = new HashMap<IndexKey, Rdf.Quad[]>(IndexKey.hashCode, IndexKey.equals);
-  const put = (key: IndexKey, quad: Rdf.Quad) => {
-    let items = indexed.get(key);
-    if (!items) {
-      items = [];
-      indexed.set(key, items);
-    }
-    items.push(quad);
-  };
-  for (const t of triples) {
-    put({source: t.subject, predicate: t.predicate}, t);
-    put({source: t.object, predicate: t.predicate}, t);
-  }
-  return indexed;
-}
-
 interface FrameContext {
   readonly mapper: ValueMapper;
-  readonly triples: ReadonlyArray<Rdf.Quad>;
-  readonly indexedTriples: ReadonlyHashMap<IndexKey, Rdf.Quad[]>;
+  readonly dataset: Rdf.Dataset;
   readonly vars: HashMap<ShapeID, unknown>;
   readonly refs: HashMap<ShapeID, RefContext[]>;
   resolveShape(shapeID: ShapeID): Shape;
@@ -274,16 +242,11 @@ function findByPropertyPath(
 
   for (const segment of path) {
     for (const source of current) {
-      const key: IndexKey = {source, predicate: segment.predicate};
-      const triples = context.indexedTriples.get(key);
-      if (triples) {
-        for (const t of triples) {
-          if (segment.reverse && Rdf.equals(source, t.object)) {
-            next.push(t.subject);
-          } else if (!segment.reverse && Rdf.equals(source, t.subject)) {
-            next.push(t.object);
-          }
-        }
+      const quads = segment.reverse
+        ? context.dataset.iterateMatches(null, segment.predicate, source)
+        : context.dataset.iterateMatches(source, segment.predicate, null);
+      for (const q of quads) {
+        next.push(segment.reverse ? q.subject : q.object);
       }
     }
     const temp = current;
@@ -370,7 +333,7 @@ function *frameList(
     let rest = candidate;
 
     while (true) {
-      if (Rdf.equals(rest, nil)) {
+      if (Rdf.equalTerms(rest, nil)) {
         if (!result) {
           result = [];
         }
@@ -379,7 +342,7 @@ function *frameList(
 
       let foundHead: Rdf.Term | undefined;
       for (const head of findByPropertyPath(headPath, rest, context)) {
-        if (foundHead && !Rdf.equals(head, foundHead)) {
+        if (foundHead && !Rdf.equalTerms(head, foundHead)) {
           throw new Error(`Found multiple matches for list head ` +
             formatListMatchPosition(index, rest, candidate, shape, stack));
         }
@@ -419,7 +382,7 @@ function *frameList(
 
       let foundTail: Rdf.NamedNode | Rdf.BlankNode | undefined;
       for (const tail of filterResources(findByPropertyPath(tailPath, rest, context))) {
-        if (foundTail && !Rdf.equals(tail, foundTail)) {
+        if (foundTail && !Rdf.equalTerms(tail, foundTail)) {
           throw new Error(`Found multiple matches for list tail ` +
             formatListMatchPosition(index, rest, candidate, shape, stack));
         }
@@ -517,9 +480,9 @@ function *filterResources(nodes: Iterable<Rdf.Term>) {
   }
 }
 
-function findAllCandidates(triples: ReadonlyArray<Rdf.Quad>) {
+function findAllCandidates(dataset: Rdf.Dataset) {
   const candidates = makeTermSet();
-  for (const {subject, object} of triples) {
+  for (const {subject, object} of dataset) {
     candidates.add(subject);
     candidates.add(object);
   }

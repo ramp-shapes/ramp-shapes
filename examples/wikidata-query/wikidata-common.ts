@@ -1,9 +1,10 @@
 import { join } from 'path';
 import * as Ram from '../../src/index';
-import { readTriplesFromTurtle } from '../util';
+import { readQuadsFromTurtle } from '../util';
 
-const triples = readTriplesFromTurtle(join(__dirname, 'wikidata-shapes.ttl'));
-const wikidataShapes = Ram.frameShapes(triples);
+const wikidataShapes = Ram.frameShapes(Ram.Rdf.dataset(
+  readQuadsFromTurtle(join(__dirname, 'wikidata-shapes.ttl'))
+));
 
 export const Prefixes: { [prefix: string]: string } = {
   rdfs: 'http://www.w3.org/2000/01/rdf-schema#',

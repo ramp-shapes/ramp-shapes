@@ -15,7 +15,7 @@ export async function makeDirectoryIfNotExists(path: string) {
   }
 }
 
-export function readTriplesFromTurtle(path: string): Rdf.Quad[] {
+export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
   const parser = N3.Parser();
   return parser.parse(ttl) as Rdf.Quad[];
@@ -30,7 +30,7 @@ export function toJson(match: unknown): string {
   }, 2);
 }
 
-export function triplesToTurtleString(
+export function quadsToTurtleString(
   triples: Iterable<Rdf.Quad>,
   prefixes: { [prefix: string]: string }
 ): Promise<string> {
@@ -72,7 +72,7 @@ function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
 }
 
 export function parseJsonQueryResponse(bindings: any[]): HashSet<Rdf.Quad> {
-  const set = new HashSet(Rdf.hashQuad, Rdf.equalsQuad);
+  const set = new HashSet(Rdf.hashQuad, Rdf.equalQuads);
   for (const {subject, predicate, object} of bindings) {
     const quad = Rdf.quad(
       jsonQueryResultTermToRdf(subject) as Rdf.Quad['subject'],

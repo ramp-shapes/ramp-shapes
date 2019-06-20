@@ -1,4 +1,4 @@
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 
 export type ShapeID = Rdf.NamedNode | Rdf.BlankNode;
 export type Shape =

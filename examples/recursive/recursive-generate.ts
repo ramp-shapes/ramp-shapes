@@ -1,10 +1,11 @@
 import { join } from 'path';
 import * as SparqlJs from 'sparqljs';
 import * as Ram from '../../src/index';
-import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
+import { readQuadsFromTurtle } from '../util';
 
-const triples = readTriplesFromTurtle(join(__dirname, 'recursive-shapes.ttl'));
-const shapes = Ram.frameShapes(triples);
+const shapes = Ram.frameShapes(Ram.Rdf.dataset(
+  readQuadsFromTurtle(join(__dirname, 'recursive-shapes.ttl'))
+));
 
 const PREFIXES: { [prefix: string]: string } = {
   rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',

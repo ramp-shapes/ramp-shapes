@@ -1,10 +1,11 @@
 import { join } from 'path';
 import * as SparqlJs from 'sparqljs';
 import * as Ram from '../../src/index';
-import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
+import { readQuadsFromTurtle } from '../util';
 
-const triples = readTriplesFromTurtle(join(__dirname, 'iiif-shapes.ttl'));
-const shapes = Ram.frameShapes(triples);
+const shapes = Ram.frameShapes(Ram.Rdf.dataset(
+  readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
+));
 
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",

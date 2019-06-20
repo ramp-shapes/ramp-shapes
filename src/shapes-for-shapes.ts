@@ -1,5 +1,5 @@
 import { ShapeBuilder, property, self } from './builder';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import { Shape, Vocabulary } from './shapes';
 import { frame } from './frame';
 import { rdf, ram, xsd } from './vocabulary';
@@ -223,11 +223,11 @@ schema.object({
 
 export const ShapesForShapes = [Shape, ShapeID, ...schema.shapes];
 
-export function frameShapes(graph: ReadonlyArray<Rdf.Quad>): Shape[] {
+export function frameShapes(dataset: Rdf.Dataset): Shape[] {
   const framingResults = frame({
     rootShape: ram.Shape,
     shapes: ShapesForShapes,
-    triples: graph,
+    dataset,
   });
   const shapes: Shape[] = [];
   for (const {value} of framingResults) {

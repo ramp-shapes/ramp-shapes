@@ -2,9 +2,9 @@ import { join } from 'path';
 import * as Ram from '../../src/index';
 import { Rdf, property, inverseProperty, self } from '../../src/index';
 import { rdf } from '../namespaces';
-import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
+import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
 
-const triples = readTriplesFromTurtle(join(__dirname, 'list.ttl'));
+const dataset = Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'list.ttl')));
 
 const schema = new Ram.ShapeBuilder();
 
@@ -41,27 +41,27 @@ const PREFIXES = {
 };
 
 (async function main() {
-  for (const {value} of Ram.frame({rootShape: list, shapes: schema.shapes, triples})) {
+  for (const {value} of Ram.frame({rootShape: list, shapes: schema.shapes, dataset})) {
     console.log('FRAME list', toJson(value));
     const triples = Ram.flatten({value, rootShape: list, shapes: schema.shapes});
-    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+    console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ram.frame({rootShape: listOwner, shapes: schema.shapes, triples})) {
+  for (const {value} of Ram.frame({rootShape: listOwner, shapes: schema.shapes, dataset})) {
     console.log('FRAME list owner', toJson(value));
     const triples = Ram.flatten({value, rootShape: listOwner, shapes: schema.shapes});
-    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+    console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ram.frame({rootShape: listOfUnion, shapes: schema.shapes, triples})) {
+  for (const {value} of Ram.frame({rootShape: listOfUnion, shapes: schema.shapes, dataset})) {
     console.log('FRAME list of union', toJson(value));
     const triples = Ram.flatten({value, rootShape: listOfUnion, shapes: schema.shapes});
-    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+    console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ram.frame({rootShape: listSelf, shapes: schema.shapes, triples})) {
+  for (const {value} of Ram.frame({rootShape: listSelf, shapes: schema.shapes, dataset})) {
     console.log('FRAME list self', toJson(value));
     const triples = Ram.flatten({value, rootShape: listSelf, shapes: schema.shapes});
-    console.log('FLATTEN:\n', await triplesToTurtleString(triples, PREFIXES));
+    console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 })();

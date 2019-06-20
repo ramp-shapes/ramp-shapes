@@ -1,11 +1,14 @@
 import { join } from 'path';
 import * as Ram from '../../src/index';
-import { toJson, readTriplesFromTurtle, triplesToTurtleString } from '../util';
+import { toJson, readQuadsFromTurtle } from '../util';
 
-const shapes = Ram.frameShapes(
-  readTriplesFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
-);
-const data = readTriplesFromTurtle(join(__dirname, '../../out/iiif-query-result.ttl'));
+const shapes = Ram.frameShapes(Ram.Rdf.dataset(
+  readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
+));
+
+const quads = readQuadsFromTurtle(join(__dirname, '../../out/iiif-query-result.ttl'));
+const dataset = Ram.Rdf.dataset(quads);
+console.log(`Total quads: ${quads.length}; Unique quads: ${dataset.size}`);
 
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",
@@ -26,16 +29,10 @@ const PREFIXES: { [prefix: string]: string } = {
   ram: Ram.vocabulary.NAMESPACE,
 };
 
-const set = new Ram.HashSet(Ram.Rdf.hashQuad, Ram.Rdf.equalsQuad);
-for (const quad of data) {
-  set.add(quad);
-}
-console.log('Unique quads: ' + set.size);
-
 const iterator = Ram.frame({
   rootShape: Ram.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
   shapes,
-  triples: data,
+  dataset,
 });
 
 for (const {value} of iterator) {

@@ -1,6 +1,5 @@
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 import { ShapeID, Shape, ObjectProperty, PropertyPathSegment, ShapeReference, Vocabulary } from './shapes';
-import { rdf } from './vocabulary';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
 

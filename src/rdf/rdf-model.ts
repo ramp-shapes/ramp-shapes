@@ -6,10 +6,10 @@ export class NamedNode {
     readonly value: string,
   ) {}
   equals(other: Term | undefined | null): boolean {
-    return other && equals(this, other) || false;
+    return other && equalTerms(this, other) || false;
   }
   hashCode?() {
-    return hash(this);
+    return hashTerm(this);
   }
   toString() {
     return toString(this);
@@ -22,10 +22,10 @@ export class BlankNode {
     readonly value: string,
   ) {}
   equals(other: Term | undefined | null): boolean {
-    return other && equals(this, other) || false;
+    return other && equalTerms(this, other) || false;
   }
   hashCode?() {
-    return hash(this);
+    return hashTerm(this);
   }
   toString() {
     return toString(this);
@@ -51,10 +51,10 @@ export class Literal {
     }
   }
   equals(other: Term | undefined | null): boolean {
-    return other && equals(this, other) || false;
+    return other && equalTerms(this, other) || false;
   }
   hashCode?() {
-    return hash(this);
+    return hashTerm(this);
   }
   toString() {
     return toString(this);
@@ -67,10 +67,10 @@ export class Variable {
     readonly value: string
   ) {}
   equals(other: Term | undefined | null): boolean {
-    return other && equals(this, other) || false;
+    return other && equalTerms(this, other) || false;
   }
   hashCode?() {
-    return hash(this);
+    return hashTerm(this);
   }
   toString() {
     return toString(this);
@@ -83,10 +83,10 @@ export class DefaultGraph {
   readonly value = '';
   constructor() {}
   equals(other: Term | undefined | null): boolean {
-    return other && equals(this, other) || false;
+    return other && equalTerms(this, other) || false;
   }
   hashCode?() {
-    return hash(this);
+    return hashTerm(this);
   }
   toString() {
     return toString(this);
@@ -101,7 +101,7 @@ export class Quad {
     readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
   ) {}
   equals(other: Quad | undefined | null): boolean {
-    return other && equalsQuad(this, other) || false;
+    return other && equalQuads(this, other) || false;
   }
 }
 
@@ -200,7 +200,7 @@ function escapeLiteralValue(value: string): string {
     .replace('\n', '\\n');
 }
 
-export function hash(node: Term): number {
+export function hashTerm(node: Term): number {
   let hash = 0;
   switch (node.termType) {
     case 'NamedNode':
@@ -223,7 +223,7 @@ export function hash(node: Term): number {
   return hash;
 }
 
-export function equals(a: Term, b: Term): boolean {
+export function equalTerms(a: Term, b: Term): boolean {
   if (a.termType !== b.termType) {
     return false;
   }
@@ -246,19 +246,19 @@ export function equals(a: Term, b: Term): boolean {
 
 export function hashQuad(quad: Quad): number {
   let h = 0;
-  h = (h * 31 + hash(quad.subject)) | 0;
-  h = (h * 31 + hash(quad.predicate)) | 0;
-  h = (h * 31 + hash(quad.object)) | 0;
-  h = (h * 31 + hash(quad.graph)) | 0;
+  h = (h * 31 + hashTerm(quad.subject)) | 0;
+  h = (h * 31 + hashTerm(quad.predicate)) | 0;
+  h = (h * 31 + hashTerm(quad.object)) | 0;
+  h = (h * 31 + hashTerm(quad.graph)) | 0;
   return h;
 }
 
-export function equalsQuad(a: Quad, b: Quad): boolean {
+export function equalQuads(a: Quad, b: Quad): boolean {
   return (
-    equals(a.subject, b.subject) &&
-    equals(a.predicate, b.predicate) &&
-    equals(a.object, b.object) &&
-    equals(a.graph, b.graph)
+    equalTerms(a.subject, b.subject) &&
+    equalTerms(a.predicate, b.predicate) &&
+    equalTerms(a.object, b.object) &&
+    equalTerms(a.graph, b.graph)
   );
 }
 

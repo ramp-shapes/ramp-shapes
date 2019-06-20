@@ -1,4 +1,4 @@
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 
 export namespace rdf {
   export const NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';

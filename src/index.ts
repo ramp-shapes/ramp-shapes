@@ -1,5 +1,5 @@
 export { HashSet, ReadonlyHashSet, HashMap, ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf-model';
+import * as Rdf from './rdf';
 export { Rdf };
 export * from './shapes';
 export { ShapesForShapes, frameShapes } from './shapes-for-shapes';
