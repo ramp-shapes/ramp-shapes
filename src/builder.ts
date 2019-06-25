@@ -1,5 +1,5 @@
 import * as Rdf from './rdf';
-import { ShapeID, Shape, ObjectProperty, PropertyPathSegment, ShapeReference, Vocabulary } from './shapes';
+import { ObjectProperty, PropertyPathSegment, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
 
@@ -63,7 +63,7 @@ export class ShapeBuilder {
     return id;
   }
 
-  optional(itemShape: ShapeID, emptyValue: null | undefined = undefined): ShapeID {
+  optional(itemShape: ShapeID, emptyValue?: null): ShapeID {
     const id = this.makeShapeID('optional');
     this._shapes.push({type: 'optional', id, itemShape, emptyValue});
     return id;

@@ -46,7 +46,7 @@ export class Literal {
       this.language = languageOrDatatype;
       this.datatype = RDF_LANG_STRING;
     } else {
-      this.language = "";
+      this.language = '';
       this.datatype = languageOrDatatype || XSD_STRING;
     }
   }
@@ -81,7 +81,6 @@ export class DefaultGraph {
   static readonly instance = new DefaultGraph();
   readonly termType = 'DefaultGraph';
   readonly value = '';
-  constructor() {}
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
@@ -210,9 +209,11 @@ export function hashTerm(node: Term): number {
     case 'Literal':
       hash = hashFnv32a(node.value);
       if (node.datatype) {
+        // tslint:disable-next-line: no-bitwise
         hash = (hash * 31 + hashFnv32a(node.datatype.value)) | 0;
       }
       if (node.language) {
+        // tslint:disable-next-line: no-bitwise
         hash = (hash * 31 + hashFnv32a(node.language)) | 0;
       }
       break;
@@ -245,12 +246,14 @@ export function equalTerms(a: Term, b: Term): boolean {
 }
 
 export function hashQuad(quad: Quad): number {
+  /* tslint:disable: no-bitwise */
   let h = 0;
   h = (h * 31 + hashTerm(quad.subject)) | 0;
   h = (h * 31 + hashTerm(quad.predicate)) | 0;
   h = (h * 31 + hashTerm(quad.object)) | 0;
   h = (h * 31 + hashTerm(quad.graph)) | 0;
   return h;
+  /* tslint:enable: no-bitwise */
 }
 
 export function equalQuads(a: Quad, b: Quad): boolean {
@@ -267,16 +270,17 @@ export function hashString(str: string): number {
 }
 
 /**
-* Calculate a 32 bit FNV-1a hash
-* Found here: https://gist.github.com/vaiorabbit/5657561
-* Ref.: http://isthe.com/chongo/tech/comp/fnv/
-*
-* @param {string} str the input value
-* @param {integer} [seed] optionally pass the hash of the previous chunk
-* @returns {integer}
-*/
+ * Calculate a 32 bit FNV-1a hash
+ * Found here: https://gist.github.com/vaiorabbit/5657561
+ * Ref.: http://isthe.com/chongo/tech/comp/fnv/
+ *
+ * @param str the input value
+ * @param [seed] optionally pass the hash of the previous chunk
+ * @returns {integer}
+ */
 function hashFnv32a(str: string, seed = 0x811c9dc5): number {
-  /* tslint:disable:no-bitwise */
+  /* tslint:disable: no-bitwise */
+  // tslint:disable-next-line: one-variable-per-declaration
   let i: number, l: number, hval = seed & 0x7fffffff;
 
   for (i = 0, l = str.length; i < l; i++) {
@@ -284,5 +288,5 @@ function hashFnv32a(str: string, seed = 0x811c9dc5): number {
     hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
   }
   return hval >>> 0;
-  /* tslint:enable:no-bitwise */
+  /* tslint:enable: no-bitwise */
 }

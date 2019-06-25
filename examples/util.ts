@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { promisify } from 'util';
 import * as N3 from 'n3';
-import { Rdf, HashSet } from "../src/index";
+import { Rdf, HashSet } from '../src/index';
 
 export const exists = promisify(fs.exists);
 export const mkdir = promisify(fs.mkdir);
@@ -43,7 +43,7 @@ export function quadsToTurtleString(
       q.graph
     ));
   }
-  
+
   return new Promise((resolve, reject) => {
     const writer = new N3.Writer({prefixes});
     writer.addQuads(quads);

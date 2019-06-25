@@ -22,7 +22,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   const generateBlankNode = (prefix: string) => {
     const index = blankIndex++;
     return Rdf.blankNode(`${prefix}_${blankUniqueKey}_${index}`);
-  }
+  };
 
   const context: LowerContext = {
     mapper: params.mapper || ValueMapper.mapByDefault(),
@@ -357,13 +357,13 @@ function flattenMap(
 
     let item = valueAtKey;
     if (shape.value) {
-      const matches = makeTermMap<ReadonlyArray<ReferenceMatch>>();
-      matches.set(shape.key.target, [
+      const refs = makeTermMap<ReadonlyArray<ReferenceMatch>>();
+      refs.set(shape.key.target, [
         {ref: shape.key, match: key},
         {ref: shape.value, match: valueAtKey},
       ]);
       item = synthesizeShape(itemShape, {
-        matches,
+        matches: refs,
         resolveShape: context.resolveShape,
       });
     }

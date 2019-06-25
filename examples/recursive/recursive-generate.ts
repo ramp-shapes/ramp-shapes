@@ -14,8 +14,8 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 
 const query = Ram.generateQuery({
-  rootShape: Ram.Rdf.namedNode(PREFIXES['ex'] + 'Selector'),
-  shapes: shapes,
+  rootShape: Ram.Rdf.namedNode(PREFIXES.ex + 'Selector'),
+  shapes,
   prefixes: PREFIXES,
 });
 

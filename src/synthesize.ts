@@ -50,7 +50,7 @@ export function synthesizeShape(
 ): unknown {
   switch (shape.type) {
     case 'object': {
-      let result: { [propertyName: string]: unknown } = {};
+      const result: { [propertyName: string]: unknown } = {};
       synthesizeProperties(result, shape.typeProperties, context);
       synthesizeProperties(result, shape.properties, context);
       return result;
@@ -131,7 +131,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
       }
     }
   }
-  
+
   assertPart(shape, 'value', value);
   assertPart(shape, 'datatype', datatype);
   if (datatype && Rdf.equalTerms(datatype, rdf.langString)) {

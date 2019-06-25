@@ -1,7 +1,7 @@
 import { HashMap, HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, PropertyPathSegment, ResourceShape, LiteralShape, ListShape
+  ListShape, LiteralShape, PropertyPathSegment, ResourceShape, Shape, ShapeID
 } from './shapes';
 import { rdf, xsd } from './vocabulary';
 

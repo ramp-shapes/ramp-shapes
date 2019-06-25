@@ -10,6 +10,7 @@ const quads = readQuadsFromTurtle(join(__dirname, '../../out/iiif-query-result.t
 const dataset = Ram.Rdf.dataset(quads);
 console.log(`Total quads: ${quads.length}; Unique quads: ${dataset.size}`);
 
+/* tslint:disable: quotemark */
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",
   "iiif": "http://iiif.io/api/image/2#",
@@ -28,9 +29,10 @@ const PREFIXES: { [prefix: string]: string } = {
   "as": "http://www.w3.org/ns/activitystreams#",
   ram: Ram.vocabulary.NAMESPACE,
 };
+/* tslint:enable: quotemark */
 
 const iterator = Ram.frame({
-  rootShape: Ram.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
+  rootShape: Ram.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
   shapes,
   dataset,
 });

@@ -106,7 +106,7 @@ function *frameShape(
         return assertUnknownShape(shape);
     }
   })();
-  
+
   for (const value of solutions) {
     const matchingRefs = context.refs.get(shape.id);
     if (matchingRefs) {

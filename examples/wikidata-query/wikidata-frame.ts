@@ -26,7 +26,7 @@ const queryResult = require('../../out/wikidata-query-result.json');
       throw new Error('Multiple matches!');
     }
     matched = true;
-    
+
     await writeFile(
       path.join(outDir, 'wikidata-framed.json'),
       toJson(value),

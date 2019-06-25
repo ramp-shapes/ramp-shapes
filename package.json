@@ -4,21 +4,23 @@
   "description": "",
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc --project tsconfig.module.json",
+    "lint": "tslint 'src/**.ts' 'examples/**.ts'",
     "test": "npm run build"
   },
   "author": "Alexey Morozov <alexey.morozov@live.ru>",
   "license": "MIT",
   "devDependencies": {
     "@types/n3": "^1.0.7",
-    "@types/node": "^11.11.3",
+    "@types/node": "^12.0.10",
     "@types/sparqljs": "^2.1.0",
     "n3": "^1.0.4",
     "sparqljs": "^2.2.3",
-    "ts-node": "^8.0.3",
-    "typescript": "^3.3.3333"
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.1"
   },
   "dependencies": {
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   },
   "module": "dist/module/index.js",
   "main": "dist/cjs/index.js",

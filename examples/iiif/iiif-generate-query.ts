@@ -7,6 +7,7 @@ const shapes = Ram.frameShapes(Ram.Rdf.dataset(
   readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
 ));
 
+/* tslint:disable: quotemark */
 const PREFIXES: { [prefix: string]: string } = {
   "sc": "http://iiif.io/api/presentation/2#",
   "iiif": "http://iiif.io/api/image/2#",
@@ -25,10 +26,11 @@ const PREFIXES: { [prefix: string]: string } = {
   "as": "http://www.w3.org/ns/activitystreams#",
   ram: Ram.vocabulary.NAMESPACE,
 };
+/* tslint:enable: quotemark */
 
 const query = Ram.generateQuery({
-  rootShape: Ram.Rdf.namedNode(PREFIXES['sc'] + 'Manifest'),
-  shapes: shapes,
+  rootShape: Ram.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
+  shapes,
   prefixes: PREFIXES,
 });
 

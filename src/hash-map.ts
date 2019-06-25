@@ -23,7 +23,7 @@ export class HashMap<K, V> implements ReadonlyMap<K, V> {
     const items = this.map.get(this.hashCode(key));
     if (!items) { return false; }
     for (const item of items) {
-      if (this.equals(item.key, key)) { return true }
+      if (this.equals(item.key, key)) { return true; }
     }
     return false;
   }

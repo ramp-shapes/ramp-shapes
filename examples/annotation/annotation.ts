@@ -91,7 +91,7 @@ const PREFIXES = {
     const triples = Ram.flatten({value, rootShape: oa.Annotation, shapes: schema.shapes});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
-  
+
   for (const {value, vars} of Ram.frame({rootShape: backwardsShape, shapes: schema.shapes, dataset})) {
     console.log('FRAME backwards shape', toJson(value));
     console.log('VAR xpath', toJson(vars.get(xpathLiteral)));

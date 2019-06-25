@@ -45,7 +45,7 @@ class SourcePredicateIndexedDataset implements Dataset {
   get size(): number {
     return this._size;
   }
-  
+
   add(quad: Quad): this {
     if (!this.byQuad.has(quad)) {
       this.byQuad.add(quad);
@@ -116,6 +116,7 @@ interface SourcePredicateKey {
 }
 namespace SourcePredicateKey {
   export function hashCode(key: SourcePredicateKey): number {
+    // tslint:disable-next-line: no-bitwise
     return (hashTerm(key.source) * 31 + hashTerm(key.predicate)) | 0;
   }
   export function equals(a: SourcePredicateKey, b: SourcePredicateKey): boolean {

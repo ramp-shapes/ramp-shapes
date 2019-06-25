@@ -31,5 +31,5 @@ const query = Ram.generateQuery({
 const generator = new SparqlJs.Generator();
 const queryString = generator.stringify(query);
 
-console.log('# Execute the following query at https://query.wikidata.org/')
+console.log('# Execute the following query at https://query.wikidata.org/');
 console.log(queryString);

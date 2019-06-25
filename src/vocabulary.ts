@@ -25,7 +25,7 @@ export namespace ram {
 
   export const Shape = Rdf.namedNode(NAMESPACE + 'Shape');
   export const ShapeID = Rdf.namedNode(NAMESPACE + 'ShapeID');
-  
+
   // Object
   export const ObjectShape = Rdf.namedNode(NAMESPACE + 'ObjectShape');
   export const typeProperty = Rdf.namedNode(NAMESPACE + 'typeProperty');
@@ -47,7 +47,7 @@ export namespace ram {
   export const termLanguage = Rdf.namedNode(NAMESPACE + 'termLanguage');
   export const termValue = Rdf.namedNode(NAMESPACE + 'termValue');
   export const keepAsTerm = Rdf.namedNode(NAMESPACE + 'keepAsTerm');
-  
+
   // Union
   export const UnionShape = Rdf.namedNode(NAMESPACE + 'UnionShape');
   export const variant = Rdf.namedNode(NAMESPACE + 'variant');

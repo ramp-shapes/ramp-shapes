@@ -18,7 +18,7 @@ import * as N3 from 'n3';
 import * as SparqlJs from 'sparqljs';
 
 // get graph triples (source data)
-const graph = new N3.Parser().parse(`
+const dataset = Ram.Rdf.dataset(new N3.Parser().parse(`
     @prefix ex: <http://example.com/schema/>.
     @prefix : <http://example.com/data/>.
 
@@ -28,10 +28,10 @@ const graph = new N3.Parser().parse(`
 
     :point1 a ex:Point;
         ex:position 42.
-`);
+`));
 
 // define custom RAM shapes using Turtle syntax
-const shapes = Ram.frameShapes(new N3.Parser().parse(`
+const shapes = Ram.frameShapes(Ram.Rdf.dataset(new N3.Parser().parse(`
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
@@ -77,7 +77,7 @@ const shapes = Ram.frameShapes(new N3.Parser().parse(`
 
     ex:Path a :ListShape;
         :item [ a :LiteralShape; :termDatatype xsd:string ].
-`));
+`)));
 
 // choose entry point shape
 const rootShape = Ram.Rdf.namedNode(
@@ -93,7 +93,7 @@ const prefixes = {
 };
 
 // use defined shapes to lower RDF graph into JS objects...
-const matches = Ram.frame({shapes, rootShape, triples: graph}));
+const matches = Ram.frame({shapes, rootShape, dataset}));
 for (const match of matches) {
   /* match.value object has ex:Annotation shape, e.g.:
     {
@@ -184,5 +184,4 @@ const queryString = new SparqlJs.Generator().stringify(query);
 ```
 
 ## References
-A publication which describes this work is currently under review at 
-Semantics-2019 conference.
+A publication which describes this work is currently under review at TBD conference.

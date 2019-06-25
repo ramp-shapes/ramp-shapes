@@ -12,7 +12,7 @@ export const Prefixes: { [prefix: string]: string } = {
   wdt: 'http://www.wikidata.org/prop/direct/',
 };
 export namespace vocab {
-  export const wd = (s: string) => Ram.Rdf.namedNode(Prefixes['wd'] + s);
+  export const wd = (s: string) => Ram.Rdf.namedNode(Prefixes.wd + s);
 }
 
 const schema = new Ram.ShapeBuilder();

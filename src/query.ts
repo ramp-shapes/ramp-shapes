@@ -87,7 +87,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
         }
       }
     },
-    onEmit: params.unstable_onEmit || ((shape, subject, out) => {}),
+    onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
   };
 
   const rootShape = context.resolveShape(params.rootShape);
@@ -137,7 +137,7 @@ function rdfTermToSparqlTerm(term: Rdf.Term): SparqlJs.Term {
   switch (term.termType) {
     case 'NamedNode':
       return term.value as SparqlJs.Term;
-    case 'Literal':{
+    case 'Literal': {
       const {value, language, datatype} = term;
       const stringLiteral = `"${escapeSparqlLiteralValue(value)}"`;
       if (language) {
@@ -179,7 +179,7 @@ function propertyPathToSparql(
       const predicate = rdfTermToSparqlTerm(segment.predicate);
       return segment.reverse
         ? {type: 'path', pathType: '^', items: [predicate]}
-        : predicate
+        : predicate;
     })
   };
 }
@@ -306,7 +306,7 @@ function generateRecursiveEdge(
     return edge;
   }
 
-  const object = context.makeVariable(shape.type + "_r");
+  const object = context.makeVariable(shape.type + '_r');
   out.push({
     type: 'bgp',
     triples: [{
@@ -421,7 +421,7 @@ function generateForList(
   if (isBreakingPointShape(shape)) {
     edge = generateRecursiveEdge(shape, edge, out, context);
   }
-  
+
   const nextPath = propertyPathToSparql(tail);
   const nodePath: SparqlJs.PropertyPath = {
     type: 'path',
@@ -439,7 +439,7 @@ function generateForList(
   const nextEdge: Edge = {subject: listNode, path: nextPath, object: nextNode};
   generateEdge(nextEdge, out);
   context.addEdge(nextEdge);
-  
+
   const itemShape = context.resolveShape(shape.itemShape);
   if (head.length === 0) {
     generateForShape(itemShape, {object: listNode}, out, context);

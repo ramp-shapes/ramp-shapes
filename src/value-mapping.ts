@@ -42,10 +42,10 @@ export namespace ValueMapper {
   }
 
   export function resolveVocabularies(): ValueMapper {
-    type CachedVocabulary = {
+    interface CachedVocabulary {
       termToKey: ReadonlyHashMap<Rdf.Term, string>;
       keyToTerm: ReadonlyMap<string, Rdf.Term>;
-    };
+    }
 
     const cache = makeTermMap<CachedVocabulary>();
 
@@ -106,7 +106,7 @@ export namespace ValueMapper {
         result = first.toRdf(result, shape);
         return result;
       }
-    }
+    };
   }
 
   export function mapByDefault(): ValueMapper {
@@ -151,7 +151,7 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
       return Rdf.toString(value);
     }
   }
-  
+
   if (shape.type === 'literal' && value.termType === 'Literal') {
     const datatype = effectiveDatatype(shape);
     if (datatype) {
@@ -176,7 +176,7 @@ export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, va
       ? Rdf.blankNode(value.substring(2))
       : Rdf.namedNode(value);
   }
-  
+
   if (shape.type === 'literal') {
     const datatype = effectiveDatatype(shape);
     if (datatype) {
