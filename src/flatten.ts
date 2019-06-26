@@ -1,7 +1,7 @@
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
+  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment,
 } from './shapes';
 import {
   SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm, makeTermMap
@@ -162,7 +162,7 @@ function matchProperties(
 
 interface Edge {
   subject: Rdf.NamedNode | Rdf.BlankNode;
-  path: ReadonlyArray<PropertyPathSegment>;
+  path: PathSequence;
 }
 
 function generateEdge(
@@ -174,8 +174,8 @@ function generateEdge(
 }
 
 function *generatePropertyPath(
-  subject: Rdf.NamedNode | Rdf.BlankNode,
-  path: ReadonlyArray<PropertyPathSegment>,
+  subject: RdfNode,
+  path: PathSequence,
   object: RdfNode,
   context: LowerContext
 ): Iterable<Rdf.Quad> {
@@ -183,22 +183,46 @@ function *generatePropertyPath(
     return;
   }
   let s = subject;
-  for (let i = 0; i < path.length - 1; i++) {
-    const o = context.generateBlankNode('path');
-    const {predicate, reverse} = path[i];
-    yield reverse ? Rdf.quad(o, predicate, s) : Rdf.quad(s, predicate, o);
-    s = o;
-  }
-  const last = path[path.length - 1];
-  if (last.reverse) {
-    if (object.termType === 'Literal') {
-      throw new Error(
-        `Cannot put literal ${object} as subject with predicate ${last.predicate}`
-      );
+  for (let i = 0; i < path.length; i++) {
+    const o = i === path.length - 1
+      ? object : context.generateBlankNode('path');
+    const element = path[i];
+    if (isPathSegment(element)) {
+      if (s.termType === 'Literal') {
+        throw new Error(
+          `Cannot put literal ${Rdf.toString(s)} as subject with ` +
+          `predicate ${Rdf.toString(element.predicate)}`
+        );
+      }
+      yield Rdf.quad(s, element.predicate, o);
+    } else {
+      switch (element.operator) {
+        case '|': {
+          if (element.path.length > 0) {
+            // take only the first alternative
+            const alternative = element.path.slice(0, 1);
+            yield* generatePropertyPath(s, alternative, o, context);
+          }
+          break;
+        }
+        case '^': {
+          // switch subject and predicate
+          yield* generatePropertyPath(o, element.path, s, context);
+          break;
+        }
+        case '*':
+        case '+':
+        case '?': {
+          // always generate a path with length === 1
+          yield* generatePropertyPath(s, element.path, o, context);
+          break;
+        }
+        case '!':
+          // ignore negated paths (should we do anything else instead?)
+          break;
+      }
     }
-    yield Rdf.quad(object, last.predicate, s);
-  } else {
-    yield Rdf.quad(s, last.predicate, object);
+    s = o;
   }
 }
 

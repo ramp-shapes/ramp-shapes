@@ -1,9 +1,9 @@
 import { HashMap, HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ListShape, LiteralShape, PropertyPathSegment, ResourceShape, Shape, ShapeID
+  ListShape, LiteralShape, PathSequence, ResourceShape, Shape, ShapeID
 } from './shapes';
-import { rdf, xsd } from './vocabulary';
+import { rdf } from './vocabulary';
 
 export function makeTermSet() {
   return new HashSet<Rdf.Term>(Rdf.hashTerm, Rdf.equalTerms);
@@ -46,14 +46,12 @@ export function matchesTerm(shape: ResourceShape | LiteralShape, node: Rdf.Term)
   }
 }
 
-const DEFAULT_LIST_HEAD: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: rdf.first, reverse: false}];
-const DEFAULT_LIST_TAIL: ReadonlyArray<PropertyPathSegment> =
-  [{predicate: rdf.rest, reverse: false}];
+const DEFAULT_LIST_HEAD: PathSequence = [{predicate: rdf.first}];
+const DEFAULT_LIST_TAIL: PathSequence = [{predicate: rdf.rest}];
 
 export interface ResolvedListShape {
-  head: ReadonlyArray<PropertyPathSegment>;
-  tail: ReadonlyArray<PropertyPathSegment>;
+  head: PathSequence;
+  tail: PathSequence;
   nil: Rdf.NamedNode;
 }
 

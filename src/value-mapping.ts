@@ -70,7 +70,7 @@ export namespace ValueMapper {
         if (vocab && looksLikeRdfNode(value)) {
           if (!vocab.termToKey.has(value)) {
             throw new Error(
-              `Cannot find RDF term ${value} in vocabulary for shape ${Rdf.toString(shape.id)}`
+              `Cannot find RDF term ${Rdf.toString(value)} in vocabulary for shape ${Rdf.toString(shape.id)}`
             );
           }
           return vocab.termToKey.get(value);
@@ -82,7 +82,7 @@ export namespace ValueMapper {
         if (vocab && typeof value === 'string') {
           if (!vocab.keyToTerm.has(value)) {
             throw new Error(
-              `Cannot find literal ${value} in vocabulary for shape ${Rdf.toString(shape.id)}`
+              `Cannot find string "${value}" in vocabulary for shape ${Rdf.toString(shape.id)}`
             );
           }
           return vocab.keyToTerm.get(value);

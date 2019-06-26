@@ -6,7 +6,7 @@ import { rdf, ram, xsd } from './vocabulary';
 
 const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
 
-const Shape: Shape = {
+schema.shapes.push({
   type: 'union',
   id: ram.Shape,
   variants: [
@@ -19,13 +19,13 @@ const Shape: Shape = {
     ram.ListShape,
     ram.MapShape,
   ]
-};
+});
 
-const ShapeID: Shape = {
+schema.shapes.push({
   type: 'resource',
   id: ram.ShapeID,
   keepAsTerm: true,
-};
+});
 
 const ShapeTypeVocabulary: Vocabulary = {
   terms: {
@@ -58,18 +58,44 @@ schema.object({
   id: ram.ObjectProperty,
   properties: {
     name: property(ram.name, schema.literal({datatype: xsd.string})),
-    path: property(ram.path, schema.list(ram.PropertyPathSegment)),
+    path: property(ram.path, ram.PathSequence),
     valueShape: property(ram.shape, ram.ShapeID),
   }
 });
 
+schema.shapes.push({
+  type: 'list',
+  id: ram.PathSequence,
+  itemShape: ram.PathElement,
+});
+
+schema.shapes.push({
+  type: 'union',
+  id: ram.PathElement,
+  variants: [ram.PathExpression, ram.PathSegment],
+});
+
 schema.object({
-  id: ram.PropertyPathSegment,
+  id: ram.PathExpression,
   typeProperties: {
-    predicate: property(ram.predicate, schema.resource({keepAsTerm: true})),
+    operator: property(ram.operator, schema.union(
+      schema.constant(Rdf.literal('|')),
+      schema.constant(Rdf.literal('^')),
+      schema.constant(Rdf.literal('*')),
+      schema.constant(Rdf.literal('+')),
+      schema.constant(Rdf.literal('?')),
+      schema.constant(Rdf.literal('!')),
+    )),
   },
   properties: {
-    inverse: property(ram.inverse, schema.optional(schema.literal({datatype: xsd.boolean}))),
+    path: property(ram.path, ram.PathSequence),
+  }
+});
+
+schema.object({
+  id: ram.PathSegment,
+  typeProperties: {
+    predicate: property(ram.predicate, schema.resource({keepAsTerm: true})),
   }
 });
 
@@ -180,8 +206,8 @@ schema.object({
   properties: {
     id: self(ram.ShapeID),
     itemShape: property(ram.item, ram.ShapeID),
-    headPath: property(ram.headPath, schema.optional(schema.list(ram.PropertyPathSegment))),
-    tailPath: property(ram.tailPath, schema.optional(schema.list(ram.PropertyPathSegment))),
+    headPath: property(ram.headPath, schema.optional(ram.PathSequence)),
+    tailPath: property(ram.tailPath, schema.optional(ram.PathSequence)),
     nil: property(ram.nil, schema.optional(schema.resource({keepAsTerm: true}))),
   }
 });
@@ -221,7 +247,7 @@ schema.object({
   }
 });
 
-export const ShapesForShapes = [Shape, ShapeID, ...schema.shapes];
+export const ShapesForShapes = [...schema.shapes];
 
 export function frameShapes(dataset: Rdf.Dataset): Shape[] {
   const framingResults = frame({

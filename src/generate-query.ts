@@ -3,8 +3,8 @@ import * as SparqlJs from 'sparqljs';
 import { HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference
+  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment
 } from './shapes';
 import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
@@ -166,22 +166,35 @@ function escapeSparqlLiteralValue(value: string): string {
 
 type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.Term;
 
-function propertyPathToSparql(
-  path: ReadonlyArray<PropertyPathSegment>
-): SparqlJsPredicate {
-  if (path.length === 1 && !path[0].reverse) {
-    return rdfTermToSparqlTerm(path[0].predicate);
-  }
-  return {
-    type: 'path',
-    pathType: '/',
-    items: path.map((segment): SparqlJs.PropertyPath | SparqlJs.Term => {
-      const predicate = rdfTermToSparqlTerm(segment.predicate);
-      return segment.reverse
-        ? {type: 'path', pathType: '^', items: [predicate]}
-        : predicate;
-    })
-  };
+function propertyPathToSparql(path: PathSequence): SparqlJsPredicate {
+  const items = path.map((element): SparqlJs.PropertyPath | SparqlJs.Term => {
+    if (isPathSegment(element)) {
+      return rdfTermToSparqlTerm(element.predicate);
+    } else {
+      switch (element.operator) {
+        case '|':
+          return {
+            type: 'path',
+            pathType: '|',
+            items: element.path.map(subElement => propertyPathToSparql([subElement])),
+          };
+        case '!':
+        case '^':
+        case '*':
+        case '+':
+        case '?':
+          return {
+            type: 'path',
+            // TODO: fix Sparql.js typings for property path operator '?'
+            pathType: element.operator as SparqlJs.PropertyPath['pathType'],
+            items: [propertyPathToSparql(element.path)],
+          };
+        default:
+          throw new Error(`Unknown path operator "${element.operator}"`);
+      }
+    }
+  });
+  return items.length === 1 ? items[0] : {type: 'path', pathType: '/', items};
 }
 
 function concatSparqlPaths(

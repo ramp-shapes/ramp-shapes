@@ -20,13 +20,18 @@ export interface ObjectShape {
 
 export interface ObjectProperty {
   readonly name: string;
-  readonly path: ReadonlyArray<PropertyPathSegment>;
+  readonly path: PathSequence;
   readonly valueShape: ShapeID;
 }
 
-export interface PropertyPathSegment {
-  readonly predicate: Rdf.NamedNode;
-  readonly reverse?: boolean;
+export type PathSequence = ReadonlyArray<PathElement>;
+export type PathElement = PathExpression | PathSegment;
+export interface PathExpression {
+  operator: '|' | '^' | '*' | '+' | '?' | '!';
+  path: PathSequence;
+}
+export interface PathSegment {
+  predicate: Rdf.NamedNode;
 }
 
 export interface UnionShape {
@@ -70,9 +75,9 @@ export interface ListShape {
   readonly id: ShapeID;
   readonly itemShape: ShapeID;
   /** @default [{predicate: (rdf:first)}] */
-  readonly headPath?: ReadonlyArray<PropertyPathSegment>;
+  readonly headPath?: PathSequence;
   /** @default [{predicate: (rdf:rest)}] */
-  readonly tailPath?: ReadonlyArray<PropertyPathSegment>;
+  readonly tailPath?: PathSequence;
   /** @default rdf:nil */
   readonly nil?: Rdf.NamedNode;
 }
@@ -92,4 +97,8 @@ export interface ShapeReference {
 
 export interface Vocabulary {
   terms: { [literal: string]: Rdf.NamedNode };
+}
+
+export function isPathSegment(element: PathElement): element is PathSegment {
+  return Boolean((element as { predicate?: Rdf.NamedNode }).predicate);
 }

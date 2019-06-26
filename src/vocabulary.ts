@@ -33,12 +33,15 @@ export namespace ram {
 
   // ObjectProperty
   export const ObjectProperty = Rdf.namedNode(NAMESPACE + 'ObjectProperty');
-  export const PropertyPathSegment = Rdf.namedNode(NAMESPACE + 'PropertyPathSegment');
+  export const PathSequence = Rdf.namedNode(NAMESPACE + 'PathSequence');
+  export const PathElement = Rdf.namedNode(NAMESPACE + 'PathElement');
+  export const PathExpression = Rdf.namedNode(NAMESPACE + 'PathExpression');
+  export const PathSegment = Rdf.namedNode(NAMESPACE + 'PathSegment');
   export const name = Rdf.namedNode(NAMESPACE + 'name');
   export const shape = Rdf.namedNode(NAMESPACE + 'shape');
   export const path = Rdf.namedNode(NAMESPACE + 'path');
+  export const operator = Rdf.namedNode(NAMESPACE + 'operator');
   export const predicate = Rdf.namedNode(NAMESPACE + 'predicate');
-  export const inverse = Rdf.namedNode(NAMESPACE + 'inverse');
 
   // Resource and Literal
   export const ResourceShape = Rdf.namedNode(NAMESPACE + 'ResourceShape');

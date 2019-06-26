@@ -1,8 +1,8 @@
-import { HashMap, ReadonlyHashMap } from './hash-map';
+import { HashMap, ReadonlyHashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPathSegment, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference
+  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape, OptionalShape,
+  ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, isPathSegment,
 } from './shapes';
 import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
@@ -44,7 +44,8 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
     value: undefined,
     vars: context.vars,
   };
-  for (const value of frameShape(rootShape, allCandidates, undefined, context)) {
+  const stack = new StackFrame(undefined, rootShape);
+  for (const value of frameShape(rootShape, allCandidates, stack, context)) {
     solution.value = value;
     yield solution;
     solution.value = undefined;
@@ -63,11 +64,10 @@ class StackFrame {
   constructor(
     readonly parent: StackFrame | undefined,
     readonly shape: Shape,
-    readonly property?: ObjectProperty,
-    readonly index?: number,
+    readonly edge?: string | number,
   ) {}
   hasEdge() {
-    return this.property !== undefined || this.index !== undefined;
+    return this.edge !== undefined;
   }
 }
 
@@ -80,28 +80,26 @@ interface RefContext {
 function *frameShape(
   shape: Shape,
   candidates: Iterable<Rdf.Term>,
-  stack: StackFrame | undefined,
+  stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
-  const nextStack = (stack && stack.hasEdge()) ? stack : new StackFrame(stack, shape);
-
   const solutions = (() => {
     switch (shape.type) {
       case 'object':
-        return frameObject(shape, candidates, nextStack, context);
+        return frameObject(shape, candidates, stack, context);
       case 'union':
-        return frameUnion(shape, candidates, nextStack, context);
+        return frameUnion(shape, candidates, stack, context);
       case 'set':
-        return frameSet(shape, candidates, nextStack, context);
+        return frameSet(shape, candidates, stack, context);
       case 'optional':
-        return frameOptional(shape, candidates, nextStack, context);
+        return frameOptional(shape, candidates, stack, context);
       case 'resource':
       case 'literal':
-        return frameNode(shape, candidates, nextStack, context);
+        return frameNode(shape, candidates, stack, context);
       case 'list':
-        return frameList(shape, candidates, nextStack, context);
+        return frameList(shape, candidates, stack, context);
       case 'map':
-        return frameMap(shape, candidates, nextStack, context);
+        return frameMap(shape, candidates, stack, context);
       default:
         return assertUnknownShape(shape);
     }
@@ -224,46 +222,42 @@ function *frameProperty(
   context: FrameContext
 ): Iterable<unknown> {
   const values = findByPropertyPath(property.path, candidate, context);
-  const nextStack = new StackFrame(stack, valueShape, property);
+  const nextStack = new StackFrame(stack, valueShape, property.name);
   yield* frameShape(valueShape, values, nextStack, context);
 }
 
-function findByPropertyPath(
-  path: ReadonlyArray<PropertyPathSegment>,
+function *findByPropertyPath(
+  path: PathSequence,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FrameContext
-): Iterable<Rdf.Term> {
+): IterableIterator<Rdf.Term> {
   if (path.length === 0) {
-    return [candidate];
-  }
-
-  let current: Rdf.Term[] = [candidate];
-  let next: Rdf.Term[] = [];
-
-  for (const segment of path) {
-    for (const source of current) {
-      const quads = segment.reverse
-        ? context.dataset.iterateMatches(null, segment.predicate, source)
-        : context.dataset.iterateMatches(source, segment.predicate, null);
-      for (const q of quads) {
-        next.push(segment.reverse ? q.subject : q.object);
+    yield candidate;
+    return;
+  } else if (path.length === 1) {
+    const element = path[0];
+    if (isPathSegment(element)) {
+      // optimize for single forward predicate
+      for (const q of context.dataset.iterateMatches(candidate, element.predicate, null)) {
+        yield q.object;
+      }
+      return;
+    } else if (element.operator === '^' && element.path.length === 1) {
+      const reversed = element.path[0];
+      if (isPathSegment(reversed)) {
+        // optimize for single backwards predicate
+        for (const q of context.dataset.iterateMatches(null, reversed.predicate, candidate)) {
+          yield q.subject;
+        }
+        return;
       }
     }
-    const temp = current;
-    current = next;
-    next = temp;
-    next.length = 0;
   }
 
-  if (current.length > 1) {
-    const set = makeTermSet();
-    for (const value of current) {
-      set.add(value);
-    }
-    return set;
-  } else {
-    return current;
-  }
+  // use full/slow search in all other cases
+  const source = makeTermSet();
+  source.add(candidate);
+  yield* findByPath(source, path, false, context);
 }
 
 function *frameUnion(
@@ -274,7 +268,8 @@ function *frameUnion(
 ): Iterable<unknown> {
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
-    yield* frameShape(variantShape, candidates, stack, context);
+    const nextStack = new StackFrame(stack, variantShape);
+    yield* frameShape(variantShape, candidates, nextStack, context);
   }
 }
 
@@ -285,7 +280,8 @@ function *frameSet(
   context: FrameContext
 ): Iterable<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
-  yield Array.from(frameShape(itemShape, candidates, stack, context));
+  const nextStack = new StackFrame(stack, itemShape);
+  yield Array.from(frameShape(itemShape, candidates, nextStack, context));
 }
 
 function *frameOptional(
@@ -296,7 +292,8 @@ function *frameOptional(
 ): Iterable<unknown> {
   let found = false;
   const itemShape = context.resolveShape(shape.itemShape);
-  for (const value of frameShape(itemShape, candidates, stack, context)) {
+  const nextStack = new StackFrame(stack, itemShape);
+  for (const value of frameShape(itemShape, candidates, nextStack, context)) {
     found = true;
     yield value;
   }
@@ -363,7 +360,7 @@ function *frameList(
         result = [];
       }
 
-      const nextStack = new StackFrame(stack, itemShape, undefined, index);
+      const nextStack = new StackFrame(stack, itemShape, index);
       let hasItemMatch = false;
       for (const item of frameShape(itemShape, [foundHead], nextStack, context)) {
         if (hasItemMatch) {
@@ -434,7 +431,8 @@ function *frameMap(
   }
 
   const itemShape = context.resolveShape(shape.itemShape);
-  for (const item of frameShape(itemShape, candidates, stack, context)) {
+  const nextStack = new StackFrame(stack, itemShape);
+  for (const item of frameShape(itemShape, candidates, nextStack, context)) {
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
     if (key !== undefined && value !== undefined) {
@@ -489,13 +487,90 @@ function findAllCandidates(dataset: Rdf.Dataset) {
   return candidates;
 }
 
+function findByPath(
+  sources: ReadonlyHashSet<Rdf.Term>,
+  path: PathSequence,
+  reverse: boolean,
+  context: FrameContext
+): HashSet<Rdf.Term> {
+  const iteratedPath = reverse ? [...path].reverse() : path;
+  let next: HashSet<Rdf.Term> | undefined;
+
+  for (const element of iteratedPath) {
+    const current = next || sources;
+    next = makeTermSet();
+
+    if (isPathSegment(element)) {
+      for (const source of current) {
+        const matches = reverse
+          ? context.dataset.iterateMatches(null, element.predicate, source)
+          : context.dataset.iterateMatches(source, element.predicate, null);
+        for (const q of matches) {
+          next.add(q.object);
+        }
+      }
+    } else {
+      switch (element.operator) {
+        case '|':
+          for (const alternative of element.path) {
+            for (const term of findByPath(current, [alternative], reverse, context)) {
+              next.add(term);
+            }
+          }
+          break;
+        case '^': {
+          for (const term of findByPath(current, element.path, !reverse, context)) {
+            next.add(term);
+          }
+          break;
+        }
+        case '!': {
+          const excluded = makeTermSet();
+          for (const term of findByPath(current, element.path, reverse, context)) {
+            excluded.add(term);
+          }
+          for (const term of findAllCandidates(context.dataset)) {
+            if (!excluded.has(term)) {
+              next.add(term);
+            }
+          }
+          break;
+        }
+        case '*':
+        case '+':
+        case '?': {
+          if (element.operator === '*' || element.operator === '?') {
+            for (const term of current) {
+              next.add(term);
+            }
+          }
+
+          const once = element.operator === '?';
+          let foundAtStep: HashSet<Rdf.Term> | undefined;
+          do {
+            foundAtStep = findByPath(foundAtStep || current, element.path, reverse, context);
+            for (const term of foundAtStep) {
+              if (next.has(term)) {
+                foundAtStep.delete(term);
+              } else {
+                next.add(term);
+              }
+            }
+          } while (foundAtStep.size > 0 && !once);
+        }
+      }
+    }
+  }
+  return next || makeTermSet();
+}
+
 function formatShapeStack(stack: StackFrame) {
   let result = '';
   let frame: StackFrame | undefined = stack;
   while (frame) {
     const edge = (
-      frame.property ? `"${frame.property.name}" |> ` :
-      frame.index ? `${frame.index} |> ` :
+      typeof frame.edge === 'string' ? `"${frame.edge}" |> ` :
+      typeof frame.edge === 'number' ? `${frame.edge} |> ` :
       ''
     );
     result = edge + Rdf.toString(frame.shape.id) + (result ? ' |> ' : '') + result;

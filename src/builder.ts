@@ -1,5 +1,5 @@
 import * as Rdf from './rdf';
-import { ObjectProperty, PropertyPathSegment, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
+import { ObjectProperty, PathSequence, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
 export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
 
@@ -149,20 +149,13 @@ export function self(valueShape: ShapeID): PartialProperty {
 }
 
 export function property(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
-  return {path: [{predicate, reverse: false}], valueShape};
+  return {path: [{predicate}], valueShape};
 }
 
 export function inverseProperty(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
-  return {path: [{predicate, reverse: true}], valueShape};
+  return {path: [{operator: '^', path: [{predicate}]}], valueShape};
 }
 
-export function propertyPath(
-  predicates: ReadonlyArray<Rdf.NamedNode>, valueShape: ShapeID
-): PartialProperty {
-  return {
-    path: predicates.map((predicate): PropertyPathSegment =>
-      ({predicate, reverse: false})
-    ),
-    valueShape,
-  };
+export function propertyPath(path: PathSequence, valueShape: ShapeID): PartialProperty {
+  return {path, valueShape};
 }
