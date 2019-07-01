@@ -226,30 +226,31 @@ function *frameProperty(
   yield* frameShape(valueShape, values, nextStack, context);
 }
 
-function *findByPropertyPath(
+function findByPropertyPath(
   path: PathSequence,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FrameContext
-): IterableIterator<Rdf.Term> {
+): Iterable<Rdf.Term> {
   if (path.length === 0) {
-    yield candidate;
-    return;
+    return [candidate];
   } else if (path.length === 1) {
     const element = path[0];
     if (isPathSegment(element)) {
       // optimize for single forward predicate
+      const objects: Rdf.Term[] = [];
       for (const q of context.dataset.iterateMatches(candidate, element.predicate, null)) {
-        yield q.object;
+        objects.push(q.object);
       }
-      return;
+      return objects;
     } else if (element.operator === '^' && element.path.length === 1) {
       const reversed = element.path[0];
       if (isPathSegment(reversed)) {
         // optimize for single backwards predicate
+        const subjects: Rdf.Term[] = [];
         for (const q of context.dataset.iterateMatches(null, reversed.predicate, candidate)) {
-          yield q.subject;
+          subjects.push(q.subject);
         }
-        return;
+        return subjects;
       }
     }
   }
@@ -257,7 +258,7 @@ function *findByPropertyPath(
   // use full/slow search in all other cases
   const source = makeTermSet();
   source.add(candidate);
-  yield* findByPath(source, path, false, context);
+  return findByPath(source, path, false, context);
 }
 
 function *frameUnion(

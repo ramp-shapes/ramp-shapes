@@ -1,24 +1,33 @@
 import * as path from 'path';
 import * as Ram from '../../src/index';
-import { writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse } from '../util';
-import { Shapes, PeterTheGreatDescendants } from './wikidata-common';
+import {
+  writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse, quadsToTurtleString
+} from '../util';
+import { Prefixes, Shapes, AlexanderTheThirdDescendants } from './wikidata-common';
 
 const queryResult = require('../../out/wikidata-query-result.json');
 
 (async function main() {
   const bindings = queryResult.results.bindings;
-  const dataset = Ram.Rdf.dataset(parseJsonQueryResponse(bindings));
+  const quads = parseJsonQueryResponse(bindings);
+  const dataset = Ram.Rdf.dataset(quads);
   console.log('Total quads: ' + bindings.length);
   console.log('Unique quads: ' + dataset.size);
 
   const iterator = Ram.frame({
-    rootShape: PeterTheGreatDescendants,
+    rootShape: AlexanderTheThirdDescendants,
     shapes: Shapes,
     dataset,
   });
 
   const outDir = path.join(__dirname, '../../out');
   makeDirectoryIfNotExists(outDir);
+
+  await writeFile(
+    path.join(outDir, 'wikidata-query-result.ttl'),
+    await quadsToTurtleString(quads, Prefixes),
+    {encoding: 'utf-8'}
+  );
 
   let matched = false;
   for (const {value} of iterator) {

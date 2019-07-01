@@ -18,10 +18,10 @@ export namespace vocab {
 const schema = new Ram.ShapeBuilder();
 schema.shapes.push(...wikidataShapes);
 
-export const PeterTheGreatDescendants = schema.object({
-  id: vocab.wd('Q8479'),
+export const AlexanderTheThirdDescendants = schema.object({
+  id: vocab.wd('Q120180'),
   typeProperties: {
-    target: Ram.self(schema.constant(vocab.wd('Q8479')))
+    target: Ram.self(schema.constant(vocab.wd('Q120180')))
   },
   properties: {
     result: Ram.self(vocab.wd('Q5'))

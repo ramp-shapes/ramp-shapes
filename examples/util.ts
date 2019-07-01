@@ -71,15 +71,15 @@ function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
   );
 }
 
-export function parseJsonQueryResponse(bindings: any[]): HashSet<Rdf.Quad> {
-  const set = new HashSet(Rdf.hashQuad, Rdf.equalQuads);
+export function parseJsonQueryResponse(bindings: any[]): Rdf.Quad[] {
+  const quads: Rdf.Quad[] = [];
   for (const {subject, predicate, object} of bindings) {
     const quad = Rdf.quad(
       jsonQueryResultTermToRdf(subject) as Rdf.Quad['subject'],
       jsonQueryResultTermToRdf(predicate) as Rdf.Quad['predicate'],
       jsonQueryResultTermToRdf(object) as Rdf.Quad['object'],
     );
-    set.add(quad);
+    quads.push(quad);
   }
-  return set;
+  return quads;
 }

@@ -71,7 +71,7 @@ export class SubjectMemo {
 
   set(node: Rdf.Term) {
     if (node.termType === 'NamedNode') {
-      if (this.iri) {
+      if (this.iri && !Rdf.equalTerms(node, this.iri)) {
         throw new Error(
           `Inconsistent self reference for object shape ${Rdf.toString(this.shape.id)}`
         );

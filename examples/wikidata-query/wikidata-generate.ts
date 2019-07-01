@@ -1,9 +1,9 @@
 import * as SparqlJs from 'sparqljs';
 import * as Ram from '../../src/index';
-import { Shapes, PeterTheGreatDescendants, Prefixes } from './wikidata-common';
+import { Shapes, AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
 
 const query = Ram.generateQuery({
-  rootShape: PeterTheGreatDescendants,
+  rootShape: AlexanderTheThirdDescendants,
   shapes: Shapes,
   prefixes: Prefixes,
   unstable_onEmit: (shape, subject, out) => {
