@@ -1,5 +1,7 @@
 # RAM shapes: declarative RDF ↔ ADT mapping
 
+[Home page](https://ram-shapes.github.io/) | [Specification draft](https://ram-shapes.github.io/ram-shapes-spec/) | [Playground](https://ram-shapes.github.io/playground.html)
+
 **RAM** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
 
 ## Features
@@ -11,6 +13,8 @@
  * *(In the future)* Validate that runtime object structure matches specified shape.
 
 ## Example
+
+Try out on the interactive [playground](https://ram-shapes.github.io/playground.html).
 
 ```ts
 import * as Ram from 'ram-shapes';
