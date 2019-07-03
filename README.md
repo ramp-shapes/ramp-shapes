@@ -184,4 +184,4 @@ const queryString = new SparqlJs.Generator().stringify(query);
 ```
 
 ## References
-A publication which describes this work is currently under review at TBD conference.
+A publication which describes this work is currently under review at MTSR Conference 2019.
