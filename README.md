@@ -1,4 +1,4 @@
-# RAM shapes: declarative RDF ↔ ADT mapping
+# RAM shapes: declarative RDF ↔ ADT mapping [![npm version](https://badge.fury.io/js/ram-shapes.svg)](https://badge.fury.io/js/ram-shapes)
 
 [Home page](https://ram-shapes.github.io/) | [Specification draft](https://ram-shapes.github.io/ram-shapes-spec/) | [Playground](https://ram-shapes.github.io/playground.html)
 
@@ -12,7 +12,11 @@
  * Construct SPARQL queries to fetch necessary data for given shapes.
  * *(In the future)* Validate that runtime object structure matches specified shape.
 
-## Example
+## Install
+
+Install with `npm install --save ram-shapes`
+
+## Usage
 
 Try out on the interactive [playground](https://ram-shapes.github.io/playground.html).
 
