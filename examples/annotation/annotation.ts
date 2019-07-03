@@ -49,18 +49,17 @@ schema.object({
       properties: {
         source: property(oa.hasSource, schema.resource()),
         selector: property(oa.hasSelector, schema.union(
-          oa.RangeSelector,
-          oa.XPathSelector
+          [oa.RangeSelector, oa.XPathSelector]
         ))
       }
     })),
     body: property(oa.hasBody, schema.object({
       properties: {
-        label: property(rdfs.label, schema.mapValue(
-          {target: bodyLabel, part: 'language'},
-          {target: bodyLabel, part: 'value'}
-        )),
-        label_en: property(rdfs.label, schema.literal({language: 'en'})),
+        label: property(rdfs.label, schema.map({
+          key: {target: bodyLabel, part: 'language'},
+          value: {target: bodyLabel, part: 'value'},
+        })),
+        label_en: property(rdfs.label, schema.literal({language: 'en', lenient: true})),
         nonExistentValue: property(rdf.value, schema.optional(schema.literal())),
       }
     })),
@@ -72,8 +71,7 @@ const backwardsShape = schema.object({
     iri: self(schema.resource()),
     source: property(oa.hasSource, schema.resource()),
     selector: property(oa.hasSelector, schema.union(
-      oa.RangeSelector,
-      oa.XPathSelector
+      [oa.RangeSelector, oa.XPathSelector]
     )),
     annotations: inverseProperty(oa.hasTarget, schema.set(oa.Annotation)),
   }

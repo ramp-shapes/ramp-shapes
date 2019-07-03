@@ -6,23 +6,20 @@ import { rdf, ram, xsd } from './vocabulary';
 
 const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
 
-schema.shapes.push({
-  type: 'union',
+schema.union([
+  ram.ObjectShape,
+  ram.UnionShape,
+  ram.SetShape,
+  ram.OptionalShape,
+  ram.ResourceShape,
+  ram.LiteralShape,
+  ram.ListShape,
+  ram.MapShape,
+], {
   id: ram.Shape,
-  variants: [
-    ram.ObjectShape,
-    ram.UnionShape,
-    ram.SetShape,
-    ram.OptionalShape,
-    ram.ResourceShape,
-    ram.LiteralShape,
-    ram.ListShape,
-    ram.MapShape,
-  ]
 });
 
-schema.shapes.push({
-  type: 'resource',
+schema.resource({
   id: ram.ShapeID,
   keepAsTerm: true,
 });
@@ -40,6 +37,13 @@ const ShapeTypeVocabulary: Vocabulary = {
   }
 };
 
+const baseProperties = {
+  id: self(ram.ShapeID),
+  lenient: property(ram.lenient, schema.optional(
+    schema.literal({datatype: xsd.boolean})
+  )),
+};
+
 schema.object({
   id: ram.ObjectShape,
   typeProperties: {
@@ -48,7 +52,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     typeProperties: property(ram.typeProperty, schema.set(ram.ObjectProperty)),
     properties: property(ram.property, schema.set(ram.ObjectProperty)),
   }
@@ -63,29 +67,25 @@ schema.object({
   }
 });
 
-schema.shapes.push({
-  type: 'list',
+schema.list(ram.PathElement, {
   id: ram.PathSequence,
-  itemShape: ram.PathElement,
 });
 
-schema.shapes.push({
-  type: 'union',
+schema.union([ram.PathExpression, ram.PathSegment], {
   id: ram.PathElement,
-  variants: [ram.PathExpression, ram.PathSegment],
 });
 
 schema.object({
   id: ram.PathExpression,
   typeProperties: {
-    operator: property(ram.operator, schema.union(
+    operator: property(ram.operator, schema.union([
       schema.constant(Rdf.literal('|')),
       schema.constant(Rdf.literal('^')),
       schema.constant(Rdf.literal('*')),
       schema.constant(Rdf.literal('+')),
       schema.constant(Rdf.literal('?')),
       schema.constant(Rdf.literal('!')),
-    )),
+    ])),
   },
   properties: {
     path: property(ram.path, ram.PathSequence),
@@ -107,7 +107,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     variants: property(ram.variant, schema.set(ram.ShapeID)),
   }
 });
@@ -120,7 +120,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     itemShape: property(ram.item, ram.ShapeID),
   }
 });
@@ -133,7 +133,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     itemShape: property(ram.item, ram.ShapeID),
   }
 });
@@ -146,7 +146,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     value: property(ram.termValue, schema.optional(schema.resource({keepAsTerm: true}))),
     keepAsTerm: property(ram.keepAsTerm, schema.optional(
       schema.literal({datatype: xsd.boolean})
@@ -170,11 +170,11 @@ const VocabularyItem = schema.object({
 schema.object({
   id: ram.Vocabulary,
   properties: {
-    terms: property(ram.vocabItem, schema.mapValue(
-      {target: VocabularyItemKey},
-      {target: VocabularyItemTerm},
-      VocabularyItem,
-    )),
+    terms: property(ram.vocabItem, schema.map({
+      key: {target: VocabularyItemKey},
+      value: {target: VocabularyItemTerm},
+      itemShape: VocabularyItem,
+    })),
   }
 });
 
@@ -186,7 +186,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     datatype: property(ram.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
     language: property(ram.termLanguage, schema.optional(schema.literal({datatype: xsd.string}))),
     value: property(ram.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
@@ -204,7 +204,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     itemShape: property(ram.item, ram.ShapeID),
     headPath: property(ram.headPath, schema.optional(ram.PathSequence)),
     tailPath: property(ram.tailPath, schema.optional(ram.PathSequence)),
@@ -220,7 +220,7 @@ schema.object({
     )),
   },
   properties: {
-    id: self(ram.ShapeID),
+    ...baseProperties,
     key: property(ram.mapKey, ram.ShapeReference),
     value: property(ram.mapValue, schema.optional(ram.ShapeReference)),
     itemShape: property(ram.item, ram.ShapeID),
@@ -239,11 +239,11 @@ schema.object({
   id: ram.ShapeReference,
   properties: {
     target: property(ram.shape, ram.ShapeID),
-    part: property(ram.termPart, schema.optional(schema.union(
+    part: property(ram.termPart, schema.optional(schema.union([
       schema.constant(ram.TermDatatype, {vocabulary: TermPartVocabulary}),
       schema.constant(ram.TermLanguage, {vocabulary: TermPartVocabulary}),
       schema.constant(ram.TermValue, {vocabulary: TermPartVocabulary}),
-    )))
+    ])))
   }
 });
 

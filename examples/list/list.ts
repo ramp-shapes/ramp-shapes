@@ -19,10 +19,10 @@ const listOwner = schema.object({
 const listOfUnion = schema.object({
   properties: {
     list: property(Rdf.namedNode('example:hasList'), schema.list(
-      schema.union(
+      schema.union([
         schema.constant(Rdf.namedNode('example:b1')),
         schema.constant(Rdf.namedNode('example:b2')),
-      )
+      ])
     ))
   }
 });

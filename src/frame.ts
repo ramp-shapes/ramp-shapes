@@ -15,6 +15,7 @@ export interface FrameParams {
   rootShape: ShapeID;
   shapes: ReadonlyArray<Shape>;
   dataset: Rdf.Dataset;
+  candidates?: Iterable<Rdf.Term>;
   mapper?: ValueMapper;
 }
 
@@ -39,13 +40,13 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   };
 
   const rootShape = context.resolveShape(params.rootShape);
-  const allCandidates = findAllCandidates(params.dataset);
+  const candidates = params.candidates || findAllCandidates(params.dataset);
   const solution: { value: unknown; vars: typeof context.vars } = {
     value: undefined,
     vars: context.vars,
   };
   const stack = new StackFrame(undefined, rootShape);
-  for (const value of frameShape(rootShape, allCandidates, stack, context)) {
+  for (const value of frameShape(rootShape, false, candidates, stack, context)) {
     solution.value = value;
     yield solution;
     solution.value = undefined;
@@ -79,27 +80,29 @@ interface RefContext {
 
 function *frameShape(
   shape: Shape,
+  strict: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
+  const required = strict && !shape.lenient;
   const solutions = (() => {
     switch (shape.type) {
       case 'object':
-        return frameObject(shape, candidates, stack, context);
+        return frameObject(shape, required, candidates, stack, context);
       case 'union':
-        return frameUnion(shape, candidates, stack, context);
+        return frameUnion(shape, required, candidates, stack, context);
       case 'set':
-        return frameSet(shape, candidates, stack, context);
+        return frameSet(shape, required, candidates, stack, context);
       case 'optional':
-        return frameOptional(shape, candidates, stack, context);
+        return frameOptional(shape, required, candidates, stack, context);
       case 'resource':
       case 'literal':
-        return frameNode(shape, candidates, stack, context);
+        return frameNode(shape, required, candidates, stack, context);
       case 'list':
-        return frameList(shape, candidates, stack, context);
+        return frameList(shape, required, candidates, stack, context);
       case 'map':
-        return frameMap(shape, candidates, stack, context);
+        return frameMap(shape, required, candidates, stack, context);
       default:
         return assertUnknownShape(shape);
     }
@@ -128,49 +131,70 @@ function *frameShape(
 
 function *frameObject(
   shape: ObjectShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
 ): Iterable<{ [fieldName: string]: unknown }> {
-  for (const candidate of filterResources(candidates)) {
+  for (const candidate of candidates) {
+    if (!isResource(candidate)) {
+      if (required) {
+        return throwFailedToMatch(shape, stack, candidate);
+      } else {
+        continue;
+      }
+    }
     const template = {};
+    // stores failed to match properties to produce diagnostics
+    let errors: PropertyMatchError[] | undefined = required ? [] : undefined;
     if (frameProperties(shape.typeProperties, template, candidate, undefined, stack, context)) {
-      // stores failed to match properties to produce diagnostics
-      const errors: PropertyMatchError[] | undefined =
-        shape.typeProperties.length > 0 ? [] : undefined;
+      if (!errors && shape.typeProperties.length > 0) {
+        errors = [];
+      }
 
       if (frameProperties(shape.properties, template, candidate, errors, stack, context)) {
         yield template;
       } else if (errors && errors.length > 0) {
-        const propertyErrors: string[] = [];
-
-        if (errors.find(e => e.type === 'no-match')) {
-          propertyErrors.push(
-            'failed to match properties: ' +
-            errors
-              .filter(e => e.type === 'no-match')
-              .map(e => `"${e.property.name}"`)
-              .join(', ')
-          );
-        }
-
-        if (errors.find(e => e.type === 'multiple-matches')) {
-          propertyErrors.push(
-            'found multiple matches for properties: ' +
-            errors
-              .filter(e => e.type === 'multiple-matches')
-              .map(e => `"${e.property.name}"`)
-              .join(', ')
-          );
-        }
-
-        throw new Error(
-          `Invalid subject ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
-          propertyErrors.join('; ') + ' at ' + formatShapeStack(stack)
-        );
+        throwPropertyError(errors, shape, candidate, stack);
       }
+    } else if (errors && errors.length > 0) {
+      throwPropertyError(errors, shape, candidate, stack);
     }
   }
+}
+
+function throwPropertyError(
+  errors: ReadonlyArray<PropertyMatchError>,
+  shape: ObjectShape,
+  candidate: Rdf.Term,
+  stack: StackFrame
+): never {
+  const propertyErrors: string[] = [];
+
+  if (errors.find(e => e.type === 'no-match')) {
+    propertyErrors.push(
+      'failed to match properties: ' +
+      errors
+        .filter(e => e.type === 'no-match')
+        .map(e => `"${e.property.name}"`)
+        .join(', ')
+    );
+  }
+
+  if (errors.find(e => e.type === 'multiple-matches')) {
+    propertyErrors.push(
+      'found multiple matches for properties: ' +
+      errors
+        .filter(e => e.type === 'multiple-matches')
+        .map(e => `"${e.property.name}"`)
+        .join(', ')
+    );
+  }
+
+  throw new Error(
+    `Invalid subject ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
+    propertyErrors.join('; ') + ' at ' + formatShapeStack(stack)
+  );
 }
 
 interface PropertyMatchError {
@@ -186,11 +210,12 @@ function frameProperties(
   stack: StackFrame,
   context: FrameContext
 ): boolean {
+  const required = errors !== undefined;
   for (const property of properties) {
     const valueShape = context.resolveShape(property.valueShape);
 
     let found = false;
-    for (const value of frameProperty(property, valueShape, candidate, stack, context)) {
+    for (const value of frameProperty(property, valueShape, required, candidate, stack, context)) {
       if (found) {
         if (errors) {
           errors.push({property, type: 'multiple-matches'});
@@ -217,13 +242,14 @@ function frameProperties(
 function *frameProperty(
   property: ObjectProperty,
   valueShape: Shape,
+  required: boolean,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
   const values = findByPropertyPath(property.path, candidate, context);
   const nextStack = new StackFrame(stack, valueShape, property.name);
-  yield* frameShape(valueShape, values, nextStack, context);
+  yield* frameShape(valueShape, required, values, nextStack, context);
 }
 
 function findByPropertyPath(
@@ -263,30 +289,48 @@ function findByPropertyPath(
 
 function *frameUnion(
   shape: UnionShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
+  let found = false;
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     const nextStack = new StackFrame(stack, variantShape);
-    yield* frameShape(variantShape, candidates, nextStack, context);
+    for (const match of frameShape(variantShape, false, candidates, nextStack, context)) {
+      found = true;
+      yield match;
+    }
+  }
+
+  if (required && !found) {
+    // try to frame first shape with "required = true" to produce error
+    for (const variant of shape.variants) {
+      const variantShape = context.resolveShape(variant);
+      const nextStack = new StackFrame(stack, variantShape);
+      yield* frameShape(variantShape, true, candidates, nextStack, context);
+    }
+    // otherwise just throw an error
+    return throwFailedToMatch(shape, stack);
   }
 }
 
 function *frameSet(
   shape: SetShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown[]> {
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
-  yield Array.from(frameShape(itemShape, candidates, nextStack, context));
+  yield Array.from(frameShape(itemShape, required, candidates, nextStack, context));
 }
 
 function *frameOptional(
   shape: OptionalShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
@@ -294,17 +338,24 @@ function *frameOptional(
   let found = false;
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
-  for (const value of frameShape(itemShape, candidates, nextStack, context)) {
+  for (const value of frameShape(itemShape, false, candidates, nextStack, context)) {
     found = true;
     yield value;
   }
   if (!found) {
+    if (required && !isEmpty(candidates)) {
+      // try to frame first shape with "required = true" to produce error
+      yield* frameShape(itemShape, true, candidates, stack, context);
+      // otherwise just throw an error
+      return throwFailedToMatch(shape, stack);
+    }
     yield shape.emptyValue;
   }
 }
 
 function *frameNode(
   shape: ResourceShape | LiteralShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
@@ -312,12 +363,15 @@ function *frameNode(
   for (const candidate of candidates) {
     if (matchesTerm(shape, candidate)) {
       yield candidate;
+    } else if (required) {
+      return throwFailedToMatch(shape, stack, candidate);
     }
   }
 }
 
 function *frameList(
   shape: ListShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
@@ -325,7 +379,15 @@ function *frameList(
   const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
   const itemShape = context.resolveShape(shape.itemShape);
 
-  for (const candidate of filterResources(candidates)) {
+  for (const candidate of candidates) {
+    if (!isResource(candidate)) {
+      if (required) {
+        return throwFailedToMatch(shape, stack, candidate);
+      } else {
+        continue;
+      }
+    }
+
     let result: unknown[] | undefined;
     let index = 0;
     let rest = candidate;
@@ -347,13 +409,15 @@ function *frameList(
         foundHead = head;
       }
       if (!foundHead) {
-        if (index === 0) {
-          break;
-        } else {
+        if (index > 0) {
           throw new Error(
             `Failed to match list head ` +
             formatListMatchPosition(index, rest, candidate, shape, stack)
           );
+        } else if (required) {
+          return throwFailedToMatch(shape, stack, candidate);
+        } else {
+          break;
         }
       }
 
@@ -363,7 +427,7 @@ function *frameList(
 
       const nextStack = new StackFrame(stack, itemShape, index);
       let hasItemMatch = false;
-      for (const item of frameShape(itemShape, [foundHead], nextStack, context)) {
+      for (const item of frameShape(itemShape, required, [foundHead], nextStack, context)) {
         if (hasItemMatch) {
           // fail to match item if multiple matches found
           hasItemMatch = false;
@@ -379,7 +443,8 @@ function *frameList(
       }
 
       let foundTail: Rdf.NamedNode | Rdf.BlankNode | undefined;
-      for (const tail of filterResources(findByPropertyPath(tailPath, rest, context))) {
+      for (const tail of findByPropertyPath(tailPath, rest, context)) {
+        if (!isResource(tail)) { continue; }
         if (foundTail && !Rdf.equalTerms(tail, foundTail)) {
           throw new Error(`Found multiple matches for list tail ` +
             formatListMatchPosition(index, rest, candidate, shape, stack));
@@ -416,6 +481,7 @@ function formatListMatchPosition(
 
 function *frameMap(
   shape: MapShape,
+  required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
@@ -433,7 +499,7 @@ function *frameMap(
 
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
-  for (const item of frameShape(itemShape, candidates, nextStack, context)) {
+  for (const item of frameShape(itemShape, required, candidates, nextStack, context)) {
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
     if (key !== undefined && value !== undefined) {
@@ -471,12 +537,8 @@ function frameByReference(
   }
 }
 
-function *filterResources(nodes: Iterable<Rdf.Term>) {
-  for (const node of nodes) {
-    if (node.termType === 'NamedNode' || node.termType === 'BlankNode') {
-      yield node;
-    }
-  }
+function isResource(term: Rdf.Term): term is Rdf.NamedNode | Rdf.BlankNode {
+  return term.termType === 'NamedNode' || term.termType === 'BlankNode';
 }
 
 function findAllCandidates(dataset: Rdf.Dataset) {
@@ -486,6 +548,13 @@ function findAllCandidates(dataset: Rdf.Dataset) {
     candidates.add(object);
   }
   return candidates;
+}
+
+function isEmpty(collection: Iterable<unknown>) {
+  for (const item of collection) {
+    return false;
+  }
+  return true;
 }
 
 function findByPath(
@@ -565,16 +634,33 @@ function findByPath(
   return next || makeTermSet();
 }
 
+function throwFailedToMatch(shape: Shape, stack: StackFrame, term?: Rdf.Term): never {
+  const displyedShape = shape.id.termType === 'BlankNode'
+    ? `(${shape.type} ${Rdf.toString(shape.id)})`
+    : Rdf.toString(shape.id);
+
+  const baseMessage = term
+    ? `Term ${Rdf.toString(term)} does not match ${displyedShape} at `
+    : `Failed to match ${displyedShape} at `;
+
+  throw new Error(baseMessage + formatShapeStack(stack));
+}
+
 function formatShapeStack(stack: StackFrame) {
   let result = '';
   let frame: StackFrame | undefined = stack;
+  let last: StackFrame | undefined;
   while (frame) {
+    const shape = frame.shape.id.termType === 'BlankNode'
+      ? `(${frame.shape.type} ${Rdf.toString(frame.shape.id)})`
+      : Rdf.toString(frame.shape.id);
     const edge = (
-      typeof frame.edge === 'string' ? `"${frame.edge}" |> ` :
-      typeof frame.edge === 'number' ? `${frame.edge} |> ` :
+      (last && typeof last.edge === 'string') ? `."${last.edge}"` :
+      (last && typeof last.edge === 'number') ? `.[${last.edge}]` :
       ''
     );
-    result = edge + Rdf.toString(frame.shape.id) + (result ? ' |> ' : '') + result;
+    result = `${shape}${edge}${last ? ` / ` : ''}${result}`;
+    last = frame;
     frame = frame.parent;
   }
   return result;

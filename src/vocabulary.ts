@@ -25,6 +25,7 @@ export namespace ram {
 
   export const Shape = Rdf.namedNode(NAMESPACE + 'Shape');
   export const ShapeID = Rdf.namedNode(NAMESPACE + 'ShapeID');
+  export const lenient = Rdf.namedNode(NAMESPACE + 'lenient');
 
   // Object
   export const ObjectShape = Rdf.namedNode(NAMESPACE + 'ObjectShape');

@@ -2,16 +2,37 @@ import * as Rdf from './rdf';
 
 export type ShapeID = Rdf.NamedNode | Rdf.BlankNode;
 export type Shape =
+  | ResourceShape
+  | LiteralShape
   | ObjectShape
   | UnionShape
   | SetShape
   | OptionalShape
-  | ResourceShape
-  | LiteralShape
   | ListShape
   | MapShape;
 
-export interface ObjectShape {
+export interface ShapeBase {
+  readonly id: ShapeID;
+  readonly lenient?: boolean;
+}
+
+export interface ResourceShape extends ShapeBase {
+  readonly type: 'resource';
+  readonly value?: Rdf.NamedNode | Rdf.BlankNode;
+  readonly keepAsTerm?: boolean;
+  readonly vocabulary?: Vocabulary;
+}
+
+export interface LiteralShape extends ShapeBase {
+  readonly type: 'literal';
+  readonly id: ShapeID;
+  readonly datatype?: Rdf.NamedNode;
+  readonly language?: string;
+  readonly value?: Rdf.Literal;
+  readonly keepAsTerm?: boolean;
+}
+
+export interface ObjectShape extends ShapeBase {
   readonly type: 'object';
   readonly id: ShapeID;
   readonly typeProperties: ReadonlyArray<ObjectProperty>;
@@ -34,43 +55,27 @@ export interface PathSegment {
   predicate: Rdf.NamedNode;
 }
 
-export interface UnionShape {
+export interface UnionShape extends ShapeBase {
   readonly type: 'union';
   readonly id: ShapeID;
   readonly variants: ReadonlyArray<ShapeID>;
 }
 
-export interface SetShape {
+export interface SetShape extends ShapeBase {
   readonly type: 'set';
   readonly id: ShapeID;
   readonly itemShape: ShapeID;
 }
 
-export interface OptionalShape {
+export interface OptionalShape extends ShapeBase {
   readonly type: 'optional';
   readonly id: ShapeID;
   readonly itemShape: ShapeID;
+  readonly strict?: boolean;
   readonly emptyValue?: null | undefined;
 }
 
-export interface ResourceShape {
-  readonly type: 'resource';
-  readonly id: ShapeID;
-  readonly value?: Rdf.NamedNode | Rdf.BlankNode;
-  readonly keepAsTerm?: boolean;
-  readonly vocabulary?: Vocabulary;
-}
-
-export interface LiteralShape {
-  readonly type: 'literal';
-  readonly id: ShapeID;
-  readonly datatype?: Rdf.NamedNode;
-  readonly language?: string;
-  readonly value?: Rdf.Literal;
-  readonly keepAsTerm?: boolean;
-}
-
-export interface ListShape {
+export interface ListShape extends ShapeBase {
   readonly type: 'list';
   readonly id: ShapeID;
   readonly itemShape: ShapeID;
@@ -82,7 +87,7 @@ export interface ListShape {
   readonly nil?: Rdf.NamedNode;
 }
 
-export interface MapShape {
+export interface MapShape extends ShapeBase {
   readonly type: 'map';
   readonly id: ShapeID;
   readonly key: ShapeReference;

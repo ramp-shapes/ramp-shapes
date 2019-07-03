@@ -1,16 +1,41 @@
 import * as Rdf from './rdf';
 import { ObjectProperty, PathSequence, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
-export type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
+export interface ShapeBuilderOptions {
+  blankUniqueKey?: string;
+}
 
-export interface ObjectShapeProps {
+interface ShapeBaseProps {
   id?: ShapeID;
+  lenient?: boolean;
+}
+
+interface ObjectShapeProps extends ShapeBaseProps {
   typeProperties?: { [name: string]: PartialProperty };
   properties?: { [name: string]: PartialProperty };
 }
 
-export interface ShapeBuilderOptions {
-  blankUniqueKey?: string;
+type PartialProperty = Pick<ObjectProperty, 'path' | 'valueShape'>;
+
+interface OptionalShapeProps extends ShapeBaseProps {
+  emptyValue?: null;
+}
+
+interface ConstantShapeProps extends ShapeBaseProps {
+  keepAsTerm?: boolean;
+  vocabulary?: Vocabulary;
+}
+
+interface LiteralShapeProps extends ShapeBaseProps {
+  datatype?: Rdf.NamedNode;
+  language?: string;
+  keepAsTerm?: boolean;
+}
+
+interface MapShapeProps extends ShapeBaseProps {
+  key: ShapeReference;
+  value: ShapeReference;
+  itemShape?: ShapeID;
 }
 
 export class ShapeBuilder {
@@ -51,40 +76,37 @@ export class ShapeBuilder {
     return id;
   }
 
-  union(...variants: ShapeID[]): ShapeID {
-    const id = this.makeShapeID('union');
-    this._shapes.push({type: 'union', id, variants});
+  union(variants: ReadonlyArray<ShapeID>, props: ShapeBaseProps = {}): ShapeID {
+    const {id = this.makeShapeID('union'), lenient} = props;
+    this._shapes.push({type: 'union', id, lenient, variants});
     return id;
   }
 
-  set(itemShape: ShapeID): ShapeID {
-    const id = this.makeShapeID('set');
-    this._shapes.push({type: 'set', id, itemShape});
+  set(itemShape: ShapeID, props: ShapeBaseProps = {}): ShapeID {
+    const {id = this.makeShapeID('set'), lenient} = props;
+    this._shapes.push({type: 'set', id, lenient, itemShape});
     return id;
   }
 
-  optional(itemShape: ShapeID, emptyValue?: null): ShapeID {
-    const id = this.makeShapeID('optional');
-    this._shapes.push({type: 'optional', id, itemShape, emptyValue});
+  optional(itemShape: ShapeID, props: OptionalShapeProps = {}): ShapeID {
+    const {id = this.makeShapeID('optional'), lenient, emptyValue} = props;
+    this._shapes.push({type: 'optional', id, lenient, itemShape, emptyValue});
     return id;
   }
 
-  constant(value: Rdf.Term, options: {
-    keepAsTerm?: boolean;
-    vocabulary?: Vocabulary;
-  } = {}): ShapeID {
-    const {keepAsTerm, vocabulary} = options;
+  constant(value: Rdf.Term, props: ConstantShapeProps = {}): ShapeID {
+    const {lenient, keepAsTerm, vocabulary} = props;
     let shape: Shape;
     switch (value.termType) {
       case 'NamedNode':
       case 'BlankNode': {
-        const id = this.makeShapeID('resource');
-        shape = {type: 'resource', id, value, keepAsTerm, vocabulary};
+        const {id = this.makeShapeID('resource')} = props;
+        shape = {type: 'resource', id, lenient, value, keepAsTerm, vocabulary};
         break;
       }
       case 'Literal': {
-        const id = this.makeShapeID('literal');
-        shape = {type: 'literal', id, value, keepAsTerm};
+        const {id = this.makeShapeID('literal')} = props;
+        shape = {type: 'literal', id, lenient, value, keepAsTerm};
         break;
       }
       default:
@@ -94,47 +116,33 @@ export class ShapeBuilder {
     return shape.id;
   }
 
-  resource(options: {
-    keepAsTerm?: boolean;
-    vocabulary?: Vocabulary;
-  } = {}): ShapeID {
-    const {keepAsTerm, vocabulary} = options;
-    const id = this.makeShapeID('resource');
-    this._shapes.push({type: 'resource', id, keepAsTerm, vocabulary});
+  resource(props: ConstantShapeProps = {}): ShapeID {
+    const {id = this.makeShapeID('resource'), lenient, keepAsTerm, vocabulary} = props;
+    this._shapes.push({type: 'resource', id, lenient, keepAsTerm, vocabulary});
     return id;
   }
 
-  literal(options: {
-    datatype?: Rdf.NamedNode;
-    language?: string;
-    keepAsTerm?: boolean;
-  } = {}): ShapeID {
-    const id = this.makeShapeID('literal');
-    this._shapes.push({
-      type: 'literal',
-      id,
-      datatype: options.datatype,
-      language: options.language,
-      keepAsTerm: options.keepAsTerm,
-    });
+  literal(props: LiteralShapeProps = {}): ShapeID {
+    const {id = this.makeShapeID('literal'), lenient, datatype, language, keepAsTerm} = props;
+    this._shapes.push({type: 'literal', id, lenient, datatype, language, keepAsTerm});
     return id;
   }
 
-  list(itemShape: ShapeID): ShapeID {
-    const id = this.makeShapeID('list');
-    this._shapes.push({type: 'list', id, itemShape});
+  list(itemShape: ShapeID, props: ShapeBaseProps = {}): ShapeID {
+    const {id = this.makeShapeID('list'), lenient} = props;
+    this._shapes.push({type: 'list', id, lenient, itemShape});
     return id;
   }
 
-  map(key: ShapeReference, itemShape: ShapeID): ShapeID {
-    const id = this.makeShapeID('map');
-    this._shapes.push({type: 'map', id, key, itemShape});
-    return id;
-  }
-
-  mapValue(key: ShapeReference, value: ShapeReference, itemShape?: ShapeID): ShapeID {
-    const id = this.makeShapeID('map');
-    this._shapes.push({type: 'map', id, key, value, itemShape: itemShape || value.target});
+  map(props: MapShapeProps): ShapeID {
+    const {
+      id = this.makeShapeID('map'),
+      lenient,
+      key,
+      value,
+      itemShape = value.target,
+    } = props;
+    this._shapes.push({type: 'map', id, lenient, key, value, itemShape});
     return id;
   }
 

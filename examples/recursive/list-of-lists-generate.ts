@@ -10,15 +10,14 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 
 const schema = new Ram.ShapeBuilder({blankUniqueKey: 'recLists'});
-const listShapeId = Ram.Rdf.namedNode(PREFIXES.ex + 'ListOfLists');
-schema.shapes.push({
-  type: 'list',
-  id: listShapeId,
-  itemShape: schema.union(
-    listShapeId,
+const LIST_SHAPE_ID = Ram.Rdf.namedNode(PREFIXES.ex + 'ListOfLists');
+schema.list(
+  schema.union([
+    LIST_SHAPE_ID,
     schema.literal({datatype: xsd.integer})
-  )
-});
+  ]),
+  {id: LIST_SHAPE_ID}
+);
 
 const rootListIri = Ram.Rdf.namedNode(PREFIXES.ex + 'rootList');
 
@@ -27,7 +26,7 @@ const rootShape = schema.object({
     iri: Ram.self(schema.constant(rootListIri)),
   },
   properties: {
-    body: Ram.self(listShapeId),
+    body: Ram.self(LIST_SHAPE_ID),
   }
 });
 
