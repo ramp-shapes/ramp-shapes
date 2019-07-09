@@ -67,7 +67,7 @@ export namespace ValueMapper {
     return {
       fromRdf: (value, shape) => {
         const vocab = getVocab(shape);
-        if (vocab && looksLikeRdfNode(value)) {
+        if (vocab && Rdf.looksLikeTerm(value)) {
           if (!vocab.termToKey.has(value)) {
             throw new Error(
               `Cannot find RDF term ${Rdf.toString(value)} in vocabulary for shape ${Rdf.toString(shape.id)}`
@@ -140,7 +140,7 @@ function makeKeyToTermVocabulary(vocab: Vocabulary): Map<string, Rdf.Term> {
 }
 
 export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: unknown): unknown {
-  if (!looksLikeRdfNode(value)) {
+  if (!Rdf.looksLikeTerm(value)) {
     return value;
   }
 
@@ -221,12 +221,4 @@ function isFractionalType(datatype: string) {
     datatype === xsd.decimal.value ||
     datatype === xsd.double.value
   );
-}
-
-export function looksLikeRdfNode(value: unknown): value is Rdf.Term {
-  if (!(typeof value === 'object' && value && 'termType' in value)) {
-    return false;
-  }
-  const {termType} = value as Rdf.Term;
-  return termType === 'NamedNode' || termType === 'BlankNode' || termType === 'Literal';
 }

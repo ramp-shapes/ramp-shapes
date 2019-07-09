@@ -6,7 +6,7 @@ import {
 } from './shapes';
 import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
-  resolveListShapeDefaults, matchesTerm
+  resolveListShapeDefaults, matchesTerm,
 } from './common';
 import { compactByReference } from './synthesize';
 import { ValueMapper } from './value-mapping';
@@ -47,6 +47,9 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   };
   const stack = new StackFrame(undefined, rootShape);
   for (const value of frameShape(rootShape, false, candidates, stack, context)) {
+    if (value === MISMATCH) {
+      continue;
+    }
     solution.value = value;
     yield solution;
     solution.value = undefined;
@@ -78,13 +81,16 @@ interface RefContext {
   match?: unknown;
 }
 
+interface Mismatch { _RamMismatch: true; }
+const MISMATCH = { _RamMismatch: true } as Mismatch;
+
 function *frameShape(
   shape: Shape,
   strict: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown> {
+): Iterable<unknown | Mismatch> {
   const required = strict && !shape.lenient;
   const solutions = (() => {
     switch (shape.type) {
@@ -109,6 +115,13 @@ function *frameShape(
   })();
 
   for (const value of solutions) {
+    if (value === MISMATCH) {
+      if (!shape.lenient) {
+        yield strict ? throwFailedToMatch(shape, stack) : MISMATCH;
+      }
+      continue;
+    }
+
     const matchingRefs = context.refs.get(shape.id);
     if (matchingRefs) {
       for (const ref of matchingRefs) {
@@ -135,121 +148,68 @@ function *frameObject(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<{ [fieldName: string]: unknown }> {
+): Iterable<{ [fieldName: string]: unknown } | Mismatch> {
+  function failMatch(candidate: Rdf.Term, message: string): never {
+    throw new Error(
+      message +
+      ` when framing subject ${Rdf.toString(candidate)}` +
+      ` to shape ${Rdf.toString(shape.id)} at ` +
+      formatShapeStack(stack)
+    );
+  }
+
+  function frameProperties(
+    properties: ReadonlyArray<ObjectProperty>,
+    required: boolean,
+    candidate: Rdf.NamedNode | Rdf.BlankNode,
+    template: { [fieldName: string]: unknown }
+  ): boolean {
+    for (const property of properties) {
+      const valueShape = context.resolveShape(property.valueShape);
+      const values = findByPropertyPath(property.path, candidate, context);
+      const nextStack = new StackFrame(stack, valueShape, property.name);
+      let found = false;
+      for (const value of frameShape(valueShape, required, values, nextStack, context)) {
+        if (value === MISMATCH) {
+          return required
+            ? failMatch(candidate, `Failed to match property "${property.name}"`)
+            : false;
+        }
+        if (found) {
+          return required
+            ? failMatch(candidate, `Found multiple matches for property "${property.name}"`)
+            : false;
+        }
+        found = true;
+        template[property.name] = value;
+      }
+      if (!found) {
+        return required
+          ? failMatch(candidate, `Found no matches for property "${property.name}"`)
+          : false;
+      }
+    }
+    return true;
+  }
+
   for (const candidate of candidates) {
     if (!isResource(candidate)) {
-      if (required) {
-        return throwFailedToMatch(shape, stack, candidate);
-      } else {
-        continue;
-      }
+      yield (required ? failMatch(candidate, `Found non-resource term`) : MISMATCH);
+      continue;
     }
+
     const template = {};
-    // stores failed to match properties to produce diagnostics
-    let errors: PropertyMatchError[] | undefined = required ? [] : undefined;
-    if (frameProperties(shape.typeProperties, template, candidate, undefined, stack, context)) {
-      if (!errors && shape.typeProperties.length > 0) {
-        errors = [];
-      }
-
-      if (frameProperties(shape.properties, template, candidate, errors, stack, context)) {
+    if (frameProperties(shape.typeProperties, required, candidate, template)) {
+      const checkProperties = required || shape.typeProperties.length > 0;
+      if (frameProperties(shape.properties, checkProperties, candidate, template)) {
         yield template;
-      } else if (errors && errors.length > 0) {
-        throwPropertyError(errors, shape, candidate, stack);
-      }
-    } else if (errors && errors.length > 0) {
-      throwPropertyError(errors, shape, candidate, stack);
-    }
-  }
-}
-
-function throwPropertyError(
-  errors: ReadonlyArray<PropertyMatchError>,
-  shape: ObjectShape,
-  candidate: Rdf.Term,
-  stack: StackFrame
-): never {
-  const propertyErrors: string[] = [];
-
-  if (errors.find(e => e.type === 'no-match')) {
-    propertyErrors.push(
-      'failed to match properties: ' +
-      errors
-        .filter(e => e.type === 'no-match')
-        .map(e => `"${e.property.name}"`)
-        .join(', ')
-    );
-  }
-
-  if (errors.find(e => e.type === 'multiple-matches')) {
-    propertyErrors.push(
-      'found multiple matches for properties: ' +
-      errors
-        .filter(e => e.type === 'multiple-matches')
-        .map(e => `"${e.property.name}"`)
-        .join(', ')
-    );
-  }
-
-  throw new Error(
-    `Invalid subject ${Rdf.toString(candidate)} for shape ${Rdf.toString(shape.id)}: ` +
-    propertyErrors.join('; ') + ' at ' + formatShapeStack(stack)
-  );
-}
-
-interface PropertyMatchError {
-  type: 'no-match' | 'multiple-matches';
-  property: ObjectProperty;
-}
-
-function frameProperties(
-  properties: ReadonlyArray<ObjectProperty>,
-  template: { [fieldName: string]: unknown },
-  candidate: Rdf.NamedNode | Rdf.BlankNode,
-  errors: PropertyMatchError[] | undefined,
-  stack: StackFrame,
-  context: FrameContext
-): boolean {
-  const required = errors !== undefined;
-  for (const property of properties) {
-    const valueShape = context.resolveShape(property.valueShape);
-
-    let found = false;
-    for (const value of frameProperty(property, valueShape, required, candidate, stack, context)) {
-      if (found) {
-        if (errors) {
-          errors.push({property, type: 'multiple-matches'});
-        } else {
-          return false;
-        }
-      }
-      found = true;
-      template[property.name] = value;
-    }
-
-    if (!found) {
-      if (errors) {
-        errors.push({property, type: 'no-match'});
       } else {
-        return false;
+        yield MISMATCH;
       }
+    } else {
+      yield MISMATCH;
     }
   }
-
-  return errors ? errors.length === 0 : true;
-}
-
-function *frameProperty(
-  property: ObjectProperty,
-  valueShape: Shape,
-  required: boolean,
-  candidate: Rdf.NamedNode | Rdf.BlankNode,
-  stack: StackFrame,
-  context: FrameContext
-): Iterable<unknown> {
-  const values = findByPropertyPath(property.path, candidate, context);
-  const nextStack = new StackFrame(stack, valueShape, property.name);
-  yield* frameShape(valueShape, required, values, nextStack, context);
 }
 
 function findByPropertyPath(
@@ -295,24 +255,31 @@ function *frameUnion(
   context: FrameContext
 ): Iterable<unknown> {
   let found = false;
+  let mismatch = false;
   for (const variant of shape.variants) {
     const variantShape = context.resolveShape(variant);
     const nextStack = new StackFrame(stack, variantShape);
     for (const match of frameShape(variantShape, false, candidates, nextStack, context)) {
-      found = true;
-      yield match;
+      if (match === MISMATCH) {
+        mismatch = true;
+      } else {
+        found = true;
+        yield match;
+      }
     }
   }
 
-  if (required && !found) {
-    // try to frame first shape with "required = true" to produce error
-    for (const variant of shape.variants) {
-      const variantShape = context.resolveShape(variant);
-      const nextStack = new StackFrame(stack, variantShape);
-      yield* frameShape(variantShape, true, candidates, nextStack, context);
+  if (!found && mismatch) {
+    if (required) {
+      // try to frame with "required = true" to produce error
+      for (const variant of shape.variants) {
+        const variantShape = context.resolveShape(variant);
+        const nextStack = new StackFrame(stack, variantShape);
+        yield* frameShape(variantShape, true, candidates, nextStack, context);
+      }
+    } else {
+      yield MISMATCH;
     }
-    // otherwise just throw an error
-    return throwFailedToMatch(shape, stack);
   }
 }
 
@@ -322,10 +289,18 @@ function *frameSet(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown[]> {
+): Iterable<unknown> {
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
-  yield Array.from(frameShape(itemShape, required, candidates, nextStack, context));
+  const matches: unknown[] = [];
+  for (const match of frameShape(itemShape, required, candidates, nextStack, context)) {
+    if (match === MISMATCH) {
+      yield MISMATCH;
+      return;
+    }
+    matches.push(match);
+  }
+  yield matches;
 }
 
 function *frameOptional(
@@ -334,21 +309,22 @@ function *frameOptional(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown> {
+): Iterable<unknown | Mismatch> {
   let found = false;
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
   for (const value of frameShape(itemShape, false, candidates, nextStack, context)) {
-    found = true;
+    if (value === MISMATCH) {
+      if (required) {
+        // try to frame with "required = true" to produce error
+        yield* frameShape(itemShape, true, candidates, nextStack, context);
+      }
+    } else {
+      found = true;
+    }
     yield value;
   }
   if (!found) {
-    if (required && !isEmpty(candidates)) {
-      // try to frame first shape with "required = true" to produce error
-      yield* frameShape(itemShape, true, candidates, stack, context);
-      // otherwise just throw an error
-      return throwFailedToMatch(shape, stack);
-    }
     yield shape.emptyValue;
   }
 }
@@ -359,12 +335,14 @@ function *frameNode(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<Rdf.Term> {
+): Iterable<Rdf.Term | Mismatch> {
   for (const candidate of candidates) {
     if (matchesTerm(shape, candidate)) {
       yield candidate;
     } else if (required) {
       return throwFailedToMatch(shape, stack, candidate);
+    } else {
+      yield MISMATCH;
     }
   }
 }
@@ -375,50 +353,41 @@ function *frameList(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown[]> {
+): Iterable<unknown[] | Mismatch> {
   const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
   const itemShape = context.resolveShape(shape.itemShape);
 
-  for (const candidate of candidates) {
-    if (!isResource(candidate)) {
-      if (required) {
-        return throwFailedToMatch(shape, stack, candidate);
-      } else {
-        continue;
-      }
-    }
-
+  function frameListFromTerm(candidate: Rdf.Term): unknown[] | Mismatch {
     let result: unknown[] | undefined;
     let index = 0;
     let rest = candidate;
 
+    function failMatch(message: string): never {
+      throw new Error(message +
+        formatListMatchPosition(index, rest, candidate, shape, stack));
+    }
+
     while (true) {
+      if (!isResource(rest)) {
+        return required ? failMatch(`List term is not a resource`) : MISMATCH;
+      }
+
       if (Rdf.equalTerms(rest, nil)) {
         if (!result) {
           result = [];
         }
-        break;
+        return result;
       }
 
       let foundHead: Rdf.Term | undefined;
       for (const head of findByPropertyPath(headPath, rest, context)) {
         if (foundHead && !Rdf.equalTerms(head, foundHead)) {
-          throw new Error(`Found multiple matches for list head ` +
-            formatListMatchPosition(index, rest, candidate, shape, stack));
+          return required ? failMatch(`Found multiple matches for list head`) : MISMATCH;
         }
         foundHead = head;
       }
       if (!foundHead) {
-        if (index > 0) {
-          throw new Error(
-            `Failed to match list head ` +
-            formatListMatchPosition(index, rest, candidate, shape, stack)
-          );
-        } else if (required) {
-          return throwFailedToMatch(shape, stack, candidate);
-        } else {
-          break;
-        }
+        return required ? failMatch(`Failed to match list head`) : MISMATCH;
       }
 
       if (!result) {
@@ -428,54 +397,49 @@ function *frameList(
       const nextStack = new StackFrame(stack, itemShape, index);
       let hasItemMatch = false;
       for (const item of frameShape(itemShape, required, [foundHead], nextStack, context)) {
-        if (hasItemMatch) {
-          // fail to match item if multiple matches found
-          hasItemMatch = false;
-          break;
+        if (item === MISMATCH) {
+          return MISMATCH;
+        } else if (hasItemMatch) {
+          return required ? failMatch(`Multiple matches for list item found`) : MISMATCH;
         }
         hasItemMatch = true;
         result.push(item);
       }
       if (!hasItemMatch) {
-        // fail to match list when failed to match an item
-        result = undefined;
-        break;
+        return required ? failMatch(`No matches for list item found`) : MISMATCH;
       }
 
-      let foundTail: Rdf.NamedNode | Rdf.BlankNode | undefined;
+      let foundTail: Rdf.Term | undefined;
       for (const tail of findByPropertyPath(tailPath, rest, context)) {
-        if (!isResource(tail)) { continue; }
         if (foundTail && !Rdf.equalTerms(tail, foundTail)) {
-          throw new Error(`Found multiple matches for list tail ` +
-            formatListMatchPosition(index, rest, candidate, shape, stack));
+          return required ? failMatch(`Found multiple matches for list tail`) : MISMATCH;
         }
         foundTail = tail;
       }
       if (!foundTail) {
-        throw new Error(`Failed to match list tail ` +
-          formatListMatchPosition(index, rest, candidate, shape, stack));
+        return required ? failMatch(`Failed to match list tail`) : MISMATCH;
       }
 
       rest = foundTail;
       index++;
     }
+  }
 
-    if (result) {
-      yield result;
-    }
+  for (const candidate of candidates) {
+    yield frameListFromTerm(candidate);
   }
 }
 
 function formatListMatchPosition(
   index: number,
-  tail: Rdf.NamedNode | Rdf.BlankNode,
-  subject: Rdf.NamedNode | Rdf.BlankNode,
+  tail: Rdf.Term,
+  subject: Rdf.Term,
   shape: Shape,
   stack: StackFrame
 ) {
   return (
-    `at index ${index} with tail ${Rdf.toString(tail)}, subject ${Rdf.toString(subject)}, ` +
-    `shape ${Rdf.toString(shape.id)} at ` + formatShapeStack(stack)
+    ` at index ${index} with tail ${Rdf.toString(tail)}, subject ${Rdf.toString(subject)},` +
+    ` shape ${Rdf.toString(shape.id)} at ` + formatShapeStack(stack)
   );
 }
 
@@ -485,7 +449,7 @@ function *frameMap(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<{ [key: string]: unknown }> {
+): Iterable<{ [key: string]: unknown } | Mismatch> {
   const result: { [key: string]: unknown } = {};
 
   const keyContext: RefContext = {source: shape.id, reference: shape.key};
@@ -500,6 +464,10 @@ function *frameMap(
   const itemShape = context.resolveShape(shape.itemShape);
   const nextStack = new StackFrame(stack, itemShape);
   for (const item of frameShape(itemShape, required, candidates, nextStack, context)) {
+    if (item === MISMATCH) {
+      yield MISMATCH;
+      return;
+    }
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
     if (key !== undefined && value !== undefined) {
@@ -548,13 +516,6 @@ function findAllCandidates(dataset: Rdf.Dataset) {
     candidates.add(object);
   }
   return candidates;
-}
-
-function isEmpty(collection: Iterable<unknown>) {
-  for (const item of collection) {
-    return false;
-  }
-  return true;
 }
 
 function findByPath(
@@ -684,10 +645,4 @@ function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
   if (removed !== ref) {
     throw new Error('Encountered non-matching ref operations');
   }
-}
-
-function toTraceString(value: unknown) {
-  return Array.isArray(value) ? `[length = ${value.length}]` :
-    (typeof value === 'object' && value) ? `{keys: ${Object.keys(value)}}` :
-    String(value);
 }

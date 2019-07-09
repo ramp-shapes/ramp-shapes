@@ -7,7 +7,7 @@ import {
   SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm, makeTermMap
 } from './common';
 import { ReferenceMatch, synthesizeShape } from './synthesize';
-import { ValueMapper, looksLikeRdfNode } from './value-mapping';
+import { ValueMapper } from './value-mapping';
 
 export interface FlattenParams {
   value: unknown;
@@ -307,7 +307,7 @@ function flattenNode(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  if (!(looksLikeRdfNode(value) && matchesTerm(shape, value))) {
+  if (!(Rdf.looksLikeTerm(value) && matchesTerm(shape, value))) {
     return undefined;
   }
   const node = value as RdfNode;

@@ -290,3 +290,20 @@ function hashFnv32a(str: string, seed = 0x811c9dc5): number {
   return hval >>> 0;
   /* tslint:enable: no-bitwise */
 }
+
+export function looksLikeTerm(value: unknown): value is Term {
+  if (!(typeof value === 'object' && value && 'termType' in value)) {
+    return false;
+  }
+  const {termType} = value as Term;
+  switch (termType) {
+    case 'NamedNode':
+    case 'Literal':
+    case 'BlankNode':
+    case 'DefaultGraph':
+    case 'Variable':
+      return true;
+    default:
+      return false;
+  }
+}
