@@ -1,23 +1,35 @@
 {
   "name": "ram-shapes",
   "version": "0.4.0",
-  "description": "",
-  "scripts": {
-    "build": "tsc --project tsconfig.json && tsc --project tsconfig.module.json",
-    "lint": "tslint 'src/**.ts' 'examples/**.ts'",
-    "test": "npm run build"
+  "description": "RAM shapes: declarative RDF ↔ ADT mapping",
+  "keywords": [
+    "RDF",
+    "ADT",
+    "mapping",
+    "JSON"
+  ],
+  "homepage": "https://ram-shapes.github.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ram-shapes/ram-shapes.git"
   },
   "author": "Alexey Morozov <alexey.morozov@live.ru>",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.module.json && tsc --project tsconfig.module-es5.json",
+    "lint": "tslint --project tsconfig.json",
+    "test": "ts-node ./test/main.ts"
+  },
   "devDependencies": {
     "@types/n3": "^1.0.7",
     "@types/node": "^12.0.10",
     "@types/sparqljs": "^2.1.0",
+    "json-diff": "^0.5.4",
     "n3": "^1.0.4",
     "sparqljs": "^2.2.3",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.2"
   },
   "dependencies": {
     "tslib": "^1.10.0"

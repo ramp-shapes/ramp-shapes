@@ -1,0 +1,16 @@
+{
+  "shapes": "points-simple",
+  "graph": "object1",
+  "matches": [
+    {
+      "type": "http://example.com/schema#Point",
+      "x": 1,
+      "y": 2
+    },
+    {
+      "type": "http://example.com/schema#Point",
+      "x": -3,
+      "y": -4
+    }
+  ]
+}

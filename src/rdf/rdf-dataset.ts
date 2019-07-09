@@ -21,7 +21,7 @@ export interface Dataset extends Iterable<Quad> {
   ): Iterable<Quad>;
 }
 
-export function dataset(quads?: Iterable<Quad>) {
+export function dataset(quads?: Iterable<Quad>): Dataset {
   const result = new SourcePredicateIndexedDataset();
   if (quads) {
     result.addAll(quads);

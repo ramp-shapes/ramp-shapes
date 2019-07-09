@@ -1,0 +1,4 @@
+[
+  {"type": "frame", "name": "object1"},
+  {"type": "generateQuery", "name": "point"}
+]

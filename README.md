@@ -12,7 +12,7 @@
  * Construct SPARQL queries to fetch necessary data for given shapes.
  * *(In the future)* Validate that runtime object structure matches specified shape.
 
-## Install
+## Installation
 
 Install with `npm install --save ram-shapes`
 

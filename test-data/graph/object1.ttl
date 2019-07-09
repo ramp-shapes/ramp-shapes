@@ -1,0 +1,13 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:pointNamed a ex:Point;
+    ex:xCoord 1;
+    ex:yCoord 2.
+
+_:pointBlank a ex:Point;
+    ex:xCoord -3;
+    ex:yCoord -4.
+
+:notPoint ex:xCoord 10;
+    ex:yCoord 20.
