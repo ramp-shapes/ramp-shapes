@@ -1,4 +1,8 @@
 [
+  {"type": "frame", "name": "lenient1"},
+  {"type": "frame", "name": "lenient2-err"},
   {"type": "frame", "name": "object1"},
+  {"type": "frame", "name": "object2-err"},
+  {"type": "frame", "name": "object3-err"},
   {"type": "generateQuery", "name": "point"}
 ]

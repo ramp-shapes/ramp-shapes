@@ -16,7 +16,7 @@ enum ExitCode {
 
 if (process.argv.length === 3) {
   const [, scriptName, argument] = process.argv;
-  if (argument === 'help' || argument === '--help') {
+  if (argument === '--help') {
     console.error(
       `CLI syntax for ${scriptName}:\n` +
       `$ ${scriptName} (<test-case-name>)*`
@@ -67,7 +67,7 @@ console.log();
 
 for (const result of results) {
   if (result.type === 'failure') {
-    console.error(`Failure in "${result.testCase.name}": ${result.message}`);
+    console.error(`Failure in "${TestCase.getFullName(result.testCase)}": ${result.message}`);
     if (result.error) {
       console.error(result.error);
     }

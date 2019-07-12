@@ -1,0 +1,10 @@
+{
+  "shapes": "points-simple",
+  "graph": "object2-err",
+  "error": {
+    "code": 203,
+    "stack": [
+      {"shape": "http://example.com/schema#Point"}
+    ]
+  }
+}

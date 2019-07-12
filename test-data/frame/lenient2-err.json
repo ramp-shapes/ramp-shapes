@@ -1,0 +1,13 @@
+{
+  "shapes": "lenient",
+  "graph": "lenient2-err",
+  "error": {
+    "code": 201,
+    "stack": [
+      {"shape": "http://example.com/schema#Location"},
+      {"edge": "center", "shape": {"type": "optional"}},
+      {"shape": "http://example.com/schema#Point"},
+      {"edge": "y", "shape": {"type": "literal"}}
+    ]
+  }
+}

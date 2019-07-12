@@ -1,0 +1,6 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:location1 a ex:Location;
+    ex:centerPoint [ ex:xCoord 3; ex:yCoord "7" ];
+    ex:borderPoint [ ex:xCoord 4; ex:yCoord "8" ].

@@ -33,7 +33,18 @@ export interface TestFailure {
 interface FrameTest {
   readonly shapes: string;
   readonly graph: string;
-  readonly matches: ReadonlyArray<unknown>;
+  readonly matches?: ReadonlyArray<unknown>;
+  readonly error?: FrameErrorTest;
+}
+
+interface FrameErrorTest {
+  readonly code: Ram.ErrorCode;
+  readonly stack?: ReadonlyArray<TestStackFrame>;
+}
+
+interface TestStackFrame {
+  readonly edge?: string | number;
+  readonly shape: string | { type: Ram.Shape['type'] };
 }
 
 export function runTest(testCase: TestCase): TestResult {
@@ -103,7 +114,7 @@ function runFrameTest(testCase: TestCase): TestResult {
     const matches = Ram.frame({shapes, rootShape, dataset: graph});
     let matchIndex = 0;
     for (const match of matches) {
-      if (matchIndex >= frameTest.matches.length) {
+      if (!frameTest.matches || matchIndex >= frameTest.matches.length) {
         return {
           type: 'failure',
           testCase,
@@ -124,16 +135,56 @@ function runFrameTest(testCase: TestCase): TestResult {
       }
       matchIndex++;
     }
+    if (frameTest.error) {
+      return {
+        type: 'failure',
+        testCase,
+        message: 'Framing expected to fail with error',
+      };
+    }
   } catch (error) {
-    return {
-      type: 'failure',
-      testCase,
-      message: 'Failed to frame test graph',
-      error,
-    };
+    if (Ram.isRamError(error) && frameTest.error) {
+      if (error.ramErrorCode !== frameTest.error.code) {
+        return {
+          type: 'failure',
+          testCase,
+          message: 'Expected a different framing error code',
+          error,
+          expected: frameTest.error.code,
+          given: error.ramErrorCode,
+        };
+      }
+      const stack = error.ramStack ? ramStackToTestStack(error.ramStack) : undefined;
+      if (!structurallySame(stack, frameTest.error.stack)) {
+        return {
+          type: 'failure',
+          testCase,
+          message: 'Expected a different frame error stack',
+          error,
+          expected: frameTest.error.stack,
+          given: stack,
+        };
+      }
+    } else {
+      return {
+        type: 'failure',
+        testCase,
+        message: 'Unexpected error while framing test graph',
+        error,
+      };
+    }
   }
 
   return {type: 'success', testCase};
+}
+
+function ramStackToTestStack(stack: ReadonlyArray<Ram.StackFrame>) {
+  return stack.map((frame): TestStackFrame => ({
+    edge: frame.edge,
+    shape: frame.shape.id.termType === 'NamedNode'
+      ? frame.shape.id.value
+      : {type: frame.shape.type}
+  }));
 }
 
 function runGenerateQueryTest(testCase: TestCase): TestResult {

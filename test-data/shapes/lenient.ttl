@@ -1,0 +1,37 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://ram-shapes.github.io/schema#>.
+
+ex:Location a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate rdf:type ]);
+        :shape [ a :ResourceShape; :termValue ex:Location ]
+    ];
+    :property [
+        :name "center";
+        :path ([ :predicate ex:centerPoint ]);
+        :shape [ a :OptionalShape; :item ex:Point ]
+    ];
+    :property [
+        :name "border";
+        :path ([ :predicate ex:borderPoint ]);
+        :shape [ a :SetShape; :item _:LenientPoint ]
+    ].
+
+_:LenientPoint a :UnionShape;
+    :lenient true;
+    :variant ex:Point.
+
+ex:Point a :ObjectShape;
+    :property [
+        :name "x";
+        :path ([ :predicate ex:xCoord ]);
+        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+    ];
+    :property [
+        :name "y";
+        :path ([ :predicate ex:yCoord ]);
+        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+    ].

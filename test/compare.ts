@@ -25,12 +25,23 @@ export function structurallySame(a: unknown, b: unknown) {
           return false;
         }
         for (const key in a) {
-          if (Object.hasOwnProperty.call(a, key) && Object.hasOwnProperty.call(b, key)) {
-            if ((a as any)[key] !== (b as any)[key]) { return false; }
+          if (Object.hasOwnProperty.call(a, key)) {
+            const aValue = (a as any)[key];
+            if (aValue !== undefined && !Object.hasOwnProperty.call(b, key)) {
+              return false;
+            }
+            if (!structurallySame(aValue, (b as any)[key])) {
+              return false;
+            }
           }
         }
         for (const key in b as object) {
-          if (!Object.hasOwnProperty.call(a, key)) { return false; }
+          if (Object.hasOwnProperty.call(b, key)) {
+            const bValue = (b as any)[key];
+            if (bValue !== undefined && !Object.hasOwnProperty.call(a, key)) {
+              return false;
+            }
+          }
         }
         return true;
       }

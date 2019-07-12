@@ -1,0 +1,14 @@
+{
+  "shapes": "lenient",
+  "graph": "lenient1",
+  "matches": [
+    {
+      "type": "http://example.com/schema#Location",
+      "border": [
+        {"x": 1, "y": 2},
+        {"x": 5, "y": 6},
+        {"x": 7, "y": 8}
+      ]
+    }
+  ]
+}
