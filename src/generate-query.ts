@@ -10,6 +10,7 @@ import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
   resolveListShapeDefaults,
 } from './common';
+import { ErrorCode, RamError, formatShapeStack } from './errors';
 
 export interface GenerateQueryParams {
   rootShape: ShapeID;
@@ -19,6 +20,9 @@ export interface GenerateQueryParams {
   unstable_onEmit?: (shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]) => void;
 }
 
+/**
+ * @throws {RamError}
+ */
 export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQuery {
   const templateTriples: SparqlJs.Triple[] = [];
   const wherePatterns: SparqlJs.Pattern[] = [];
@@ -64,7 +68,8 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     visitingShapes: makeTermSet() as HashSet<ShapeID>,
     stack: [],
     resolveShape: makeShapeResolver(params.shapes, shapeID => {
-      throw new Error(
+      throw context.makeError(
+        ErrorCode.MissingShape,
         `Failed to resolve shape ${Rdf.toString(shapeID)}`
       );
     }),
@@ -86,6 +91,14 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
           templateTriples.push(triple);
         }
       }
+    },
+    makeError: (code, message) => {
+      const stack = context.stack.map(shape => ({shape}));
+      const stackString = formatShapeStack(stack);
+      const error = new Error(`RAM${code}: ${message} at ${stackString}`) as RamError;
+      error.ramErrorCode = code;
+      error.ramStack = stack;
+      return error;
     },
     onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
   };
@@ -111,6 +124,7 @@ interface GenerateQueryContext {
   resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
   addEdge(edge: Edge): void;
+  makeError(code: ErrorCode, message: string): RamError;
   onEmit(shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]): void;
 }
 
