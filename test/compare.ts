@@ -1,4 +1,4 @@
-import * as Ram from '../src/index';
+import * as Ramp from '../src/index';
 
 export function structurallySame(a: unknown, b: unknown) {
   if (typeof a !== typeof b) { return false; }
@@ -16,8 +16,8 @@ export function structurallySame(a: unknown, b: unknown) {
           if (!structurallySame(a[i], b[i])) { return false; }
         }
         return true;
-      } else if (Ram.Rdf.looksLikeTerm(a) && Ram.Rdf.looksLikeTerm(b)) {
-        return Ram.Rdf.equalTerms(a, b);
+      } else if (Ramp.Rdf.looksLikeTerm(a) && Ramp.Rdf.looksLikeTerm(b)) {
+        return Ramp.Rdf.equalTerms(a, b);
       } else {
         const aPrototype = Object.getPrototypeOf(a);
         const bPrototype = Object.getPrototypeOf(b);

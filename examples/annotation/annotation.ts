@@ -1,12 +1,12 @@
 import { join } from 'path';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import { self, property, inverseProperty, propertyPath } from '../../src/index';
 import { rdf, rdfs, xsd, oa } from '../namespaces';
 import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
 
-const dataset = Ram.Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'annotation.ttl')));
+const dataset = Ramp.Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'annotation.ttl')));
 
-const schema = new Ram.ShapeBuilder();
+const schema = new Ramp.ShapeBuilder();
 
 const xpathLiteral = schema.literal({datatype: xsd.string});
 
@@ -85,17 +85,17 @@ const PREFIXES = {
 };
 
 (async function main() {
-  for (const {value, vars} of Ram.frame({rootShape: oa.Annotation, shapes: schema.shapes, dataset})) {
+  for (const {value, vars} of Ramp.frame({rootShape: oa.Annotation, shapes: schema.shapes, dataset})) {
     console.log('FRAME oa:Annotation', toJson(value));
     console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
-    const triples = Ram.flatten({value, rootShape: oa.Annotation, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, rootShape: oa.Annotation, shapes: schema.shapes});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value, vars} of Ram.frame({rootShape: backwardsShape, shapes: schema.shapes, dataset})) {
+  for (const {value, vars} of Ramp.frame({rootShape: backwardsShape, shapes: schema.shapes, dataset})) {
     console.log('FRAME backwards shape', toJson(value));
     console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
-    const triples = Ram.flatten({value, rootShape: backwardsShape, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, rootShape: backwardsShape, shapes: schema.shapes});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 })();

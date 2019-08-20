@@ -649,7 +649,7 @@ function makeError(code: ErrorCode, message: string, stack?: StackFrame): RamErr
   const stackArray = stack ? stackToArray(stack) : undefined;
   const stackString = stackArray ? formatShapeStack(stackArray) : undefined;
   const error = new Error(
-    `RAM${code}: ${message}` + (stackString ? ` at ${stackString}` : '')
+    `RAMP${code}: ${message}` + (stackString ? ` at ${stackString}` : '')
   ) as RamError;
   error.ramErrorCode = code;
   error.ramStack = stackArray;

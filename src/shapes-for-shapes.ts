@@ -2,83 +2,83 @@ import { ShapeBuilder, property, self } from './builder';
 import * as Rdf from './rdf';
 import { Shape, Vocabulary } from './shapes';
 import { frame } from './frame';
-import { rdf, ram, xsd } from './vocabulary';
+import { rdf, ramp, xsd } from './vocabulary';
 
 const schema = new ShapeBuilder({blankUniqueKey: 'shapes'});
 
 schema.union([
-  ram.ObjectShape,
-  ram.UnionShape,
-  ram.SetShape,
-  ram.OptionalShape,
-  ram.ResourceShape,
-  ram.LiteralShape,
-  ram.ListShape,
-  ram.MapShape,
+  ramp.ObjectShape,
+  ramp.UnionShape,
+  ramp.SetShape,
+  ramp.OptionalShape,
+  ramp.ResourceShape,
+  ramp.LiteralShape,
+  ramp.ListShape,
+  ramp.MapShape,
 ], {
-  id: ram.Shape,
+  id: ramp.Shape,
 });
 
 schema.resource({
-  id: ram.ShapeID,
+  id: ramp.ShapeID,
   keepAsTerm: true,
 });
 
 const ShapeTypeVocabulary: Vocabulary = {
   terms: {
-    'object': ram.ObjectShape,
-    'union': ram.UnionShape,
-    'set': ram.SetShape,
-    'optional': ram.OptionalShape,
-    'resource': ram.ResourceShape,
-    'literal': ram.LiteralShape,
-    'list': ram.ListShape,
-    'map': ram.MapShape,
+    'object': ramp.ObjectShape,
+    'union': ramp.UnionShape,
+    'set': ramp.SetShape,
+    'optional': ramp.OptionalShape,
+    'resource': ramp.ResourceShape,
+    'literal': ramp.LiteralShape,
+    'list': ramp.ListShape,
+    'map': ramp.MapShape,
   }
 };
 
 const baseProperties = {
-  id: self(ram.ShapeID),
-  lenient: property(ram.lenient, schema.optional(
+  id: self(ramp.ShapeID),
+  lenient: property(ramp.lenient, schema.optional(
     schema.literal({datatype: xsd.boolean})
   )),
 };
 
 schema.object({
-  id: ram.ObjectShape,
+  id: ramp.ObjectShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.ObjectShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.ObjectShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    typeProperties: property(ram.typeProperty, schema.set(ram.ObjectProperty)),
-    properties: property(ram.property, schema.set(ram.ObjectProperty)),
+    typeProperties: property(ramp.typeProperty, schema.set(ramp.ObjectProperty)),
+    properties: property(ramp.property, schema.set(ramp.ObjectProperty)),
   }
 });
 
 schema.object({
-  id: ram.ObjectProperty,
+  id: ramp.ObjectProperty,
   properties: {
-    name: property(ram.name, schema.literal({datatype: xsd.string})),
-    path: property(ram.path, ram.PathSequence),
-    valueShape: property(ram.shape, ram.ShapeID),
+    name: property(ramp.name, schema.literal({datatype: xsd.string})),
+    path: property(ramp.path, ramp.PathSequence),
+    valueShape: property(ramp.shape, ramp.ShapeID),
   }
 });
 
-schema.list(ram.PathElement, {
-  id: ram.PathSequence,
+schema.list(ramp.PathElement, {
+  id: ramp.PathSequence,
 });
 
-schema.union([ram.PathExpression, ram.PathSegment], {
-  id: ram.PathElement,
+schema.union([ramp.PathExpression, ramp.PathSegment], {
+  id: ramp.PathElement,
 });
 
 schema.object({
-  id: ram.PathExpression,
+  id: ramp.PathExpression,
   typeProperties: {
-    operator: property(ram.operator, schema.union([
+    operator: property(ramp.operator, schema.union([
       schema.constant(Rdf.literal('|')),
       schema.constant(Rdf.literal('^')),
       schema.constant(Rdf.literal('*')),
@@ -88,70 +88,70 @@ schema.object({
     ])),
   },
   properties: {
-    path: property(ram.path, ram.PathSequence),
+    path: property(ramp.path, ramp.PathSequence),
   }
 });
 
 schema.object({
-  id: ram.PathSegment,
+  id: ramp.PathSegment,
   typeProperties: {
-    predicate: property(ram.predicate, schema.resource({keepAsTerm: true})),
+    predicate: property(ramp.predicate, schema.resource({keepAsTerm: true})),
   }
 });
 
 schema.object({
-  id: ram.UnionShape,
+  id: ramp.UnionShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.UnionShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.UnionShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    variants: property(ram.variant, schema.set(ram.ShapeID)),
+    variants: property(ramp.variant, schema.set(ramp.ShapeID)),
   }
 });
 
 schema.object({
-  id: ram.SetShape,
+  id: ramp.SetShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.SetShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.SetShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    itemShape: property(ram.item, ram.ShapeID),
+    itemShape: property(ramp.item, ramp.ShapeID),
   }
 });
 
 schema.object({
-  id: ram.OptionalShape,
+  id: ramp.OptionalShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.OptionalShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.OptionalShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    itemShape: property(ram.item, ram.ShapeID),
+    itemShape: property(ramp.item, ramp.ShapeID),
   }
 });
 
 schema.object({
-  id: ram.ResourceShape,
+  id: ramp.ResourceShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.ResourceShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.ResourceShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    value: property(ram.termValue, schema.optional(schema.resource({keepAsTerm: true}))),
-    keepAsTerm: property(ram.keepAsTerm, schema.optional(
+    value: property(ramp.termValue, schema.optional(schema.resource({keepAsTerm: true}))),
+    keepAsTerm: property(ramp.keepAsTerm, schema.optional(
       schema.literal({datatype: xsd.boolean})
     )),
-    vocabulary: property(ram.vocabulary, schema.optional(ram.Vocabulary)),
+    vocabulary: property(ramp.vocabulary, schema.optional(ramp.Vocabulary)),
   }
 });
 
@@ -160,17 +160,17 @@ const VocabularyItemTerm = schema.resource({keepAsTerm: true});
 const VocabularyItem = schema.object({
   id: schema.makeShapeID('VocabularyItem'),
   typeProperties: {
-    key: property(ram.vocabKey, VocabularyItemKey),
+    key: property(ramp.vocabKey, VocabularyItemKey),
   },
   properties: {
-    term: property(ram.termValue, VocabularyItemTerm),
+    term: property(ramp.termValue, VocabularyItemTerm),
   }
 });
 
 schema.object({
-  id: ram.Vocabulary,
+  id: ramp.Vocabulary,
   properties: {
-    terms: property(ram.vocabItem, schema.map({
+    terms: property(ramp.vocabItem, schema.map({
       key: {target: VocabularyItemKey},
       value: {target: VocabularyItemTerm},
       itemShape: VocabularyItem,
@@ -179,70 +179,70 @@ schema.object({
 });
 
 schema.object({
-  id: ram.LiteralShape,
+  id: ramp.LiteralShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.LiteralShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.LiteralShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    datatype: property(ram.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
-    language: property(ram.termLanguage, schema.optional(schema.literal({datatype: xsd.string}))),
-    value: property(ram.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
-    keepAsTerm: property(ram.keepAsTerm, schema.optional(
+    datatype: property(ramp.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
+    language: property(ramp.termLanguage, schema.optional(schema.literal({datatype: xsd.string}))),
+    value: property(ramp.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
+    keepAsTerm: property(ramp.keepAsTerm, schema.optional(
       schema.literal({datatype: xsd.boolean})
     )),
   }
 });
 
 schema.object({
-  id: ram.ListShape,
+  id: ramp.ListShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.ListShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.ListShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    itemShape: property(ram.item, ram.ShapeID),
-    headPath: property(ram.headPath, schema.optional(ram.PathSequence)),
-    tailPath: property(ram.tailPath, schema.optional(ram.PathSequence)),
-    nil: property(ram.nil, schema.optional(schema.resource({keepAsTerm: true}))),
+    itemShape: property(ramp.item, ramp.ShapeID),
+    headPath: property(ramp.headPath, schema.optional(ramp.PathSequence)),
+    tailPath: property(ramp.tailPath, schema.optional(ramp.PathSequence)),
+    nil: property(ramp.nil, schema.optional(schema.resource({keepAsTerm: true}))),
   }
 });
 
 schema.object({
-  id: ram.MapShape,
+  id: ramp.MapShape,
   typeProperties: {
     type: property(rdf.type, schema.constant(
-      ram.MapShape, {vocabulary: ShapeTypeVocabulary}
+      ramp.MapShape, {vocabulary: ShapeTypeVocabulary}
     )),
   },
   properties: {
     ...baseProperties,
-    key: property(ram.mapKey, ram.ShapeReference),
-    value: property(ram.mapValue, schema.optional(ram.ShapeReference)),
-    itemShape: property(ram.item, ram.ShapeID),
+    key: property(ramp.mapKey, ramp.ShapeReference),
+    value: property(ramp.mapValue, schema.optional(ramp.ShapeReference)),
+    itemShape: property(ramp.item, ramp.ShapeID),
   }
 });
 
 const TermPartVocabulary: Vocabulary = {
   terms: {
-    'datatype': ram.TermDatatype,
-    'value': ram.TermValue,
-    'language': ram.TermLanguage,
+    'datatype': ramp.TermDatatype,
+    'value': ramp.TermValue,
+    'language': ramp.TermLanguage,
   }
 };
 
 schema.object({
-  id: ram.ShapeReference,
+  id: ramp.ShapeReference,
   properties: {
-    target: property(ram.shape, ram.ShapeID),
-    part: property(ram.termPart, schema.optional(schema.union([
-      schema.constant(ram.TermDatatype, {vocabulary: TermPartVocabulary}),
-      schema.constant(ram.TermLanguage, {vocabulary: TermPartVocabulary}),
-      schema.constant(ram.TermValue, {vocabulary: TermPartVocabulary}),
+    target: property(ramp.shape, ramp.ShapeID),
+    part: property(ramp.termPart, schema.optional(schema.union([
+      schema.constant(ramp.TermDatatype, {vocabulary: TermPartVocabulary}),
+      schema.constant(ramp.TermLanguage, {vocabulary: TermPartVocabulary}),
+      schema.constant(ramp.TermValue, {vocabulary: TermPartVocabulary}),
     ])))
   }
 });
@@ -251,7 +251,7 @@ export const ShapesForShapes = [...schema.shapes];
 
 export function frameShapes(dataset: Rdf.Dataset): Shape[] {
   const framingResults = frame({
-    rootShape: ram.Shape,
+    rootShape: ramp.Shape,
     shapes: ShapesForShapes,
     dataset,
   });

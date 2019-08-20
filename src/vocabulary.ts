@@ -20,8 +20,8 @@ export namespace xsd {
   export const dateTime = Rdf.namedNode(NAMESPACE + 'dateTime');
 }
 
-export namespace ram {
-  export const NAMESPACE = 'http://ram-shapes.github.io/schema#';
+export namespace ramp {
+  export const NAMESPACE = 'http://ramp-shapes.github.io/schema#';
 
   export const Shape = Rdf.namedNode(NAMESPACE + 'Shape');
   export const ShapeID = Rdf.namedNode(NAMESPACE + 'ShapeID');

@@ -1,26 +1,26 @@
-import * as Ram from '../src/index';
-import { Rdf, vocabulary as ram } from '../src/index';
+import * as Ramp from '../src/index';
+import { Rdf, vocabulary as ramp } from '../src/index';
 import { rdf } from './namespaces';
 import { quadsToTurtleString, toJson } from './util';
 
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
-  '': Ram.vocabulary.NAMESPACE,
+  '': Ramp.vocabulary.NAMESPACE,
 };
 
-const BASE_SHAPE = Ram.ShapesForShapes
-  .find(s => Rdf.equalTerms(s.id, ram.Shape))! as Ram.UnionShape;
+const BASE_SHAPE = Ramp.ShapesForShapes
+  .find(s => Rdf.equalTerms(s.id, ramp.Shape))! as Ramp.UnionShape;
 const ROOT_SHAPES = [
   BASE_SHAPE,
-  ...BASE_SHAPE.variants.map(variant => Ram.ShapesForShapes.find(s => Rdf.equalTerms(s.id, variant))!)
+  ...BASE_SHAPE.variants.map(variant => Ramp.ShapesForShapes.find(s => Rdf.equalTerms(s.id, variant))!)
 ];
 
 async function main() {
   for (const shape of ROOT_SHAPES) {
     console.log('### ', Rdf.toString(shape.id), '###');
-    const quads = Ram.flatten({
-      rootShape: ram.Shape,
-      shapes: Ram.ShapesForShapes,
+    const quads = Ramp.flatten({
+      rootShape: ramp.Shape,
+      shapes: Ramp.ShapesForShapes,
       value: shape,
     });
 
@@ -28,7 +28,7 @@ async function main() {
     const shapeTurtle = await quadsToTurtleString(dataset, PREFIXES);
     console.log(shapeTurtle);
 
-    for (const {value} of Ram.frame({shapes: Ram.ShapesForShapes, rootShape: BASE_SHAPE.id, dataset})) {
+    for (const {value} of Ramp.frame({shapes: Ramp.ShapesForShapes, rootShape: BASE_SHAPE.id, dataset})) {
       console.log(toJson(value));
     }
   }

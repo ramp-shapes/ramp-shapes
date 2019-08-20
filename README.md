@@ -1,11 +1,11 @@
-# RAM shapes: declarative RDF ↔ ADT mapping [![npm version](https://badge.fury.io/js/ram-shapes.svg)](https://badge.fury.io/js/ram-shapes)
+# RAMP shapes: declarative RDF ↔ algebraic data type mapping [![npm version](https://badge.fury.io/js/ramp-shapes.svg)](https://badge.fury.io/js/ramp-shapes)
 
-[Home page](https://ram-shapes.github.io/) | [Specification draft](https://ram-shapes.github.io/ram-shapes-spec/) | [Playground](https://ram-shapes.github.io/playground.html)
+[Home page](https://ramp-shapes.github.io/) | [Specification draft](https://ramp-shapes.github.io/ramp-shapes-spec/) | [Playground](https://ramp-shapes.github.io/playground.html)
 
-**RAM** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
+**RAMP** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
 
 ## Features
-**RAM** introduces a language based on RDF which allows to describe a runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
+**RAMP** introduces a language based on RDF which allows to describe a runtime object interface with so-called "shapes". The shapes are basically types augumented with metadata to map them into RDF graph. Usage of such shapes allows to:
 
  * Map RDF graph data into JS objects.
  * Generate RDF quad/triple data from JS objects.
@@ -14,19 +14,19 @@
 
 ## Installation
 
-Install with `npm install --save ram-shapes`
+Install with `npm install --save ramp-shapes`
 
 ## Usage
 
-Try out on the interactive [playground](https://ram-shapes.github.io/playground.html).
+Try out on the interactive [playground](https://ramp-shapes.github.io/playground.html).
 
 ```ts
-import * as Ram from 'ram-shapes';
+import * as Ramp from 'ramp-shapes';
 import * as N3 from 'n3';
 import * as SparqlJs from 'sparqljs';
 
 // get graph triples (source data)
-const dataset = Ram.Rdf.dataset(new N3.Parser().parse(`
+const dataset = Ramp.Rdf.dataset(new N3.Parser().parse(`
     @prefix ex: <http://example.com/schema/>.
     @prefix : <http://example.com/data/>.
 
@@ -38,12 +38,12 @@ const dataset = Ram.Rdf.dataset(new N3.Parser().parse(`
         ex:position 42.
 `));
 
-// define custom RAM shapes using Turtle syntax
-const shapes = Ram.frameShapes(Ram.Rdf.dataset(new N3.Parser().parse(`
+// define custom shapes using Turtle syntax
+const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
-    @prefix : <http://ram-shapes.github.io/schema#>.
+    @prefix : <http://ramp-shapes.github.io/schema#>.
     @prefix ex: <http://example.com/schema/>.
 
     ex:Annotation a :ObjectShape;
@@ -88,7 +88,7 @@ const shapes = Ram.frameShapes(Ram.Rdf.dataset(new N3.Parser().parse(`
 `)));
 
 // choose entry point shape
-const rootShape = Ram.Rdf.namedNode(
+const rootShape = Ramp.Rdf.namedNode(
   'http://example.com/schema#Annotation'
 );
 // (optionally) specify prefixes for Turtle and SPARQL
@@ -101,7 +101,7 @@ const prefixes = {
 };
 
 // use defined shapes to lower RDF graph into JS objects...
-const matches = Ram.frame({shapes, rootShape, dataset}));
+const matches = Ramp.frame({shapes, rootShape, dataset}));
 for (const match of matches) {
   /* match.value object has ex:Annotation shape, e.g.:
     {
@@ -116,13 +116,13 @@ for (const match of matches) {
   */
 
   // ... and lift JS object back into an RDF graph
-  const quads = Ram.flatten({
+  const quads = Ramp.flatten({
     shapes,
     rootShape,
     value: match.value,
     prefixes,
   });
-  /* quads is Iterable<Ram.Rdf.Quad>, e.g.:
+  /* quads is Iterable<Rdf.Quad>, e.g.:
 
     :anno1 a ex:Annotation;
         ex:start _:object_044916_1.
@@ -138,7 +138,7 @@ for (const match of matches) {
 
 // another application of defined shapes is to generate a CONSTRUCT query
 // to get necessary graph data for framing
-const query = Ram.generateQuery({shapes, rootShape, prefixes});
+const query = Ramp.generateQuery({shapes, rootShape, prefixes});
 const queryString = new SparqlJs.Generator().stringify(query);
 /* query is a CONSTRUCT query in SPARQL.js runtime format:
 

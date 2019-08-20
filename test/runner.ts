@@ -1,6 +1,6 @@
 import path from 'path';
 
-import * as Ram from '../src/index';
+import * as Ramp from '../src/index';
 import { structurallySame } from './compare';
 import { readQuadsFromTurtle, readJson, findFirstShape } from './util';
 
@@ -38,13 +38,13 @@ interface FrameTest {
 }
 
 interface FrameErrorTest {
-  readonly code: Ram.ErrorCode;
+  readonly code: Ramp.ErrorCode;
   readonly stack?: ReadonlyArray<TestStackFrame>;
 }
 
 interface TestStackFrame {
   readonly edge?: string | number;
-  readonly shape: string | { type: Ram.Shape['type'] };
+  readonly shape: string | { type: Ramp.Shape['type'] };
 }
 
 export function runTest(testCase: TestCase): TestResult {
@@ -71,13 +71,13 @@ function runFrameTest(testCase: TestCase): TestResult {
     };
   }
 
-  let shapes: Ram.Shape[];
-  let rootShape: Ram.ShapeID | undefined;
+  let shapes: Ramp.Shape[];
+  let rootShape: Ramp.ShapeID | undefined;
   try {
     const shapeQuads = readQuadsFromTurtle(
       path.join('test-data', 'shapes', `${frameTest.shapes}.ttl`)
     );
-    shapes = Ram.frameShapes(Ram.Rdf.dataset(shapeQuads));
+    shapes = Ramp.frameShapes(Ramp.Rdf.dataset(shapeQuads));
     rootShape = findFirstShape(shapeQuads, shapes);
   } catch (error) {
     return {
@@ -96,9 +96,9 @@ function runFrameTest(testCase: TestCase): TestResult {
     };
   }
 
-  let graph: Ram.Rdf.Dataset;
+  let graph: Ramp.Rdf.Dataset;
   try {
-    graph = Ram.Rdf.dataset(readQuadsFromTurtle(
+    graph = Ramp.Rdf.dataset(readQuadsFromTurtle(
       path.join('test-data', 'graph', `${frameTest.graph}.ttl`)
     ));
   } catch (error) {
@@ -111,7 +111,7 @@ function runFrameTest(testCase: TestCase): TestResult {
   }
 
   try {
-    const matches = Ram.frame({shapes, rootShape, dataset: graph});
+    const matches = Ramp.frame({shapes, rootShape, dataset: graph});
     let matchIndex = 0;
     for (const match of matches) {
       if (!frameTest.matches || matchIndex >= frameTest.matches.length) {
@@ -143,7 +143,7 @@ function runFrameTest(testCase: TestCase): TestResult {
       };
     }
   } catch (error) {
-    if (Ram.isRamError(error) && frameTest.error) {
+    if (Ramp.isRamError(error) && frameTest.error) {
       if (error.ramErrorCode !== frameTest.error.code) {
         return {
           type: 'failure',
@@ -178,7 +178,7 @@ function runFrameTest(testCase: TestCase): TestResult {
   return {type: 'success', testCase};
 }
 
-function ramStackToTestStack(stack: ReadonlyArray<Ram.StackFrame>) {
+function ramStackToTestStack(stack: ReadonlyArray<Ramp.StackFrame>) {
   return stack.map((frame): TestStackFrame => ({
     edge: frame.edge,
     shape: frame.shape.id.termType === 'NamedNode'

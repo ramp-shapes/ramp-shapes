@@ -1,9 +1,9 @@
 import { join } from 'path';
 import * as SparqlJs from 'sparqljs';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import { readQuadsFromTurtle } from '../util';
 
-const shapes = Ram.frameShapes(Ram.Rdf.dataset(
+const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(
   readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
 ));
 
@@ -24,12 +24,12 @@ const PREFIXES: { [prefix: string]: string } = {
   "xsd": "http://www.w3.org/2001/XMLSchema#",
   "svcs": "http://rdfs.org/sioc/services#",
   "as": "http://www.w3.org/ns/activitystreams#",
-  ram: Ram.vocabulary.NAMESPACE,
+  ramp: Ramp.vocabulary.NAMESPACE,
 };
 /* tslint:enable: quotemark */
 
-const query = Ram.generateQuery({
-  rootShape: Ram.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
+const query = Ramp.generateQuery({
+  rootShape: Ramp.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
   shapes,
   prefixes: PREFIXES,
 });

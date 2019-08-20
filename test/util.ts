@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { promisify } from 'util';
 import * as N3 from 'n3';
 
-import * as Ram from '../src/index';
+import * as Ramp from '../src/index';
 import { Rdf } from '../src/index';
 
 export const exists = promisify(fs.exists);
@@ -24,8 +24,8 @@ export function readJson(path: string): unknown {
 
 export function findFirstShape(
   quads: ReadonlyArray<Rdf.Quad>,
-  shapes: ReadonlyArray<Ram.Shape>
-): Ram.ShapeID | undefined {
+  shapes: ReadonlyArray<Ramp.Shape>
+): Ramp.ShapeID | undefined {
   const shapeIds = new Set<string>();
   for (const shape of shapes) {
     shapeIds.add(shape.id.value);

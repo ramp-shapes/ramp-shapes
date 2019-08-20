@@ -1,7 +1,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix wd: <http://www.wikidata.org/entity/>.
 @prefix wdt: <http://www.wikidata.org/prop/direct/>.
-@prefix : <http://ram-shapes.github.io/schema#>.
+@prefix : <http://ramp-shapes.github.io/schema#>.
 
 # Human
 wd:Q5 a :ObjectShape;

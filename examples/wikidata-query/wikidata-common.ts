@@ -1,8 +1,8 @@
 import { join } from 'path';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import { readQuadsFromTurtle } from '../util';
 
-const wikidataShapes = Ram.frameShapes(Ram.Rdf.dataset(
+const wikidataShapes = Ramp.frameShapes(Ramp.Rdf.dataset(
   readQuadsFromTurtle(join(__dirname, 'wikidata-shapes.ttl'))
 ));
 
@@ -12,19 +12,19 @@ export const Prefixes: { [prefix: string]: string } = {
   wdt: 'http://www.wikidata.org/prop/direct/',
 };
 export namespace vocab {
-  export const wd = (s: string) => Ram.Rdf.namedNode(Prefixes.wd + s);
+  export const wd = (s: string) => Ramp.Rdf.namedNode(Prefixes.wd + s);
 }
 
-const schema = new Ram.ShapeBuilder();
+const schema = new Ramp.ShapeBuilder();
 schema.shapes.push(...wikidataShapes);
 
 export const AlexanderTheThirdDescendants = schema.object({
   id: vocab.wd('Q120180'),
   typeProperties: {
-    target: Ram.self(schema.constant(vocab.wd('Q120180')))
+    target: Ramp.self(schema.constant(vocab.wd('Q120180')))
   },
   properties: {
-    result: Ram.self(vocab.wd('Q5'))
+    result: Ramp.self(vocab.wd('Q5'))
   }
 });
 

@@ -9,4 +9,4 @@ export { ValueMapper } from './value-mapping';
 export { FrameParams, FrameSolution, frame } from './frame';
 export { FlattenParams, flatten } from './flatten';
 export { GenerateQueryParams, generateQuery } from './generate-query';
-export { ram as vocabulary } from './vocabulary';
+export { ramp as vocabulary } from './vocabulary';

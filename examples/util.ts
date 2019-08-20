@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { promisify } from 'util';
 import * as N3 from 'n3';
-import { Rdf, HashSet } from '../src/index';
+import { Rdf } from '../src/index';
 
 export const exists = promisify(fs.exists);
 export const mkdir = promisify(fs.mkdir);

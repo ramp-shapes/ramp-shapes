@@ -1,17 +1,17 @@
 {
-  "name": "ram-shapes",
-  "version": "0.4.1",
-  "description": "RAM shapes: declarative RDF ↔ ADT mapping",
+  "name": "ramp-shapes",
+  "version": "0.5.0",
+  "description": "RAMP shapes: declarative RDF ↔ algebraic data type mapping",
   "keywords": [
     "RDF",
     "ADT",
     "mapping",
     "JSON"
   ],
-  "homepage": "https://ram-shapes.github.io",
+  "homepage": "https://ramp-shapes.github.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ram-shapes/ram-shapes.git"
+    "url": "https://github.com/ramp-shapes/ramp-shapes.git"
   },
   "author": "Alexey Morozov <alexey.morozov@live.ru>",
   "license": "MIT",

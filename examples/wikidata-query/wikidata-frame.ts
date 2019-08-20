@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import {
   writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse, quadsToTurtleString
 } from '../util';
@@ -10,11 +10,11 @@ const queryResult = require('../../out/wikidata-query-result.json');
 (async function main() {
   const bindings = queryResult.results.bindings;
   const quads = parseJsonQueryResponse(bindings);
-  const dataset = Ram.Rdf.dataset(quads);
+  const dataset = Ramp.Rdf.dataset(quads);
   console.log('Total quads: ' + bindings.length);
   console.log('Unique quads: ' + dataset.size);
 
-  const iterator = Ram.frame({
+  const iterator = Ramp.frame({
     rootShape: AlexanderTheThirdDescendants,
     shapes: Shapes,
     dataset,

@@ -1,8 +1,8 @@
 import * as SparqlJs from 'sparqljs';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import { Shapes, AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
 
-const query = Ram.generateQuery({
+const query = Ramp.generateQuery({
   rootShape: AlexanderTheThirdDescendants,
   shapes: Shapes,
   prefixes: Prefixes,

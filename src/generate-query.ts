@@ -95,7 +95,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     makeError: (code, message) => {
       const stack = context.stack.map(shape => ({shape}));
       const stackString = formatShapeStack(stack);
-      const error = new Error(`RAM${code}: ${message} at ${stackString}`) as RamError;
+      const error = new Error(`RAMP${code}: ${message} at ${stackString}`) as RamError;
       error.ramErrorCode = code;
       error.ramStack = stack;
       return error;

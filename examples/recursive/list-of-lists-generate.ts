@@ -1,16 +1,16 @@
 import * as SparqlJs from 'sparqljs';
-import * as Ram from '../../src/index';
+import * as Ramp from '../../src/index';
 import { rdf, xsd } from '../namespaces';
 
 const PREFIXES: { [prefix: string]: string } = {
   rdf: rdf.NAMESPACE,
   xsd: xsd.NAMESPACE,
   ex: 'http://example.com/schema',
-  ram: Ram.vocabulary.NAMESPACE,
+  ramp: Ramp.vocabulary.NAMESPACE,
 };
 
-const schema = new Ram.ShapeBuilder({blankUniqueKey: 'recLists'});
-const LIST_SHAPE_ID = Ram.Rdf.namedNode(PREFIXES.ex + 'ListOfLists');
+const schema = new Ramp.ShapeBuilder({blankUniqueKey: 'recLists'});
+const LIST_SHAPE_ID = Ramp.Rdf.namedNode(PREFIXES.ex + 'ListOfLists');
 schema.list(
   schema.union([
     LIST_SHAPE_ID,
@@ -19,18 +19,18 @@ schema.list(
   {id: LIST_SHAPE_ID}
 );
 
-const rootListIri = Ram.Rdf.namedNode(PREFIXES.ex + 'rootList');
+const rootListIri = Ramp.Rdf.namedNode(PREFIXES.ex + 'rootList');
 
 const rootShape = schema.object({
   typeProperties: {
-    iri: Ram.self(schema.constant(rootListIri)),
+    iri: Ramp.self(schema.constant(rootListIri)),
   },
   properties: {
-    body: Ram.self(LIST_SHAPE_ID),
+    body: Ramp.self(LIST_SHAPE_ID),
   }
 });
 
-const query = Ram.generateQuery({
+const query = Ramp.generateQuery({
   rootShape,
   shapes: schema.shapes,
   prefixes: PREFIXES,
