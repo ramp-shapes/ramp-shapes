@@ -10,7 +10,7 @@ import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
   resolveListShapeDefaults,
 } from './common';
-import { ErrorCode, RamError, formatShapeStack } from './errors';
+import { ErrorCode, RampError, formatShapeStack } from './errors';
 
 export interface GenerateQueryParams {
   rootShape: ShapeID;
@@ -95,9 +95,9 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     makeError: (code, message) => {
       const stack = context.stack.map(shape => ({shape}));
       const stackString = formatShapeStack(stack);
-      const error = new Error(`RAMP${code}: ${message} at ${stackString}`) as RamError;
-      error.ramErrorCode = code;
-      error.ramStack = stack;
+      const error = new Error(`RAMP${code}: ${message} at ${stackString}`) as RampError;
+      error.rampErrorCode = code;
+      error.rampStack = stack;
       return error;
     },
     onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
@@ -124,7 +124,7 @@ interface GenerateQueryContext {
   resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
   addEdge(edge: Edge): void;
-  makeError(code: ErrorCode, message: string): RamError;
+  makeError(code: ErrorCode, message: string): RampError;
   onEmit(shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]): void;
 }
 

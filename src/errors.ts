@@ -1,9 +1,9 @@
 import * as Rdf from './rdf';
 import { Shape } from './shapes';
 
-export type RamError = Error & {
-  ramErrorCode: ErrorCode;
-  ramStack?: ReadonlyArray<StackFrame>;
+export type RampError = Error & {
+  rampErrorCode: ErrorCode;
+  rampStack?: ReadonlyArray<StackFrame>;
 };
 
 export interface StackFrame {
@@ -15,7 +15,7 @@ export const enum ErrorCode {
   // General errors
   MissingShape = 101,
 
-  // Framing errors
+  // Frame/flatten errors
   ShapeMismatch = 201,
   PropertyMismatch = 202,
   NoPropertyMatches = 203,
@@ -33,9 +33,15 @@ export const enum ErrorCode {
   NonMatchingRefContext = 215,
 }
 
-export function isRamError(error: unknown): error is RamError {
+export function isRampError(error: unknown): error is RampError {
   return typeof error === 'object'
-    && typeof (error as RamError).ramErrorCode === 'number';
+    && typeof (error as RampError).rampErrorCode === 'number';
+}
+
+export function formatDisplayShape(shape: Shape): string {
+  return shape.id.termType === 'BlankNode'
+    ? `(${shape.type} ${Rdf.toString(shape.id)})`
+    : Rdf.toString(shape.id);
 }
 
 export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
@@ -47,9 +53,7 @@ export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
       frame && typeof frame.edge === 'number' ? `.[${frame.edge}]` :
       ''
     );
-    const shape = frame.shape.id.termType === 'BlankNode'
-      ? `(${frame.shape.type} ${Rdf.toString(frame.shape.id)})`
-      : Rdf.toString(frame.shape.id);
+    const shape = formatDisplayShape(frame.shape);
     result += `${edge}${(edge || !first) ? ' / ' : ''}${shape}`;
     first = false;
   }

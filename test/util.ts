@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { promisify } from 'util';
 import * as N3 from 'n3';
+import * as SparqlJs from 'sparqljs';
 
 import * as Ramp from '../src/index';
 import { Rdf } from '../src/index';
@@ -20,6 +21,11 @@ export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
 export function readJson(path: string): unknown {
   const json = fs.readFileSync(path, {encoding: 'utf-8'});
   return JSON.parse(json);
+}
+
+export function readQuery(path: string): SparqlJs.SparqlQuery {
+  const queryText = fs.readFileSync(path, {encoding: 'utf-8'});
+  return new SparqlJs.Parser().parse(queryText);
 }
 
 export function findFirstShape(

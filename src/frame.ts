@@ -8,7 +8,7 @@ import {
   makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
   resolveListShapeDefaults, matchesTerm,
 } from './common';
-import { RamError, ErrorCode, formatShapeStack } from './errors';
+import { RampError, ErrorCode, formatDisplayShape, formatShapeStack } from './errors';
 import { compactByReference } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
@@ -614,10 +614,7 @@ function findByPath(
 }
 
 function throwFailedToMatch(shape: Shape, stack: StackFrame, term?: Rdf.Term): never {
-  const displyedShape = shape.id.termType === 'BlankNode'
-    ? `(${shape.type} ${Rdf.toString(shape.id)})`
-    : Rdf.toString(shape.id);
-
+  const displyedShape = formatDisplayShape(shape);
   const baseMessage = term
     ? `Term ${Rdf.toString(term)} does not match ${displyedShape}`
     : `Failed to match ${displyedShape}`;
@@ -645,14 +642,14 @@ function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
   }
 }
 
-function makeError(code: ErrorCode, message: string, stack?: StackFrame): RamError {
+function makeError(code: ErrorCode, message: string, stack?: StackFrame): RampError {
   const stackArray = stack ? stackToArray(stack) : undefined;
   const stackString = stackArray ? formatShapeStack(stackArray) : undefined;
   const error = new Error(
     `RAMP${code}: ${message}` + (stackString ? ` at ${stackString}` : '')
-  ) as RamError;
-  error.ramErrorCode = code;
-  error.ramStack = stackArray;
+  ) as RampError;
+  error.rampErrorCode = code;
+  error.rampStack = stackArray;
   return error;
 }
 

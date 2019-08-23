@@ -1,7 +1,7 @@
 export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
 
 export class NamedNode {
-  readonly termType = 'NamedNode';
+  get termType() { return 'NamedNode' as const; }
   constructor(
     readonly value: string,
   ) {}
@@ -17,7 +17,7 @@ export class NamedNode {
 }
 
 export class BlankNode {
-  readonly termType = 'BlankNode';
+  get termType() { return 'BlankNode' as const; }
   constructor(
     readonly value: string,
   ) {}
@@ -36,7 +36,7 @@ const RDF_LANG_STRING = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-n
 const XSD_STRING = new NamedNode('http://www.w3.org/2001/XMLSchema#string');
 
 export class Literal {
-  readonly termType = 'Literal';
+  get termType() { return 'Literal' as const; }
   readonly value: string;
   readonly language: string;
   readonly datatype: NamedNode;
@@ -62,7 +62,7 @@ export class Literal {
 }
 
 export class Variable {
-  readonly termType = 'Variable';
+  get termType() { return 'Variable' as const; }
   constructor(
     readonly value: string
   ) {}
@@ -79,7 +79,7 @@ export class Variable {
 
 export class DefaultGraph {
   static readonly instance = new DefaultGraph();
-  readonly termType = 'DefaultGraph';
+  get termType() { return 'DefaultGraph' as const; }
   readonly value = '';
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
@@ -99,8 +99,18 @@ export class Quad {
     readonly object: NamedNode | BlankNode | Literal | Variable,
     readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
   ) {}
+  hashCode?() {
+    return hashQuad(this);
+  }
   equals(other: Quad | undefined | null): boolean {
     return other && equalQuads(this, other) || false;
+  }
+  toString() {
+    let text = `${toString(this.subject)} ${toString(this.predicate)} ${toString(this.object)}`;
+    if (this.graph.termType !== 'DefaultGraph') {
+      text += ` ${toString(this.graph)}`;
+    }
+    return text;
   }
 }
 

@@ -1,6 +1,8 @@
 // tslint:disable-next-line: no-reference
 /// <reference path="./json-diff.d.ts" />
 
+import chalk from 'chalk';
+import { diffLines } from 'diff';
 import { diffString } from 'json-diff';
 
 import { TestCase, TestResult, runTest } from './runner';
@@ -51,15 +53,23 @@ let failureCount = 0;
 
 console.log('Running tests...');
 for (const testCase of casesToTest) {
-  const result = runTest(testCase);
-  if (result.type === 'success') {
-    successCount++;
+  let result: TestResult | undefined;
+  if (!testCase.skip) {
+    result = runTest(testCase);
+    if (result.type === 'success') {
+      successCount++;
+    }
+    if (result.type === 'failure') {
+      failureCount++;
+    }
+    results.push(result);
   }
-  if (result.type === 'failure') {
-    failureCount++;
-  }
-  results.push(result);
-  console.log(`  ${result.type === 'success' ? '✓' : '✗'} ${TestCase.getFullName(testCase)}`);
+  const resultIcon = (
+    !result ? '-' :
+    result.type === 'success' ? chalk.green('✓') :
+    chalk.red('✗')
+  );
+  console.log(`  ${resultIcon} ${TestCase.getFullName(testCase)}`);
 }
 
 // print new line
@@ -72,7 +82,19 @@ for (const result of results) {
       console.error(result.error);
     }
     if (result.expected || result.given) {
-      console.log(diffString(result.expected, result.given));
+      if (typeof result.expected === 'string' && typeof result.given === 'string') {
+        for (const change of diffLines(result.expected, result.given)) {
+          const color = (
+            change.added ? 'green' :
+            change.removed ? 'red' :
+            'grey'
+          );
+          process.stderr.write(chalk.keyword(color)(change.value));
+        }
+        process.stderr.write('\n');
+      } else {
+        console.log(diffString(result.expected, result.given));
+      }
     } else {
       // print new line
       console.log();

@@ -2,7 +2,7 @@ export { HashSet, ReadonlyHashSet, HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
 export { Rdf };
 export * from './shapes';
-export { ErrorCode, RamError, StackFrame, isRamError } from './errors';
+export { ErrorCode, RampError, StackFrame, isRampError } from './errors';
 export { ShapesForShapes, frameShapes } from './shapes-for-shapes';
 export * from './builder';
 export { ValueMapper } from './value-mapping';

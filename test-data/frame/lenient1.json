@@ -1,6 +1,5 @@
 {
   "shapes": "lenient",
-  "graph": "lenient1",
   "matches": [
     {
       "type": "http://example.com/schema#Location",

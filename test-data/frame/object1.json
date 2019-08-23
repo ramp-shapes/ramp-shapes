@@ -1,6 +1,5 @@
 {
   "shapes": "points-simple",
-  "graph": "object1",
   "matches": [
     {
       "type": "http://example.com/schema#Point",

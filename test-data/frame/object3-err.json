@@ -1,6 +1,5 @@
 {
   "shapes": "points-simple",
-  "graph": "object3-err",
   "error": {
     "code": 201,
     "stack": [

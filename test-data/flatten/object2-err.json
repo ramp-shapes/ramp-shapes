@@ -1,10 +1,12 @@
 {
-  "shapes": "lenient",
+  "shapes": "points-simple",
+  "value": {
+    "type": "http://example.com/schema#Point",
+    "x": 1
+  },
   "error": {
     "code": 201,
     "stack": [
-      {"shape": "http://example.com/schema#Location"},
-      {"edge": "center", "shape": {"type": "optional"}},
       {"shape": "http://example.com/schema#Point"},
       {"edge": "y", "shape": {"type": "literal"}}
     ]
