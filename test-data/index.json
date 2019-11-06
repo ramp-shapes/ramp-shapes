@@ -4,7 +4,7 @@
   {"type": "frame", "name": "object1"},
   {"type": "frame", "name": "object2-err"},
   {"type": "frame", "name": "object3-err"},
-  {"type": "flatten", "name": "object1"},
+  {"type": "flatten", "name": "object1", skip: true},
   {"type": "flatten", "name": "object2-err"},
   {"type": "generateQuery", "name": "point"}
 ]
