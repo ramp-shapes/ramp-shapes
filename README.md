@@ -1,6 +1,6 @@
 # RAMP shapes: declarative RDF ↔ algebraic data type mapping [![npm version](https://badge.fury.io/js/ramp-shapes.svg)](https://badge.fury.io/js/ramp-shapes)
 
-[Home page](https://ramp-shapes.github.io/) | [Specification draft](https://ramp-shapes.github.io/ramp-shapes-spec/) | [Playground](https://ramp-shapes.github.io/playground.html)
+[Home page](https://ramp-shapes.github.io/) | [Introductory paper](https://www.researchgate.net/publication/337724413_RAMP_Shapes_Declarative_RDF_ADT_Mapping) | [Specification draft](https://ramp-shapes.github.io/ramp-shapes-spec/) | [Playground](https://ramp-shapes.github.io/playground.html)
 
 **RAMP** is a type construction language, specification and an implementation of mapping operations between RDF graphs and structured data types.
 
@@ -192,4 +192,7 @@ const queryString = new SparqlJs.Generator().stringify(query);
 ```
 
 ## References
-A publication which describes this work is currently under review at MTSR Conference 2019.
+
+Morozov A., Wohlgenannt G., Mouromtsev D., Pavlov D., Emelyanov Y. (2019) RAMP Shapes: Declarative RDF ↔ ADT Mapping. In: Garoufallou E., Fallucchi F., William De Luca E. (eds) Metadata and Semantic Research. MTSR 2019. Communications in Computer and Information Science, vol 1057. Springer, Cham
+
+https://link.springer.com/chapter/10.1007/978-3-030-36599-8_4
