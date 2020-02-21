@@ -1,0 +1,14 @@
+{
+  "shapes": "selector-cyclic",
+  "matches": [
+    {
+      "@ref": 1,
+      "type": "selector",
+      "body": {
+        "type": "range",
+        "start": {"@use": 1},
+        "end": {"@use": 1}
+      }
+    }
+  ]
+}

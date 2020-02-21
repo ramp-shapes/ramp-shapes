@@ -7,7 +7,11 @@ ex:Selector a :ObjectShape;
     :typeProperty [
         :name "type";
         :path ([ :predicate rdf:type ]);
-        :shape [ a :ResourceShape; :termValue ex:Selector ]
+        :shape [
+            a :ResourceShape;
+            :termValue ex:Selector;
+            :vocabulary _:selectorTypeVocab
+        ]
     ];
     :property [
         :name "body";
@@ -22,7 +26,11 @@ ex:Range a :ObjectShape;
     :typeProperty [
         :name "type";
         :path ([ :predicate rdf:type ]);
-        :shape [ a :ResourceShape; :termValue ex:Range ]
+        :shape [
+            a :ResourceShape;
+            :termValue ex:Range;
+            :vocabulary _:selectorTypeVocab
+        ]
     ];
     :property [
         :name "start";
@@ -39,7 +47,11 @@ ex:Point a :ObjectShape;
     :typeProperty [
         :name "type";
         :path ([ :predicate rdf:type ]);
-        :shape [ a :ResourceShape; :termValue ex:Point ]
+        :shape [
+            a :ResourceShape;
+            :termValue ex:Point;
+            :vocabulary _:selectorTypeVocab
+        ]
     ];
     :property [
         :name "position";
@@ -51,3 +63,9 @@ ex:Point a :ObjectShape;
         :path ([ :predicate ex:plus ]);
         :shape [ a :OptionalShape; :item ex:Point ]
     ].
+
+_:selectorTypeVocab a :Vocabulary;
+    :vocabItem
+        [ :vocabKey "selector"; :termValue ex:Selector ],
+        [ :vocabKey "range"; :termValue ex:Range ],
+        [ :vocabKey "point"; :termValue ex:Point ].

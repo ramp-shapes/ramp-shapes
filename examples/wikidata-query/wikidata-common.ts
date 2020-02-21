@@ -16,16 +16,17 @@ export namespace vocab {
 }
 
 const schema = new Ramp.ShapeBuilder();
-schema.shapes.push(...wikidataShapes);
+schema.addAll(wikidataShapes);
 
-export const AlexanderTheThirdDescendants = schema.object({
-  id: vocab.wd('Q120180'),
+const AlexanderTheThird = vocab.wd('Q120180');
+schema.object({
+  id: AlexanderTheThird,
   typeProperties: {
-    target: Ramp.self(schema.constant(vocab.wd('Q120180')))
+    target: Ramp.self(schema.constant(AlexanderTheThird))
   },
   properties: {
     result: Ramp.self(vocab.wd('Q5'))
   }
 });
 
-export const Shapes = schema.shapes;
+export const AlexanderTheThirdDescendants = schema.shapes.get(AlexanderTheThird)!;

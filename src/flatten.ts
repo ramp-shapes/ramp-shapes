@@ -1,10 +1,11 @@
+import { HashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment,
+  Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment, ShapeID, ShapeReference,
 } from './shapes';
 import {
-  SubjectMemo, makeShapeResolver, assertUnknownShape, resolveListShapeDefaults, matchesTerm, makeTermMap
+  SubjectMemo, assertUnknownShape, resolveListShapeDefaults, matchesTerm, makeTermMap
 } from './common';
 import { RampError, ErrorCode, StackFrame, formatDisplayShape, formatShapeStack } from './errors';
 import { ReferenceMatch, synthesizeShape } from './synthesize';
@@ -12,8 +13,7 @@ import { ValueMapper } from './value-mapping';
 
 export interface FlattenParams {
   value: unknown;
-  rootShape: ShapeID;
-  shapes: ReadonlyArray<Shape>;
+  shape: Shape;
   mapper?: ValueMapper;
   unstable_generateBlankNode?: (prefix: string) => Rdf.BlankNode;
 }
@@ -21,15 +21,28 @@ export interface FlattenParams {
 export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
   const generateBlankNode = params.unstable_generateBlankNode || makeDefaultBlankNodeGenerator();
 
+  const matches = new HashMap<ShapeID, Map<unknown, ShapeMatch | null>>(Rdf.hashTerm, Rdf.equalTerms);
+
   const context: LowerContext = {
     stack: [],
     mapper: params.mapper || ValueMapper.mapByDefault(),
-    resolveShape: makeShapeResolver(params.shapes, shapeID => {
-      throw context.makeError(
-        ErrorCode.MissingShape,
-        `Failed to resolve shape ${Rdf.toString(shapeID)}`
-      );
-    }),
+    getMatch: (shape, value) => {
+      const map = matches.get(shape.id);
+      if (!map) { return undefined; }
+      return map.get(value);
+    },
+    setMatch: (shape, value, match) => {
+      let map = matches.get(shape.id);
+      if (!map) {
+        map = new Map<unknown, ShapeMatch | null>();
+        matches.set(shape.id, map);
+      }
+      if (match === undefined) {
+        map.delete(value);
+      } else {
+        map.set(value, match);
+      }
+    },
     generateSubject: shape => generateBlankNode(shape.type),
     generateBlankNode,
     makeError: (code, message) => {
@@ -40,7 +53,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
       return error;
     },
   };
-  const rootShape = context.resolveShape(params.rootShape);
+  const rootShape = params.shape;
   const match = flattenShape(rootShape, true, params.value, {shape: rootShape}, context);
   if (!match) {
     const displyedShape = formatDisplayShape(rootShape);
@@ -57,7 +70,8 @@ type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
 interface LowerContext {
   readonly stack: StackFrame[];
   readonly mapper: ValueMapper;
-  resolveShape: (shapeID: ShapeID) => Shape;
+  getMatch(shape: Shape, value: unknown): ShapeMatch | null | undefined;
+  setMatch(shape: Shape, value: unknown, match: ShapeMatch | null | undefined): void;
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
   makeError(code: ErrorCode, message: string): RampError;
@@ -68,6 +82,32 @@ interface ShapeMatch {
   generate: (edge: Edge | undefined) => Iterable<Rdf.Quad>;
 }
 
+class PlaceholderMatch implements ShapeMatch {
+  constructor(
+    private context: LowerContext,
+    private shape: Shape,
+    private value: unknown
+  ) {}
+
+  nodes(): Iterable<RdfNode> {
+    return [];
+  }
+
+  *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+    const match = this.context.getMatch(this.shape, this.value);
+    if (!match) {
+      const displyedShape = formatDisplayShape(this.shape);
+      throw this.context.makeError(
+        ErrorCode.CyclicMatch,
+        `Cannot generate quads for cyclic shape ${displyedShape}`
+      );
+    }
+    for (const node of match.nodes()) {
+      yield* generateEdge(edge, node, this.context);
+    }
+  }
+}
+
 function flattenShape(
   shape: Shape,
   required: boolean,
@@ -75,7 +115,17 @@ function flattenShape(
   frame: StackFrame,
   context: LowerContext
 ): ShapeMatch | undefined {
+  let existing = context.getMatch(shape, value);
+  if (existing === null) {
+    existing = new PlaceholderMatch(context, shape, value);
+  }
+
+  if (existing) {
+    return existing;
+  }
+
   context.stack.push(frame);
+  context.setMatch(shape, value, null);
 
   const converted = context.mapper.toRdf(value, shape);
   let match: ShapeMatch | undefined;
@@ -115,6 +165,7 @@ function flattenShape(
   }
 
   context.stack.pop();
+  context.setMatch(shape, value, match);
   return match;
 }
 
@@ -179,9 +230,8 @@ function matchProperties(
 ): boolean {
   for (const property of properties) {
     const propertyValue = value[property.name];
-    const valueShape = context.resolveShape(property.valueShape);
-    const frame: StackFrame = {shape: valueShape, edge: property.name};
-    const match = flattenShape(valueShape, required, propertyValue, frame, context);
+    const frame: StackFrame = {shape: property.valueShape, edge: property.name};
+    const match = flattenShape(property.valueShape, required, propertyValue, frame, context);
     if (match) {
       matches.push({property, match});
     } else if (required) {
@@ -269,8 +319,7 @@ function flattenUnion(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  for (const variant of shape.variants) {
-    const variantShape = context.resolveShape(variant);
+  for (const variantShape of shape.variants) {
     const match = flattenShape(variantShape, false, value, {shape: variantShape}, context);
     if (match) {
       return match;
@@ -278,8 +327,7 @@ function flattenUnion(
   }
 
   if (required) {
-    for (const variant of shape.variants) {
-      const variantShape = context.resolveShape(variant);
+    for (const variantShape of shape.variants) {
       // try flatten with `required = true` to produce an error
       flattenShape(variantShape, true, value, {shape: variantShape}, context);
     }
@@ -297,11 +345,10 @@ function flattenSet(
   if (!Array.isArray(value)) {
     return undefined;
   }
-  const itemShape = context.resolveShape(shape.itemShape);
-  const frame: StackFrame = {shape: itemShape};
+  const frame: StackFrame = {shape: shape.itemShape};
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = flattenShape(itemShape, required, item, frame, context);
+    const match = flattenShape(shape.itemShape, required, item, frame, context);
     if (!match) {
       return undefined;
     }
@@ -331,9 +378,8 @@ function flattenOptional(
 ): ShapeMatch | undefined {
   const isEmpty = value === shape.emptyValue;
 
-  const itemShape = context.resolveShape(shape.itemShape);
-  const frame: StackFrame = {shape: itemShape};
-  const match = isEmpty ? undefined : flattenShape(itemShape, required, value, frame, context);
+  const frame: StackFrame = {shape: shape.itemShape};
+  const match = isEmpty ? undefined : flattenShape(shape.itemShape, required, value, frame, context);
   if (!isEmpty && !match) {
     return undefined;
   }
@@ -379,12 +425,11 @@ function flattenList(
   }
 
   const {head, tail, nil} = resolveListShapeDefaults(shape);
-  const itemShape = context.resolveShape(shape.itemShape);
-  const frame: StackFrame = {shape: itemShape};
+  const frame: StackFrame = {shape: shape.itemShape};
 
   const matches: ShapeMatch[] = [];
   for (const item of value) {
-    const match = flattenShape(itemShape, required, item, frame, context);
+    const match = flattenShape(shape.itemShape, required, item, frame, context);
     if (!match) {
       return undefined;
     }
@@ -423,7 +468,7 @@ function flattenMap(
     return undefined;
   }
 
-  const itemShape = context.resolveShape(shape.itemShape);
+  const itemShape = shape.itemShape;
   const frame: StackFrame = {shape: itemShape};
 
   const matches: ShapeMatch[] = [];
@@ -433,15 +478,10 @@ function flattenMap(
 
     let item = valueAtKey;
     if (shape.value) {
-      const refs = makeTermMap<ReadonlyArray<ReferenceMatch>>();
-      refs.set(shape.key.target, [
-        {ref: shape.key, match: key},
-        {ref: shape.value, match: valueAtKey},
-      ]);
-      item = synthesizeShape(itemShape, {
-        matches: refs,
-        resolveShape: context.resolveShape,
-      });
+      const refs = makeTermMap<ReferenceMatch[]>();
+      addRefMatch(refs, shape.key, key);
+      addRefMatch(refs, shape.value, valueAtKey);
+      item = synthesizeShape(shape.itemShape, {matches: refs});
     }
 
     const match = flattenShape(itemShape, required, item, frame, context);
@@ -464,6 +504,19 @@ function flattenMap(
   }
 
   return {nodes, generate};
+}
+
+function addRefMatch(
+  refs: HashMap<Rdf.Term, ReferenceMatch[]>,
+  ref: ShapeReference,
+  match: unknown
+) {
+  let array = refs.get(ref.target.id);
+  if (!array) {
+    array = [];
+    refs.set(ref.target.id, array);
+  }
+  array.push({ref, match});
 }
 
 function makeDefaultBlankNodeGenerator() {

@@ -28,11 +28,9 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 /* tslint:enable: quotemark */
 
-const query = Ramp.generateQuery({
-  rootShape: Ramp.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
-  shapes,
-  prefixes: PREFIXES,
-});
+const manifestShapeId = Ramp.Rdf.namedNode(PREFIXES.sc + 'Manifest');
+const manifestShape = shapes.find(shape => Ramp.Rdf.equalTerms(shape.id, manifestShapeId))!;
+const query = Ramp.generateQuery({shape: manifestShape, prefixes: PREFIXES});
 
 const generator = new SparqlJs.Generator();
 const queryString = generator.stringify(query);

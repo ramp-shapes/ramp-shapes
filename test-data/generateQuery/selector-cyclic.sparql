@@ -1,0 +1,31 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.com/schema#>
+CONSTRUCT {
+  ?object_r_2 rdf:type ex:Selector.
+  ?object_r_2 ex:body ?union_3.
+  ?union_3 rdf:type ex:Range.
+  ?union_3 ex:start ?object_un_5.
+  ?union_3 ex:end ?object_un_7.
+  ?object_r_2 ex:body ?union_3.
+  ?object_r_8 rdf:type ex:Point.
+  ?object_r_8 ex:position ?literal_9.
+  ?object_r_8 ex:plus ?object_un_11.
+}
+WHERE {
+  ?object_1 (((ex:body/ex:start)|(ex:body/ex:end))*) ?object_r_2.
+  ?object_r_2 rdf:type ex:Selector.
+  {
+    ?object_r_2 ex:body ?union_3.
+    ?union_3 rdf:type ex:Range.
+    ?union_3 ex:start ?object_un_5.
+    ?union_3 ex:end ?object_un_7.
+  }
+  UNION
+  {
+    ?object_r_2 ex:body ?union_3.
+    ?union_3 (ex:plus*) ?object_r_8.
+    ?object_r_8 rdf:type ex:Point.
+    ?object_r_8 ex:position ?literal_9.
+    OPTIONAL { ?object_r_8 ex:plus ?object_un_11. }
+  }
+}

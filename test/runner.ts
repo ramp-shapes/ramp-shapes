@@ -3,7 +3,7 @@ import * as SparqlJs from 'sparqljs';
 
 import * as Ramp from '../src/index';
 import { structurallySame } from './compare';
-import { readQuadsFromTurtle, readJson, readQuery, findFirstShape } from './util';
+import { readQuadsFromTurtle, readCyclicJson, readQuery, findFirstShape } from './util';
 
 export interface TestCase {
   readonly type: 'frame' | 'flatten' | 'generateQuery';
@@ -96,11 +96,11 @@ function makeFailureError(failure: TestFailure) {
 
 function runFrameTest(testCase: TestCase): TestResult {
   const frameTest = readTestDefinition(testCase) as FrameTest;
-  const {shapes, rootShape} = readTestShapes(frameTest.shapes, testCase);
+  const shape = readTestShapes(frameTest.shapes, testCase);
   const dataset = readTestGraph(testCase.name, testCase);
 
   try {
-    const matches = Ramp.frame({shapes, rootShape, dataset});
+    const matches = Ramp.frame({shape, dataset});
 
     let matchIndex = 0;
     for (const match of matches) {
@@ -171,14 +171,13 @@ function runFrameTest(testCase: TestCase): TestResult {
 
 function runFlattenTest(testCase: TestCase): TestResult {
   const flattenTest = readTestDefinition(testCase) as FlattenTest;
-  const {shapes, rootShape} = readTestShapes(flattenTest.shapes, testCase);
+  const shape = readTestShapes(flattenTest.shapes, testCase);
 
   let quads: Ramp.Rdf.Quad[] | undefined;
   try {
     let blankIndex = 1;
     quads = [...Ramp.flatten({
-      shapes,
-      rootShape,
+      shape,
       value: flattenTest.value,
       unstable_generateBlankNode: () => {
         const blankNode = Ramp.Rdf.blankNode(`b${blankIndex}`);
@@ -241,7 +240,7 @@ function runFlattenTest(testCase: TestCase): TestResult {
 
 function runGenerateQueryTest(testCase: TestCase): TestResult {
   const generateQueryTest = readTestDefinition(testCase) as GenerateQueryTest;
-  const {shapes, rootShape} = readTestShapes(generateQueryTest.shapes, testCase);
+  const shape = readTestShapes(generateQueryTest.shapes, testCase);
 
   let expectedQuery: SparqlJs.SparqlQuery;
   try {
@@ -260,8 +259,7 @@ function runGenerateQueryTest(testCase: TestCase): TestResult {
   let generatedQuery: SparqlJs.ConstructQuery | undefined;
   try {
     generatedQuery = Ramp.generateQuery({
-      shapes,
-      rootShape,
+      shape,
       prefixes: expectedQuery.prefixes,
     });
   } catch (error) {
@@ -295,7 +293,7 @@ function runGenerateQueryTest(testCase: TestCase): TestResult {
 
 function readTestDefinition(testCase: TestCase): unknown {
   try {
-    return readJson(
+    return readCyclicJson(
       path.join('test-data', testCase.type, `${testCase.name}.json`)
     ) as FrameTest;
   } catch (error) {
@@ -308,14 +306,13 @@ function readTestDefinition(testCase: TestCase): unknown {
   }
 }
 
-function readTestShapes(name: string, testCase: TestCase) {
-  let shapes: Ramp.Shape[];
-  let rootShape: Ramp.ShapeID | undefined;
+function readTestShapes(name: string, testCase: TestCase): Ramp.Shape {
+  let rootShape: Ramp.Shape | undefined;
   try {
     const shapeQuads = readQuadsFromTurtle(
       path.join('test-data', 'shapes', `${name}.ttl`)
     );
-    shapes = Ramp.frameShapes(Ramp.Rdf.dataset(shapeQuads));
+    const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(shapeQuads));
     rootShape = findFirstShape(shapeQuads, shapes);
   } catch (error) {
     throw makeFailureError({
@@ -334,7 +331,7 @@ function readTestShapes(name: string, testCase: TestCase) {
     });
   }
 
-  return {shapes, rootShape};
+  return rootShape;
 }
 
 function readTestGraph(name: string, testCase: TestCase) {

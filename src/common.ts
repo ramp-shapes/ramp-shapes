@@ -1,7 +1,7 @@
 import { HashMap, HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ListShape, LiteralShape, PathSequence, ResourceShape, Shape, ShapeID
+  ListShape, LiteralShape, PathSequence, ResourceShape, Shape,
 } from './shapes';
 import { rdf } from './vocabulary';
 
@@ -11,23 +11,6 @@ export function makeTermSet() {
 
 export function makeTermMap<V>() {
   return new HashMap<Rdf.Term, V>(Rdf.hashTerm, Rdf.equalTerms);
-}
-
-export function makeShapeResolver(
-  shapes: ReadonlyArray<Shape>,
-  onFailed: (shapeID: ShapeID) => never
-): (shapeID: ShapeID) => Shape {
-  const contextShapes = makeTermMap<Shape>();
-  for (const shape of shapes) {
-    contextShapes.set(shape.id, shape);
-  }
-  return shapeID => {
-    const shape = contextShapes.get(shapeID);
-    if (!shape) {
-      return onFailed(shapeID);
-    }
-    return shape;
-  };
 }
 
 export function assertUnknownShape(shape: never): never {

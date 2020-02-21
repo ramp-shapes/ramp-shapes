@@ -1,0 +1,9 @@
+{
+  "shapes": "list-cyclic-with-root",
+  "matches": [
+    {
+      "iri": "http://example.com/schema#rootList",
+      "body": [1, 2, [3, 4, [5, 6], [7], 8], 9]
+    }
+  ]
+}

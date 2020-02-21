@@ -1,0 +1,4 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+ex:rootList ex:body (1 2 (3 4 (5 6) (7) 8) 9).

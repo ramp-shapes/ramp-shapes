@@ -66,7 +66,7 @@ schema.object({
   }
 });
 
-const backwardsShape = schema.object({
+const backwardsShapeId = schema.object({
   properties: {
     iri: self(schema.resource()),
     source: property(oa.hasSource, schema.resource()),
@@ -85,17 +85,17 @@ const PREFIXES = {
 };
 
 (async function main() {
-  for (const {value, vars} of Ramp.frame({rootShape: oa.Annotation, shapes: schema.shapes, dataset})) {
+  const annotationShape = schema.shapes.get(oa.Annotation)!;
+  for (const {value} of Ramp.frame({shape: annotationShape, dataset})) {
     console.log('FRAME oa:Annotation', toJson(value));
-    console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
-    const triples = Ramp.flatten({value, rootShape: oa.Annotation, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: annotationShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value, vars} of Ramp.frame({rootShape: backwardsShape, shapes: schema.shapes, dataset})) {
+  const backwardsShape = schema.shapes.get(backwardsShapeId)!;
+  for (const {value} of Ramp.frame({shape: backwardsShape, dataset})) {
     console.log('FRAME backwards shape', toJson(value));
-    console.log('VAR xpath', toJson(vars.get(xpathLiteral)));
-    const triples = Ramp.flatten({value, rootShape: backwardsShape, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: backwardsShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 })();

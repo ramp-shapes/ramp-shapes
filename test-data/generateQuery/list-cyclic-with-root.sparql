@@ -1,0 +1,17 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.com/schema#>
+CONSTRUCT {
+  ex:rootList ex:body ?list_1.
+  ?listNode_3 rdf:rest ?nextNode_4.
+  ?listNode_3 rdf:first ?list_5.
+  ?listNode_3 rdf:first ?list_un_6.
+}
+WHERE {
+  ex:rootList ex:body ?list_1.
+  ?list_1 (((rdf:rest*)/rdf:first)*) ?list_r_2.
+  ?list_r_2 (rdf:rest*) ?listNode_3.
+  ?listNode_3 rdf:rest ?nextNode_4.
+  { ?listNode_3 rdf:first ?list_5. }
+  UNION
+  { ?listNode_3 rdf:first ?list_un_6. }
+}

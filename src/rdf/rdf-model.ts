@@ -1,6 +1,37 @@
 export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
 
-export class NamedNode {
+interface TermBase {
+  readonly termType: string;
+  readonly value: string;
+  equals(other: Term | undefined | null): boolean;
+  hashCode?(): number;
+  toString(): string;
+}
+
+export interface NamedNode extends TermBase {
+  readonly termType: 'NamedNode';
+}
+
+export interface BlankNode extends TermBase {
+  readonly termType: 'BlankNode';
+}
+
+export interface Literal extends TermBase {
+  readonly termType: 'Literal';
+  readonly language: string;
+  readonly datatype: NamedNode;
+}
+
+export interface Variable extends TermBase {
+  readonly termType: 'Variable';
+}
+
+export interface DefaultGraph extends TermBase {
+  readonly termType: 'DefaultGraph';
+  readonly value: '';
+}
+
+class RdfNamedNode implements NamedNode {
   get termType() { return 'NamedNode' as const; }
   constructor(
     readonly value: string,
@@ -8,15 +39,15 @@ export class NamedNode {
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
-  hashCode?() {
+  hashCode(): number {
     return hashTerm(this);
   }
-  toString() {
+  toString(): string {
     return toString(this);
   }
 }
 
-export class BlankNode {
+class RdfBlankNode implements BlankNode {
   get termType() { return 'BlankNode' as const; }
   constructor(
     readonly value: string,
@@ -24,18 +55,18 @@ export class BlankNode {
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
-  hashCode?() {
+  hashCode(): number {
     return hashTerm(this);
   }
-  toString() {
+  toString(): string {
     return toString(this);
   }
 }
 
-const RDF_LANG_STRING = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
-const XSD_STRING = new NamedNode('http://www.w3.org/2001/XMLSchema#string');
+const RDF_LANG_STRING: NamedNode = new RdfNamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+const XSD_STRING: NamedNode = new RdfNamedNode('http://www.w3.org/2001/XMLSchema#string');
 
-export class Literal {
+class RdfLiteral implements Literal {
   get termType() { return 'Literal' as const; }
   readonly value: string;
   readonly language: string;
@@ -53,15 +84,15 @@ export class Literal {
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
-  hashCode?() {
+  hashCode(): number {
     return hashTerm(this);
   }
-  toString() {
+  toString(): string {
     return toString(this);
   }
 }
 
-export class Variable {
+class RdfVariable implements Variable {
   get termType() { return 'Variable' as const; }
   constructor(
     readonly value: string
@@ -69,37 +100,47 @@ export class Variable {
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
-  hashCode?() {
+  hashCode(): number {
     return hashTerm(this);
   }
-  toString() {
+  toString(): string {
     return toString(this);
   }
 }
 
-export class DefaultGraph {
-  static readonly instance = new DefaultGraph();
+class RdfDefaultGraph implements DefaultGraph {
+  static readonly instance = new RdfDefaultGraph();
   get termType() { return 'DefaultGraph' as const; }
   readonly value = '';
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
   }
-  hashCode?() {
+  hashCode(): number {
     return hashTerm(this);
   }
-  toString() {
+  toString(): string {
     return toString(this);
   }
 }
 
-export class Quad {
+export interface Quad {
+  readonly subject: NamedNode | BlankNode | Variable;
+  readonly predicate: NamedNode | Variable;
+  readonly object: NamedNode | BlankNode | Literal | Variable;
+  readonly graph: DefaultGraph | NamedNode | BlankNode | Variable;
+  hashCode?(): number;
+  equals(other: Quad | undefined | null): boolean;
+  toString(): string;
+}
+
+class RdfQuad implements Quad {
   constructor(
     readonly subject: NamedNode | BlankNode | Variable,
     readonly predicate: NamedNode | Variable,
     readonly object: NamedNode | BlankNode | Literal | Variable,
-    readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = DefaultGraph.instance,
+    readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = RdfDefaultGraph.instance,
   ) {}
-  hashCode?() {
+  hashCode(): number {
     return hashQuad(this);
   }
   equals(other: Quad | undefined | null): boolean {
@@ -115,12 +156,12 @@ export class Quad {
 }
 
 export function namedNode(value: string): NamedNode {
-  return new NamedNode(value);
+  return new RdfNamedNode(value);
 }
 
 export function blankNode(value?: string): BlankNode {
   return typeof value === 'string'
-    ? new BlankNode(value) : randomBlankNode('b', 48);
+    ? new RdfBlankNode(value) : randomBlankNode('b', 48);
 }
 
 export function randomBlankNode(prefix: string, randomBitCount: number): BlankNode {
@@ -130,19 +171,19 @@ export function randomBlankNode(prefix: string, randomBitCount: number): BlankNo
   const hexDigitCount = Math.ceil(randomBitCount / 4);
   const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
   const value = prefix + num.toString(16).padStart(hexDigitCount, '0');
-  return new BlankNode(value);
+  return blankNode(value);
 }
 
 export function literal(value: string, languageOrDatatype?: string | NamedNode): Literal {
-  return new Literal(value, languageOrDatatype);
+  return new RdfLiteral(value, languageOrDatatype);
 }
 
 export function variable(value: string): Variable {
-  return new Variable(value);
+  return new RdfVariable(value);
 }
 
 export function defaultGraph(): DefaultGraph {
-  return DefaultGraph.instance;
+  return RdfDefaultGraph.instance;
 }
 
 export function quad(
@@ -151,7 +192,7 @@ export function quad(
   object: Quad['object'],
   graph?: Quad['graph'],
 ): Quad {
-  return new Quad(subject, predicate, object, graph);
+  return new RdfQuad(subject, predicate, object, graph);
 }
 
 export function wrap(
@@ -165,15 +206,15 @@ export function wrap(
 ): Term | undefined {
   switch (v.termType) {
     case 'NamedNode':
-      return new NamedNode(v.value);
+      return namedNode(v.value);
     case 'BlankNode':
-      return new BlankNode(v.value);
+      return blankNode(v.value);
     case 'Literal':
-      return new Literal(v.value, v.language || wrap(v.datatype) as NamedNode);
+      return literal(v.value, v.language || wrap(v.datatype) as NamedNode);
     case 'Variable':
-      return new Variable(v.value);
+      return variable(v.value);
     case 'DefaultGraph':
-      return DefaultGraph.instance;
+      return defaultGraph();
   }
 }
 

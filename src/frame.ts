@@ -1,20 +1,18 @@
-import { HashMap, ReadonlyHashMap, HashSet, ReadonlyHashSet } from './hash-map';
+import { HashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
   ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape, OptionalShape,
   ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, isPathSegment,
 } from './shapes';
 import {
-  makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
-  resolveListShapeDefaults, matchesTerm,
+  makeTermMap, makeTermSet, assertUnknownShape, resolveListShapeDefaults, matchesTerm,
 } from './common';
 import { RampError, ErrorCode, formatDisplayShape, formatShapeStack } from './errors';
 import { compactByReference } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
 export interface FrameParams {
-  rootShape: ShapeID;
-  shapes: ReadonlyArray<Shape>;
+  shape: Shape;
   dataset: Rdf.Dataset;
   candidates?: Iterable<Rdf.Term>;
   mapper?: ValueMapper;
@@ -22,7 +20,6 @@ export interface FrameParams {
 
 export interface FrameSolution {
   readonly value: unknown;
-  readonly vars: ReadonlyHashMap<ShapeID, unknown>;
 }
 
 /**
@@ -34,39 +31,29 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   const context: FrameContext = {
     mapper: params.mapper || ValueMapper.mapByDefault(),
     dataset: params.dataset,
-    vars: makeTermMap<unknown>() as HashMap<ShapeID, unknown>,
+    visiting: new HashMap(MatchKey.hash, MatchKey.equals),
+    matches: new HashMap(MatchKey.hash, MatchKey.equals),
     refs,
-    resolveShape: makeShapeResolver(params.shapes, shapeID => {
-      throw makeError(
-        ErrorCode.MissingShape,
-        `Failed to resolve shape ${Rdf.toString(shapeID)}`
-      );
-    }),
   };
 
-  const rootShape = context.resolveShape(params.rootShape);
   const candidates = params.candidates || findAllCandidates(params.dataset);
-  const solution: { value: unknown; vars: typeof context.vars } = {
-    value: undefined,
-    vars: context.vars,
-  };
-  const stack = new StackFrame(undefined, rootShape);
-  for (const value of frameShape(rootShape, false, candidates, stack, context)) {
+  const stack = new StackFrame(undefined, params.shape);
+  for (const value of frameShape(params.shape, false, candidates, stack, context)) {
     if (value === MISMATCH) {
       continue;
+    } else if (value instanceof CyclicMatch) {
+      throw makeError(ErrorCode.CyclicMatch, `Failed to match cyclic shape`, stack);
     }
-    solution.value = value;
-    yield solution;
-    solution.value = undefined;
+    yield {value};
   }
 }
 
 interface FrameContext {
   readonly mapper: ValueMapper;
   readonly dataset: Rdf.Dataset;
-  readonly vars: HashMap<ShapeID, unknown>;
+  readonly visiting: HashMap<MatchKey, CyclicMatch | null>;
+  readonly matches: HashMap<MatchKey, unknown>;
   readonly refs: HashMap<ShapeID, RefContext[]>;
-  resolveShape(shapeID: ShapeID): Shape;
 }
 
 class StackFrame {
@@ -78,6 +65,37 @@ class StackFrame {
   hasEdge() {
     return this.edge !== undefined;
   }
+}
+
+interface MatchKey {
+  shape: Shape;
+  term: Rdf.Term;
+}
+namespace MatchKey {
+  export function hash(key: MatchKey): number {
+    let hash = Rdf.hashTerm(key.shape.id);
+    // tslint:disable-next-line: no-bitwise
+    hash = (hash * 31 + Rdf.hashTerm(key.term)) | 0;
+    return hash;
+  }
+  export function equals(a: MatchKey, b: MatchKey): boolean {
+    return Rdf.equalTerms(a.shape.id, b.shape.id) && Rdf.equalTerms(a.term, b.term);
+  }
+}
+
+class CyclicMatch {
+  holes: MatchHole[] | undefined;
+  addHole(hole: MatchHole) {
+    if (!this.holes) {
+      this.holes = [];
+    }
+    this.holes.push(hole);
+  }
+}
+
+interface MatchHole {
+  target: object;
+  property: string | number;
 }
 
 interface RefContext {
@@ -95,7 +113,7 @@ function *frameShape(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown | Mismatch> {
+): Iterable<unknown | CyclicMatch | Mismatch> {
   const required = strict && !shape.lenient;
   const solutions = (() => {
     switch (shape.type) {
@@ -124,26 +142,19 @@ function *frameShape(
       if (!shape.lenient) {
         yield strict ? throwFailedToMatch(shape, stack) : MISMATCH;
       }
-      continue;
-    }
-
-    const matchingRefs = context.refs.get(shape.id);
-    if (matchingRefs) {
-      for (const ref of matchingRefs) {
-        ref.match = value;
+    } else if (value instanceof CyclicMatch) {
+      yield value;
+    } else {
+      const matchingRefs = context.refs.get(shape.id);
+      if (matchingRefs) {
+        for (const ref of matchingRefs) {
+          ref.match = value;
+        }
       }
-    }
-    const typed = context.mapper.fromRdf(value, shape);
-    context.vars.set(shape.id, typed);
 
-    yield typed;
-
-    if (matchingRefs) {
-      for (const ref of matchingRefs) {
-        ref.match = undefined;
-      }
+      const typed = context.mapper.fromRdf(value, shape);
+      yield typed;
     }
-    context.vars.delete(shape.id);
   }
 }
 
@@ -153,7 +164,7 @@ function *frameObject(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<{ [fieldName: string]: unknown } | Mismatch> {
+): Iterable<{ [fieldName: string]: unknown } | CyclicMatch | Mismatch> {
   function failMatch(candidate: Rdf.Term, code: ErrorCode, message: string): never {
     const fullMessage = message +
       ` when framing subject ${Rdf.toString(candidate)}` +
@@ -168,11 +179,10 @@ function *frameObject(
     template: { [fieldName: string]: unknown }
   ): boolean {
     for (const property of properties) {
-      const valueShape = context.resolveShape(property.valueShape);
       const values = findByPropertyPath(property.path, candidate, context);
-      const nextStack = new StackFrame(stack, valueShape, property.name);
+      const nextStack = new StackFrame(stack, property.valueShape, property.name);
       let found = false;
-      for (const value of frameShape(valueShape, required, values, nextStack, context)) {
+      for (const value of frameShape(property.valueShape, required, values, nextStack, context)) {
         if (value === MISMATCH) {
           return required ? failMatch(
             candidate,
@@ -188,7 +198,12 @@ function *frameObject(
           ) : false;
         }
         found = true;
-        template[property.name] = value;
+        if (value instanceof CyclicMatch) {
+          value.addHole({target: template, property: property.name});
+          template[property.name] = undefined;
+        } else {
+          template[property.name] = value;
+        }
       }
       if (!found) {
         return required ? failMatch(
@@ -209,17 +224,33 @@ function *frameObject(
       continue;
     }
 
+    const matchKey: MatchKey = {shape, term: candidate};
+    if (context.matches.has(matchKey)) {
+      yield context.matches.get(matchKey) as { [fieldName: string]: unknown };
+      continue;
+    }
+
+    if (context.visiting.has(matchKey)) {
+      yield makeCyclicMatch(context, matchKey);
+      continue;
+    }
+
+    context.visiting.set(matchKey, null);
+    let foundMatch = false;
     const template = {};
+
     if (frameProperties(shape.typeProperties, required, candidate, template)) {
       const checkProperties = required || shape.typeProperties.length > 0;
       if (frameProperties(shape.properties, checkProperties, candidate, template)) {
-        yield template;
-      } else {
-        yield MISMATCH;
+        foundMatch = true;
       }
-    } else {
-      yield MISMATCH;
     }
+
+    if (foundMatch) {
+      fillCyclicHoles(context, matchKey, template);
+    }
+    context.visiting.delete(matchKey);
+    yield foundMatch ? template : MISMATCH;
   }
 }
 
@@ -264,11 +295,10 @@ function *frameUnion(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown> {
+): Iterable<unknown | CyclicMatch | Mismatch> {
   let found = false;
   let mismatch = false;
-  for (const variant of shape.variants) {
-    const variantShape = context.resolveShape(variant);
+  for (const variantShape of shape.variants) {
     const nextStack = new StackFrame(stack, variantShape);
     for (const match of frameShape(variantShape, false, candidates, nextStack, context)) {
       if (match === MISMATCH) {
@@ -283,8 +313,7 @@ function *frameUnion(
   if (!found && mismatch) {
     if (required) {
       // try to frame with "required = true" to produce error
-      for (const variant of shape.variants) {
-        const variantShape = context.resolveShape(variant);
+      for (const variantShape of shape.variants) {
         const nextStack = new StackFrame(stack, variantShape);
         yield* frameShape(variantShape, true, candidates, nextStack, context);
       }
@@ -301,15 +330,20 @@ function *frameSet(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
-  const itemShape = context.resolveShape(shape.itemShape);
-  const nextStack = new StackFrame(stack, itemShape);
+  const nextStack = new StackFrame(stack, shape.itemShape);
   const matches: unknown[] = [];
-  for (const match of frameShape(itemShape, required, candidates, nextStack, context)) {
+  for (const match of frameShape(shape.itemShape, required, candidates, nextStack, context)) {
     if (match === MISMATCH) {
       yield MISMATCH;
       return;
     }
-    matches.push(match);
+    if (match instanceof CyclicMatch) {
+      const index = matches.length;
+      matches.push(undefined);
+      match.addHole({target: matches, property: index});
+    } else {
+      matches.push(match);
+    }
   }
   yield matches;
 }
@@ -320,15 +354,14 @@ function *frameOptional(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown | Mismatch> {
+): Iterable<unknown | CyclicMatch | Mismatch> {
   let found = false;
-  const itemShape = context.resolveShape(shape.itemShape);
-  const nextStack = new StackFrame(stack, itemShape);
-  for (const value of frameShape(itemShape, false, candidates, nextStack, context)) {
+  const nextStack = new StackFrame(stack, shape.itemShape);
+  for (const value of frameShape(shape.itemShape, false, candidates, nextStack, context)) {
     if (value === MISMATCH) {
       if (required) {
         // try to frame with "required = true" to produce error
-        yield* frameShape(itemShape, true, candidates, nextStack, context);
+        yield* frameShape(shape.itemShape, true, candidates, nextStack, context);
       }
     } else {
       found = true;
@@ -364,9 +397,8 @@ function *frameList(
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
   context: FrameContext
-): Iterable<unknown[] | Mismatch> {
+): Iterable<unknown[] | CyclicMatch | Mismatch> {
   const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
-  const itemShape = context.resolveShape(shape.itemShape);
 
   function frameListFromTerm(candidate: Rdf.Term): unknown[] | Mismatch {
     let result: unknown[] | undefined;
@@ -408,9 +440,9 @@ function *frameList(
         result = [];
       }
 
-      const nextStack = new StackFrame(stack, itemShape, index);
+      const nextStack = new StackFrame(stack, shape.itemShape, index);
       let hasItemMatch = false;
-      for (const item of frameShape(itemShape, required, [foundHead], nextStack, context)) {
+      for (const item of frameShape(shape.itemShape, required, [foundHead], nextStack, context)) {
         if (item === MISMATCH) {
           return MISMATCH;
         } else if (hasItemMatch) {
@@ -446,7 +478,24 @@ function *frameList(
   }
 
   for (const candidate of candidates) {
-    yield frameListFromTerm(candidate);
+    const matchKey: MatchKey = {shape, term: candidate};
+    if (context.matches.has(matchKey)) {
+      yield context.matches.get(matchKey) as unknown[];
+      continue;
+    }
+
+    if (context.visiting.has(matchKey)) {
+      yield makeCyclicMatch(context, matchKey);
+      continue;
+    }
+
+    context.visiting.set(matchKey, null);
+    const list = frameListFromTerm(candidate);
+    if (list !== MISMATCH) {
+      fillCyclicHoles(context, matchKey, list);
+    }
+    context.visiting.delete(matchKey);
+    yield list;
   }
 }
 
@@ -480,12 +529,24 @@ function *frameMap(
     pushRef(context.refs, valueContext);
   }
 
-  const itemShape = context.resolveShape(shape.itemShape);
-  const nextStack = new StackFrame(stack, itemShape);
-  for (const item of frameShape(itemShape, required, candidates, nextStack, context)) {
+  const nextStack = new StackFrame(stack, shape.itemShape);
+  for (const item of frameShape(shape.itemShape, required, candidates, nextStack, context)) {
     if (item === MISMATCH) {
       yield MISMATCH;
       return;
+    }
+    if (item instanceof CyclicMatch) {
+      throw makeError(ErrorCode.CyclicMatch, `Cyclic map shape item matches are not supported`, stack);
+    }
+    if (keyContext.match === undefined) {
+      throw makeError(
+        ErrorCode.NoMapKeyMatches, `Failed to frame item as key of map ${Rdf.toString(shape.id)}`, stack
+      );
+    }
+    if (valueContext && valueContext.match === undefined) {
+      throw makeError(
+        ErrorCode.NoMapValueMatches, `Failed to frame item as value of map ${Rdf.toString(shape.id)}`, stack
+      );
     }
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
@@ -514,9 +575,10 @@ function frameByReference(
   if (refContext.match === undefined) {
     return undefined;
   }
-  const shape = context.resolveShape(refContext.reference.target);
+  const shape = refContext.reference.target;
   try {
-    return compactByReference(refContext.match, shape, refContext.reference);
+    const compacted = compactByReference(refContext.match, shape, refContext.reference);
+    return Rdf.looksLikeTerm(compacted) ? context.mapper.fromRdf(compacted, shape) : compacted;
   } catch (e) {
     const message = e.message || `Error compacting value of shape ${Rdf.toString(shape.id)}`;
     throw makeError(ErrorCode.FailedToCompactValue, message, stack);
@@ -622,17 +684,35 @@ function throwFailedToMatch(shape: Shape, stack: StackFrame, term?: Rdf.Term): n
   throw makeError(ErrorCode.ShapeMismatch, baseMessage, stack);
 }
 
+function makeCyclicMatch(context: FrameContext, matchKey: MatchKey) {
+  let match = context.visiting.get(matchKey);
+  if (!match) {
+    match = new CyclicMatch();
+    context.visiting.set(matchKey, match);
+  }
+  return match;
+}
+
+function fillCyclicHoles(context: FrameContext, matchKey: MatchKey, value: unknown) {
+  const cyclic = context.visiting.get(matchKey);
+  if (!(cyclic && cyclic.holes)) { return; }
+  context.matches.set(matchKey, value);
+  for (const hole of cyclic.holes) {
+    (hole.target as any)[hole.property] = value;
+  }
+}
+
 function pushRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
-  let items = map.get(ref.reference.target);
+  let items = map.get(ref.reference.target.id);
   if (!items) {
     items = [];
-    map.set(ref.reference.target, items);
+    map.set(ref.reference.target.id, items);
   }
   items.push(ref);
 }
 
 function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
-  const items = map.get(ref.reference.target);
+  const items = map.get(ref.reference.target.id);
   if (!items) {
     throw makeError(ErrorCode.CannotRemoveRefContext, 'Cannot remove ref context');
   }

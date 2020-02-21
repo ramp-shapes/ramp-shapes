@@ -41,27 +41,31 @@ const PREFIXES = {
 };
 
 (async function main() {
-  for (const {value} of Ramp.frame({rootShape: list, shapes: schema.shapes, dataset})) {
+  const listShape = schema.shapes.get(list)!;
+  for (const {value} of Ramp.frame({shape: listShape, dataset})) {
     console.log('FRAME list', toJson(value));
-    const triples = Ramp.flatten({value, rootShape: list, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: listShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ramp.frame({rootShape: listOwner, shapes: schema.shapes, dataset})) {
+  const listOwnerShape = schema.shapes.get(listOwner)!;
+  for (const {value} of Ramp.frame({shape: listOwnerShape, dataset})) {
     console.log('FRAME list owner', toJson(value));
-    const triples = Ramp.flatten({value, rootShape: listOwner, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: listOwnerShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ramp.frame({rootShape: listOfUnion, shapes: schema.shapes, dataset})) {
+  const listOfUnionShape = schema.shapes.get(listOfUnion)!;
+  for (const {value} of Ramp.frame({shape: listOfUnionShape, dataset})) {
     console.log('FRAME list of union', toJson(value));
-    const triples = Ramp.flatten({value, rootShape: listOfUnion, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: listOfUnionShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  for (const {value} of Ramp.frame({rootShape: listSelf, shapes: schema.shapes, dataset})) {
+  const listSelfShape = schema.shapes.get(listSelf)!;
+  for (const {value} of Ramp.frame({shape: listSelfShape, dataset})) {
     console.log('FRAME list self', toJson(value));
-    const triples = Ramp.flatten({value, rootShape: listSelf, shapes: schema.shapes});
+    const triples = Ramp.flatten({value, shape: listSelfShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 })();

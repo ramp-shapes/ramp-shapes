@@ -1,14 +1,13 @@
 import * as SparqlJs from 'sparqljs';
 import * as Ramp from '../../src/index';
-import { Shapes, AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
+import { AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
 
 const query = Ramp.generateQuery({
-  rootShape: AlexanderTheThirdDescendants,
-  shapes: Shapes,
+  shape: AlexanderTheThirdDescendants,
   prefixes: Prefixes,
   unstable_onEmit: (shape, subject, out) => {
     // Add FILTER(LANG(?var) = "en") to fetch only english labels
-    if (shape.type === 'literal') {
+    if (shape.type === 'literal' && shape.language) {
       out.push({
         type: 'filter',
         expression: {
@@ -20,7 +19,7 @@ const query = Ramp.generateQuery({
               operator: 'lang',
               args: [subject],
             },
-            '"en"' as SparqlJs.Term
+            `"${shape.language}"` as SparqlJs.Term
           ]
         }
       });

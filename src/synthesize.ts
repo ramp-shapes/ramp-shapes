@@ -1,7 +1,7 @@
 import { ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ObjectProperty, LiteralShape, ResourceShape, Shape, ShapeID, ShapeReference
+  ObjectProperty, LiteralShape, ResourceShape, Shape, ShapeReference
 } from './shapes';
 import { rdf } from './vocabulary';
 
@@ -13,7 +13,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Compacting term value by reference allowed only for resource or literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target)}`
+          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target.id)}`
         );
       }
     case 'datatype':
@@ -24,7 +24,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Framing term datatype or language as map key allowed only for literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target)}`
+          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target.id)}`
         );
       }
     default:
@@ -34,7 +34,6 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 
 export interface SynthesizeContext {
   readonly matches: ReadonlyHashMap<Rdf.Term, ReadonlyArray<ReferenceMatch>>;
-  resolveShape(id: ShapeID): Shape;
 }
 
 export interface ReferenceMatch {
@@ -70,8 +69,7 @@ function synthesizeProperties(
   context: SynthesizeContext
 ) {
   for (const property of properties) {
-    const valueShape = context.resolveShape(property.valueShape);
-    template[property.name] = synthesizeShape(valueShape, context);
+    template[property.name] = synthesizeShape(property.valueShape, context);
   }
 }
 
@@ -80,7 +78,7 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
     return shape.value;
   }
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equalTerms(match.ref.target, shape.id)) {
+    if (Rdf.equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;
@@ -115,7 +113,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
   let language = shape.language;
 
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equalTerms(match.ref.target, shape.id)) {
+    if (Rdf.equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;
@@ -145,7 +143,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
 function checkRefPart(match: ReferenceMatch): string {
   if (typeof match.match !== 'string') {
     throw new Error(
-      `Cannot synthesize '${match.ref.part}' part for shape ${Rdf.toString(match.ref.target)} ` +
+      `Cannot synthesize '${match.ref.part}' part for shape ${Rdf.toString(match.ref.target.id)} ` +
       `from non-string value (${typeof match.match}) ${match.match}`
     );
   }

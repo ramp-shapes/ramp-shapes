@@ -1,37 +1,42 @@
 import * as Ramp from '../src/index';
 import { Rdf, vocabulary as ramp } from '../src/index';
-import { rdf } from './namespaces';
-import { quadsToTurtleString, toJson } from './util';
+import { rdf, xsd } from './namespaces';
+import { quadsToTurtleString } from './util';
 
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
+  xsd: xsd.NAMESPACE,
   '': Ramp.vocabulary.NAMESPACE,
 };
 
-const BASE_SHAPE = Ramp.ShapesForShapes
-  .find(s => Rdf.equalTerms(s.id, ramp.Shape))! as Ramp.UnionShape;
-const ROOT_SHAPES = [
-  BASE_SHAPE,
-  ...BASE_SHAPE.variants.map(variant => Ramp.ShapesForShapes.find(s => Rdf.equalTerms(s.id, variant))!)
-];
-
 async function main() {
-  for (const shape of ROOT_SHAPES) {
-    console.log('### ', Rdf.toString(shape.id), '###');
-    const quads = Ramp.flatten({
-      rootShape: ramp.Shape,
-      shapes: Ramp.ShapesForShapes,
-      value: shape,
-    });
+  const quads: Rdf.Quad[] = [];
+  const quadSet = Rdf.dataset();
 
-    const dataset = Rdf.dataset(quads);
-    const shapeTurtle = await quadsToTurtleString(dataset, PREFIXES);
-    console.log(shapeTurtle);
+  let blankIndex = 0;
+  const generateBlankNode = (prefix: string) => {
+    blankIndex++;
+    return Rdf.blankNode(`${prefix}_gen_${blankIndex}`);
+  };
 
-    for (const {value} of Ramp.frame({shapes: Ramp.ShapesForShapes, rootShape: BASE_SHAPE.id, dataset})) {
-      console.log(toJson(value));
+  const rootShape = Ramp.ShapesForShapes.get(ramp.Shape)!;
+  const flattenedShapes = Ramp.flatten({
+    shape: rootShape,
+    value: rootShape,
+    unstable_generateBlankNode: generateBlankNode,
+  });
+  for (const quad of flattenedShapes) {
+    if (!quadSet.has(quad)) {
+      quadSet.add(quad);
+      quads.push(quad);
     }
   }
+
+  const allShapesTurtle = await quadsToTurtleString(quads, PREFIXES);
+  console.log(allShapesTurtle);
+
+  const shapes = Ramp.frameShapes(quadSet);
+  console.log(`Source shape count = ${Ramp.ShapesForShapes.size}; framed shape count = ${shapes.length}`);
 }
 
 main();

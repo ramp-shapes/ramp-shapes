@@ -7,8 +7,15 @@
       {
         "type": "node",
         "request": "launch",
-        "name": "Launch Program",
+        "name": "Launch Current File",
         "args": ["${relativeFile}"],
+        "runtimeArgs": ["--nolazy", "-r", "ts-node/register"]
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch Test",
+        "args": ["${workspaceFolder}/test/main.ts"],
         "runtimeArgs": ["--nolazy", "-r", "ts-node/register"]
       }
     ]

@@ -7,14 +7,12 @@ import {
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment
 } from './shapes';
 import {
-  makeTermMap, makeTermSet, makeShapeResolver, assertUnknownShape,
-  resolveListShapeDefaults,
+  makeTermMap, makeTermSet, assertUnknownShape, resolveListShapeDefaults,
 } from './common';
 import { ErrorCode, RampError, formatShapeStack } from './errors';
 
 export interface GenerateQueryParams {
-  rootShape: ShapeID;
-  shapes: ReadonlyArray<Shape>;
+  shape: Shape;
   base?: Rdf.NamedNode;
   prefixes?: { [prefix: string]: string };
   unstable_onEmit?: (shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]) => void;
@@ -67,12 +65,6 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   const context: GenerateQueryContext = {
     visitingShapes: makeTermSet() as HashSet<ShapeID>,
     stack: [],
-    resolveShape: makeShapeResolver(params.shapes, shapeID => {
-      throw context.makeError(
-        ErrorCode.MissingShape,
-        `Failed to resolve shape ${Rdf.toString(shapeID)}`
-      );
-    }),
     resolveSubject: (shape: Shape) => {
       let subject = subjects.get(shape.id);
       if (subject === undefined) {
@@ -103,7 +95,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
   };
 
-  const rootShape = context.resolveShape(params.rootShape);
+  const rootShape = params.shape;
   const object = context.resolveSubject(rootShape);
   generateForShape(rootShape, {object}, wherePatterns, context);
   return query;
@@ -120,7 +112,6 @@ function isEmptyPath(predicate: SparqlJs.PropertyPath | SparqlJs.Term) {
 interface GenerateQueryContext {
   readonly visitingShapes: HashSet<ShapeID>;
   readonly stack: Shape[];
-  resolveShape(shapeID: ShapeID): Shape;
   resolveSubject(shape: Shape): SparqlJs.Term;
   makeVariable(prefix: string): SparqlJs.Term;
   addEdge(edge: Edge): void;
@@ -312,7 +303,7 @@ function generateForProperties(
   context: GenerateQueryContext,
 ) {
   for (const property of properties) {
-    const shape = context.resolveShape(property.valueShape);
+    const shape = property.valueShape;
     const edge: Edge = {
       subject,
       path: propertyPathToSparql(property.path),
@@ -388,8 +379,7 @@ function generateForUnion(
   context: GenerateQueryContext,
 ): void {
   const unionBlocks: SparqlJs.Pattern[] = [];
-  for (const variant of shape.variants) {
-    const variantShape = context.resolveShape(variant);
+  for (const variantShape of shape.variants) {
     const blockPatterns: SparqlJs.Pattern[] = [];
     generateForShape(variantShape, edge, blockPatterns, context);
     if (blockPatterns.length > 0) {
@@ -407,9 +397,8 @@ function generateForSetLikeShape(
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ): void {
-  const itemShape = context.resolveShape(shape.itemShape);
   const patterns: SparqlJs.Pattern[] = [];
-  generateForShape(itemShape, edge, patterns, context);
+  generateForShape(shape.itemShape, edge, patterns, context);
   if (patterns.length > 0) {
     out.push({type: 'optional', patterns});
   }
@@ -467,14 +456,13 @@ function generateForList(
   generateEdge(nextEdge, out);
   context.addEdge(nextEdge);
 
-  const itemShape = context.resolveShape(shape.itemShape);
   if (head.length === 0) {
-    generateForShape(itemShape, {object: listNode}, out, context);
+    generateForShape(shape.itemShape, {object: listNode}, out, context);
   } else {
     const headPath = propertyPathToSparql(head);
     const object = context.resolveSubject(shape);
     const headEdge: Edge = {subject: listNode, path: headPath, object};
-    generateForShape(itemShape, headEdge, out, context);
+    generateForShape(shape.itemShape, headEdge, out, context);
   }
 }
 
@@ -502,16 +490,14 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
         yield* visitProperties(shape.properties);
         break;
       case 'union':
-        for (const variant of shape.variants) {
-          const variantShape = context.resolveShape(variant);
+        for (const variantShape of shape.variants) {
           yield* visit(variantShape);
         }
         break;
       case 'set':
       case 'optional':
       case 'map': {
-        const itemShape = context.resolveShape(shape.itemShape);
-        yield* visit(itemShape);
+        yield* visit(shape.itemShape);
         break;
       }
       case 'list': {
@@ -524,8 +510,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
         if (head.length > 0) {
           path.push(propertyPathToSparql(head));
         }
-        const itemShape = context.resolveShape(shape.itemShape);
-        yield* visit(itemShape);
+        yield* visit(shape.itemShape);
         if (head.length > 0) {
           path.pop();
         }
@@ -546,8 +531,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
   ): Iterable<SparqlJsPredicate>  {
     for (const property of properties) {
       path.push(propertyPathToSparql(property.path));
-      const valueShape = context.resolveShape(property.valueShape);
-      yield* visit(valueShape);
+      yield* visit(property.valueShape);
       path.pop();
     }
   }
@@ -567,16 +551,14 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
         yield* visitProperties(shape.properties);
         break;
       case 'union':
-        for (const variant of shape.variants) {
-          const variantShape = context.resolveShape(variant);
+        for (const variantShape of shape.variants) {
           yield* visit(variantShape);
         }
         break;
       case 'set':
       case 'optional':
       case 'map':
-        const itemShape = context.resolveShape(shape.itemShape);
-        yield* visit(itemShape);
+        yield* visit(shape.itemShape);
         break;
       case 'resource':
         if (shape.value && shape.value.termType === 'NamedNode') {
@@ -598,8 +580,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   ): Iterable<Rdf.NamedNode>  {
     for (const property of properties) {
       if (property.path.length === 0) {
-        const valueShape = context.resolveShape(property.valueShape);
-        yield* visit(valueShape);
+        yield* visit(property.valueShape);
       }
     }
   }

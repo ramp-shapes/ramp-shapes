@@ -18,9 +18,39 @@ export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
   return parser.parse(ttl) as Rdf.Quad[];
 }
 
-export function readJson(path: string): unknown {
+export function readCyclicJson(path: string): unknown {
   const json = fs.readFileSync(path, {encoding: 'utf-8'});
-  return JSON.parse(json);
+  const refs = new Map<number, unknown>();
+  const holes: Array<{ use: number; target: any; key: string }> = [];
+  const parsed = JSON.parse(json, function (key, value) {
+    if (key === '@ref') {
+      if (typeof value !== 'number') {
+        throw new Error(`Invalid non-number object definition {"@ref": ...}`);
+      }
+      if (refs.has(value)) {
+        throw new Error(`Duplicate object definition: {"@ref": ${value}}`);
+      }
+      refs.set(value, this);
+      return undefined;
+    }
+    if (typeof value === 'object' && value.hasOwnProperty('@use')) {
+      const useRef = value['@use'];
+      if (typeof useRef !== 'number') {
+        throw new Error(`Invalid non-number object reference {"@use": ...}`);
+      }
+      holes.push({use: useRef, target: this, key});
+      return undefined;
+    }
+    return value;
+  });
+  for (const hole of holes) {
+    if (!refs.has(hole.use)) {
+      throw new Error(`Failed to find object reference: {"@use": ${hole.use}}`);
+    }
+    const ref = refs.get(hole.use);
+    hole.target[hole.key] = ref;
+  }
+  return parsed;
 }
 
 export function readQuery(path: string): SparqlJs.SparqlQuery {
@@ -31,13 +61,15 @@ export function readQuery(path: string): SparqlJs.SparqlQuery {
 export function findFirstShape(
   quads: ReadonlyArray<Rdf.Quad>,
   shapes: ReadonlyArray<Ramp.Shape>
-): Ramp.ShapeID | undefined {
+): Ramp.Shape | undefined {
   const shapeIds = new Set<string>();
   for (const shape of shapes) {
     shapeIds.add(shape.id.value);
   }
-  const rootShapeQuad = quads.find(
-    q => q.subject.termType === 'NamedNode' && shapeIds.has(q.subject.value)
-  );
-  return rootShapeQuad ? rootShapeQuad.subject as Rdf.NamedNode : undefined;
+  for (const q of quads) {
+    if (q.subject.termType === 'NamedNode' && shapeIds.has(q.subject.value)) {
+      return shapes.find(shape => Rdf.equalTerms(shape.id, q.subject));
+    }
+  }
+  return undefined;
 }

@@ -31,11 +31,9 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 /* tslint:enable: quotemark */
 
-const iterator = Ramp.frame({
-  rootShape: Ramp.Rdf.namedNode(PREFIXES.sc + 'Manifest'),
-  shapes,
-  dataset,
-});
+const manifestShapeId = Ramp.Rdf.namedNode(PREFIXES.sc + 'Manifest');
+const manifestShape = shapes.find(shape => Ramp.Rdf.equalTerms(shape.id, manifestShapeId))!;
+const iterator = Ramp.frame({shape: manifestShape, dataset});
 
 for (const {value} of iterator) {
   console.log(toJson(value));

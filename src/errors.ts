@@ -31,6 +31,9 @@ export const enum ErrorCode {
   FailedToCompactValue = 213,
   CannotRemoveRefContext = 214,
   NonMatchingRefContext = 215,
+  CyclicMatch = 216,
+  NoMapKeyMatches = 217,
+  NoMapValueMatches = 218,
 }
 
 export function isRampError(error: unknown): error is RampError {

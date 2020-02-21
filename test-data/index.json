@@ -1,10 +1,14 @@
 [
+  {"type": "frame", "name": "cyclic1"},
   {"type": "frame", "name": "lenient1"},
   {"type": "frame", "name": "lenient2-err"},
+  {"type": "frame", "name": "list-cyclic"},
   {"type": "frame", "name": "object1"},
   {"type": "frame", "name": "object2-err"},
   {"type": "frame", "name": "object3-err"},
   {"type": "flatten", "name": "object1", "skip": true},
   {"type": "flatten", "name": "object2-err"},
-  {"type": "generateQuery", "name": "point"}
+  {"type": "generateQuery", "name": "list-cyclic-with-root"},
+  {"type": "generateQuery", "name": "point"},
+  {"type": "generateQuery", "name": "selector-cyclic"}
 ]

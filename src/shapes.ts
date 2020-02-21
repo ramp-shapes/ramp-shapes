@@ -42,7 +42,7 @@ export interface ObjectShape extends ShapeBase {
 export interface ObjectProperty {
   readonly name: string;
   readonly path: PathSequence;
-  readonly valueShape: ShapeID;
+  readonly valueShape: Shape;
 }
 
 export type PathSequence = ReadonlyArray<PathElement>;
@@ -58,19 +58,19 @@ export interface PathSegment {
 export interface UnionShape extends ShapeBase {
   readonly type: 'union';
   readonly id: ShapeID;
-  readonly variants: ReadonlyArray<ShapeID>;
+  readonly variants: ReadonlyArray<Shape>;
 }
 
 export interface SetShape extends ShapeBase {
   readonly type: 'set';
   readonly id: ShapeID;
-  readonly itemShape: ShapeID;
+  readonly itemShape: Shape;
 }
 
 export interface OptionalShape extends ShapeBase {
   readonly type: 'optional';
   readonly id: ShapeID;
-  readonly itemShape: ShapeID;
+  readonly itemShape: Shape;
   readonly strict?: boolean;
   readonly emptyValue?: null | undefined;
 }
@@ -78,7 +78,7 @@ export interface OptionalShape extends ShapeBase {
 export interface ListShape extends ShapeBase {
   readonly type: 'list';
   readonly id: ShapeID;
-  readonly itemShape: ShapeID;
+  readonly itemShape: Shape;
   /** @default [{predicate: (rdf:first)}] */
   readonly headPath?: PathSequence;
   /** @default [{predicate: (rdf:rest)}] */
@@ -92,11 +92,11 @@ export interface MapShape extends ShapeBase {
   readonly id: ShapeID;
   readonly key: ShapeReference;
   readonly value?: ShapeReference;
-  readonly itemShape: ShapeID;
+  readonly itemShape: Shape;
 }
 
 export interface ShapeReference {
-  readonly target: ShapeID;
+  readonly target: Shape;
   readonly part?: 'value' | 'datatype' | 'language';
 }
 

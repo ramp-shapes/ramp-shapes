@@ -3,7 +3,7 @@ import * as Ramp from '../../src/index';
 import {
   writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse, quadsToTurtleString
 } from '../util';
-import { Prefixes, Shapes, AlexanderTheThirdDescendants } from './wikidata-common';
+import { Prefixes, AlexanderTheThirdDescendants } from './wikidata-common';
 
 const queryResult = require('../../out/wikidata-query-result.json');
 
@@ -14,11 +14,7 @@ const queryResult = require('../../out/wikidata-query-result.json');
   console.log('Total quads: ' + bindings.length);
   console.log('Unique quads: ' + dataset.size);
 
-  const iterator = Ramp.frame({
-    rootShape: AlexanderTheThirdDescendants,
-    shapes: Shapes,
-    dataset,
-  });
+  const iterator = Ramp.frame({shape: AlexanderTheThirdDescendants, dataset});
 
   const outDir = path.join(__dirname, '../../out');
   makeDirectoryIfNotExists(outDir);

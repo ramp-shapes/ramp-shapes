@@ -3,6 +3,8 @@ import { promisify } from 'util';
 import * as N3 from 'n3';
 import { Rdf } from '../src/index';
 
+export { quadsToTurtleString } from './turtle-blank';
+
 export const exists = promisify(fs.exists);
 export const mkdir = promisify(fs.mkdir);
 export const readdir = promisify(fs.readdir);
@@ -28,33 +30,6 @@ export function toJson(match: unknown): string {
     }
     return value;
   }, 2);
-}
-
-export function quadsToTurtleString(
-  triples: Iterable<Rdf.Quad>,
-  prefixes: { [prefix: string]: string }
-): Promise<string> {
-  const quads: N3.Quad[] = [];
-  for (const q of triples) {
-    quads.push(N3.DataFactory.quad(
-      q.subject,
-      q.predicate,
-      q.object,
-      q.graph
-    ));
-  }
-
-  return new Promise((resolve, reject) => {
-    const writer = new N3.Writer({prefixes});
-    writer.addQuads(quads);
-    writer.end((error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
 }
 
 function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {

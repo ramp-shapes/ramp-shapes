@@ -37,12 +37,12 @@ const ShapeTypeVocabulary: Vocabulary = {
   }
 };
 
-const baseProperties = {
+const makeBaseProperties = () => ({
   id: self(ramp.ShapeID),
   lenient: property(ramp.lenient, schema.optional(
     schema.literal({datatype: xsd.boolean})
   )),
-};
+});
 
 schema.object({
   id: ramp.ObjectShape,
@@ -52,7 +52,7 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
+    ...makeBaseProperties(),
     typeProperties: property(ramp.typeProperty, schema.set(ramp.ObjectProperty)),
     properties: property(ramp.property, schema.set(ramp.ObjectProperty)),
   }
@@ -63,7 +63,7 @@ schema.object({
   properties: {
     name: property(ramp.name, schema.literal({datatype: xsd.string})),
     path: property(ramp.path, ramp.PathSequence),
-    valueShape: property(ramp.shape, ramp.ShapeID),
+    valueShape: property(ramp.shape, ramp.Shape),
   }
 });
 
@@ -107,8 +107,8 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
-    variants: property(ramp.variant, schema.set(ramp.ShapeID)),
+    ...makeBaseProperties(),
+    variants: property(ramp.variant, schema.set(ramp.Shape)),
   }
 });
 
@@ -120,8 +120,8 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
-    itemShape: property(ramp.item, ramp.ShapeID),
+    ...makeBaseProperties(),
+    itemShape: property(ramp.item, ramp.Shape),
   }
 });
 
@@ -133,8 +133,8 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
-    itemShape: property(ramp.item, ramp.ShapeID),
+    ...makeBaseProperties(),
+    itemShape: property(ramp.item, ramp.Shape),
   }
 });
 
@@ -146,7 +146,7 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
+    ...makeBaseProperties(),
     value: property(ramp.termValue, schema.optional(schema.resource({keepAsTerm: true}))),
     keepAsTerm: property(ramp.keepAsTerm, schema.optional(
       schema.literal({datatype: xsd.boolean})
@@ -186,7 +186,7 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
+    ...makeBaseProperties(),
     datatype: property(ramp.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
     language: property(ramp.termLanguage, schema.optional(schema.literal({datatype: xsd.string}))),
     value: property(ramp.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
@@ -204,8 +204,8 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
-    itemShape: property(ramp.item, ramp.ShapeID),
+    ...makeBaseProperties(),
+    itemShape: property(ramp.item, ramp.Shape),
     headPath: property(ramp.headPath, schema.optional(ramp.PathSequence)),
     tailPath: property(ramp.tailPath, schema.optional(ramp.PathSequence)),
     nil: property(ramp.nil, schema.optional(schema.resource({keepAsTerm: true}))),
@@ -220,10 +220,10 @@ schema.object({
     )),
   },
   properties: {
-    ...baseProperties,
+    ...makeBaseProperties(),
     key: property(ramp.mapKey, ramp.ShapeReference),
     value: property(ramp.mapValue, schema.optional(ramp.ShapeReference)),
-    itemShape: property(ramp.item, ramp.ShapeID),
+    itemShape: property(ramp.item, ramp.Shape),
   }
 });
 
@@ -238,7 +238,7 @@ const TermPartVocabulary: Vocabulary = {
 schema.object({
   id: ramp.ShapeReference,
   properties: {
-    target: property(ramp.shape, ramp.ShapeID),
+    target: property(ramp.shape, ramp.Shape),
     part: property(ramp.termPart, schema.optional(schema.union([
       schema.constant(ramp.TermDatatype, {vocabulary: TermPartVocabulary}),
       schema.constant(ramp.TermLanguage, {vocabulary: TermPartVocabulary}),
@@ -247,12 +247,11 @@ schema.object({
   }
 });
 
-export const ShapesForShapes = [...schema.shapes];
+export const ShapesForShapes = schema.shapes;
 
 export function frameShapes(dataset: Rdf.Dataset): Shape[] {
   const framingResults = frame({
-    rootShape: ramp.Shape,
-    shapes: ShapesForShapes,
+    shape: ShapesForShapes.get(ramp.Shape)!,
     dataset,
   });
   const shapes: Shape[] = [];
