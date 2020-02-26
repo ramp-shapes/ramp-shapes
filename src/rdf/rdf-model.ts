@@ -1,3 +1,5 @@
+import { escapeRdfValue } from './rdf-escape';
+
 export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
 
 interface TermBase {
@@ -221,12 +223,12 @@ export function wrap(
 export function toString(node: Term): string {
   switch (node.termType) {
     case 'NamedNode':
-      return `<${node.value}>`;
+      return `<${escapeRdfValue(node.value)}>`;
     case 'BlankNode':
       return `_:${node.value}`;
     case 'Literal': {
       const {value, language, datatype} = node;
-      const stringLiteral = `"${escapeLiteralValue(value)}"`;
+      const stringLiteral = `"${escapeRdfValue(value)}"`;
       if (language) {
         return stringLiteral + `@${language}`;
       } else if (datatype) {
@@ -240,14 +242,6 @@ export function toString(node: Term): string {
     case 'Variable':
       return `?${node.value}`;
   }
-}
-
-function escapeLiteralValue(value: string): string {
-  return value
-    .replace('"', '\\"')
-    .replace('\t', '\\t')
-    .replace('\r', '\\r')
-    .replace('\n', '\\n');
 }
 
 export function hashTerm(node: Term): number {
