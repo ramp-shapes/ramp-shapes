@@ -1,5 +1,6 @@
 import * as Rdf from './rdf';
 import { Shape } from './shapes';
+import { rdf, xsd } from './vocabulary';
 
 export type RampError = Error & {
   rampErrorCode: ErrorCode;
@@ -9,6 +10,7 @@ export type RampError = Error & {
 export interface StackFrame {
   edge?: string | number;
   shape: Shape;
+  focus?: Rdf.Term;
 }
 
 export const enum ErrorCode {
@@ -41,11 +43,35 @@ export function isRampError(error: unknown): error is RampError {
     && typeof (error as RampError).rampErrorCode === 'number';
 }
 
-export function formatDisplayShape(shape: Shape): string {
-  return shape.id.termType === 'BlankNode'
-    ? `(${shape.type} ${Rdf.toString(shape.id)})`
+export function formatDisplayShape(shape: Shape, focus?: Rdf.Term): string {
+  const formattedShape = shape.id.termType === 'BlankNode'
+    ? formatBlankShape(shape)
     : Rdf.toString(shape.id);
+  return focus ? `(${Rdf.toString(focus)} @ ${formattedShape})` : formattedShape;
 }
+
+function formatBlankShape(shape: Shape) {
+  if ((shape.type === 'resource' || shape.type === 'literal') && shape.value) {
+    return `(equals ${Rdf.toString(shape.value)})`;
+  } else if (shape.type === 'literal' && typeof shape.language === 'string') {
+    return `(literal with language "${shape.language}")`;
+  } else if (shape.type === 'literal' && shape.datatype) {
+    return `(literal of type ${formatCommonPrefixedIri(shape.datatype)})`;
+  }
+  return `(${shape.type})`;
+}
+
+function formatCommonPrefixedIri(term: Rdf.NamedNode) {
+  if (term.value.startsWith(rdf.NAMESPACE)) {
+    return `rdf:` + term.value.substring(rdf.NAMESPACE.length);
+  } else if (term.value.startsWith(xsd.NAMESPACE)) {
+    return `xsd:` + term.value.substring(xsd.NAMESPACE.length);
+  } else {
+    return Rdf.toString(term);
+  }
+}
+
+const STACK_FRAME_SEPARATOR = `\n  >> `;
 
 export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
   let result = '';
@@ -56,9 +82,9 @@ export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
       frame && typeof frame.edge === 'number' ? `.[${frame.edge}]` :
       ''
     );
-    const shape = formatDisplayShape(frame.shape);
-    result += `${edge}${(edge || !first) ? ' / ' : ''}${shape}`;
+    const shape = formatDisplayShape(frame.shape, frame.focus);
+    result += `${edge}${(edge || !first) ? STACK_FRAME_SEPARATOR : ''}${shape}`;
     first = false;
   }
-  return result;
+  return STACK_FRAME_SEPARATOR + result;
 }

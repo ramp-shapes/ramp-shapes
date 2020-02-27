@@ -3,10 +3,10 @@
   "error": {
     "code": 201,
     "stack": [
-      {"shape": "http://example.com/schema#Location"},
+      {"shape": "http://example.com/schema#Location", "focus": "<http://example.com/data#location1>"},
       {"edge": "center", "shape": {"type": "optional"}},
-      {"shape": "http://example.com/schema#Point"},
-      {"edge": "y", "shape": {"type": "literal"}}
+      {"shape": "http://example.com/schema#Point", "focus": "_:blank"},
+      {"edge": "y", "shape": {"type": "literal"}, "focus": "\"7\"^^<http://www.w3.org/2001/XMLSchema#string>"}
     ]
   }
 }

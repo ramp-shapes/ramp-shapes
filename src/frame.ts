@@ -61,10 +61,18 @@ class StackFrame {
     readonly parent: StackFrame | undefined,
     readonly shape: Shape,
     readonly edge?: string | number,
+    readonly focus?: Rdf.Term
   ) {}
   hasEdge() {
     return this.edge !== undefined;
   }
+  setFocus(focus: Rdf.Term): FocusedStackFrame {
+    return new StackFrame(this.parent, this.shape, this.edge, focus) as FocusedStackFrame;
+  }
+}
+
+interface FocusedStackFrame extends StackFrame {
+  focus: Rdf.Term;
 }
 
 interface MatchKey {
@@ -140,7 +148,7 @@ function *frameShape(
   for (const value of solutions) {
     if (value === MISMATCH) {
       if (!shape.lenient) {
-        yield strict ? throwFailedToMatch(shape, stack) : MISMATCH;
+        yield strict ? throwFailedToMatch(stack) : MISMATCH;
       }
     } else if (value instanceof CyclicMatch) {
       yield value;
@@ -165,9 +173,9 @@ function *frameObject(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<{ [fieldName: string]: unknown } | CyclicMatch | Mismatch> {
-  function failMatch(candidate: Rdf.Term, code: ErrorCode, message: string): never {
+  function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: string): never {
     const fullMessage = message +
-      ` when framing subject ${Rdf.toString(candidate)}` +
+      ` when framing subject ${Rdf.toString(focusedStack.focus)}` +
       ` to shape ${Rdf.toString(shape.id)}`;
     throw makeError(code, fullMessage, stack);
   }
@@ -176,23 +184,24 @@ function *frameObject(
     properties: ReadonlyArray<ObjectProperty>,
     required: boolean,
     candidate: Rdf.NamedNode | Rdf.BlankNode,
-    template: { [fieldName: string]: unknown }
+    template: { [fieldName: string]: unknown },
+    focusedStack: FocusedStackFrame
   ): boolean {
     for (const property of properties) {
       const values = findByPropertyPath(property.path, candidate, context);
-      const nextStack = new StackFrame(stack, property.valueShape, property.name);
+      const nextStack = new StackFrame(focusedStack, property.valueShape, property.name);
       let found = false;
       for (const value of frameShape(property.valueShape, required, values, nextStack, context)) {
         if (value === MISMATCH) {
           return required ? failMatch(
-            candidate,
+            focusedStack,
             ErrorCode.PropertyMismatch,
             `Failed to match property "${property.name}"`
           ) : false;
         }
         if (found) {
           return required ? failMatch(
-            candidate,
+            focusedStack,
             ErrorCode.MultiplePropertyMatches,
             `Found multiple matches for property "${property.name}"`
           ) : false;
@@ -207,7 +216,7 @@ function *frameObject(
       }
       if (!found) {
         return required ? failMatch(
-          candidate,
+          focusedStack,
           ErrorCode.NoPropertyMatches,
           `Found no matches for property "${property.name}"`
         ) : false;
@@ -219,7 +228,7 @@ function *frameObject(
   for (const candidate of candidates) {
     if (!isResource(candidate)) {
       yield required
-        ? failMatch(candidate, ErrorCode.NonResourceTerm, `Found non-resource term`)
+        ? failMatch(stack.setFocus(candidate), ErrorCode.NonResourceTerm, `Found non-resource term`)
         : MISMATCH;
       continue;
     }
@@ -238,10 +247,11 @@ function *frameObject(
     context.visiting.set(matchKey, null);
     let foundMatch = false;
     const template = {};
+    const focusedStack = stack.setFocus(candidate);
 
-    if (frameProperties(shape.typeProperties, required, candidate, template)) {
+    if (frameProperties(shape.typeProperties, required, candidate, template, focusedStack)) {
       const checkProperties = required || shape.typeProperties.length > 0;
-      if (frameProperties(shape.properties, checkProperties, candidate, template)) {
+      if (frameProperties(shape.properties, checkProperties, candidate, template, focusedStack)) {
         foundMatch = true;
       }
     }
@@ -384,7 +394,7 @@ function *frameNode(
     if (matchesTerm(shape, candidate)) {
       yield candidate;
     } else if (required) {
-      return throwFailedToMatch(shape, stack, candidate);
+      return throwFailedToMatch(stack.setFocus(candidate));
     } else {
       yield MISMATCH;
     }
@@ -400,14 +410,15 @@ function *frameList(
 ): Iterable<unknown[] | CyclicMatch | Mismatch> {
   const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
 
-  function frameListFromTerm(candidate: Rdf.Term): unknown[] | Mismatch {
+  function frameListFromTerm(focusedStack: FocusedStackFrame): unknown[] | Mismatch {
+    const candidate = focusedStack.focus;
     let result: unknown[] | undefined;
     let index = 0;
     let rest = candidate;
 
     function failMatch(code: ErrorCode, message: string): never {
       const fullMessage = message + formatListMatchPosition(index, rest, candidate, shape);
-      throw makeError(code, fullMessage, stack);
+      throw makeError(code, fullMessage, focusedStack);
     }
 
     while (true) {
@@ -440,7 +451,7 @@ function *frameList(
         result = [];
       }
 
-      const nextStack = new StackFrame(stack, shape.itemShape, index);
+      const nextStack = new StackFrame(focusedStack, shape.itemShape, index);
       let hasItemMatch = false;
       for (const item of frameShape(shape.itemShape, required, [foundHead], nextStack, context)) {
         if (item === MISMATCH) {
@@ -490,7 +501,7 @@ function *frameList(
     }
 
     context.visiting.set(matchKey, null);
-    const list = frameListFromTerm(candidate);
+    const list = frameListFromTerm(stack.setFocus(candidate));
     if (list !== MISMATCH) {
       fillCyclicHoles(context, matchKey, list);
     }
@@ -675,10 +686,10 @@ function findByPath(
   return next || makeTermSet();
 }
 
-function throwFailedToMatch(shape: Shape, stack: StackFrame, term?: Rdf.Term): never {
-  const displyedShape = formatDisplayShape(shape);
-  const baseMessage = term
-    ? `Term ${Rdf.toString(term)} does not match ${displyedShape}`
+function throwFailedToMatch(stack: StackFrame): never {
+  const displyedShape = formatDisplayShape(stack.shape);
+  const baseMessage = stack.focus
+    ? `Term ${Rdf.toString(stack.focus)} does not match ${displyedShape}`
     : `Failed to match ${displyedShape}`;
 
   throw makeError(ErrorCode.ShapeMismatch, baseMessage, stack);

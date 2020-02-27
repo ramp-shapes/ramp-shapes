@@ -56,6 +56,7 @@ interface ExpectedError {
 interface ExpectedStackFrame {
   readonly edge?: string | number;
   readonly shape: string | { type: Ramp.Shape['type'] };
+  readonly focus?: string;
 }
 
 type TestFailureError = Error & {
@@ -354,6 +355,9 @@ function rampStackToTestStack(stack: ReadonlyArray<Ramp.StackFrame>) {
     edge: frame.edge,
     shape: frame.shape.id.termType === 'NamedNode'
       ? frame.shape.id.value
-      : {type: frame.shape.type}
+      : {type: frame.shape.type},
+    focus: frame.focus
+      ? (frame.focus.termType === 'BlankNode' ? '_:blank' : Ramp.Rdf.toString(frame.focus))
+      : undefined,
   }));
 }
