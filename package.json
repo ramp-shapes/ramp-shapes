@@ -1,6 +1,6 @@
 {
   "name": "ramp-shapes",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "RAMP shapes: declarative RDF ↔ algebraic data type mapping",
   "keywords": [
     "RDF",
