@@ -88,20 +88,12 @@ const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
 `)));
 
 // choose entry point shape
-const rootShape = Ramp.Rdf.namedNode(
-  'http://example.com/schema#Annotation'
+const shape = shapes.find(s =>
+  s.id.value === 'http://example.com/schema#Annotation'
 );
-// (optionally) specify prefixes for Turtle and SPARQL
-const prefixes = {
-  rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-  xsd: "http://www.w3.org/2001/XMLSchema#",
-  ex: "http://example.com/schema/",
-  "": "http://example.com/data/",
-};
 
 // use defined shapes to lower RDF graph into JS objects...
-const matches = Ramp.frame({shapes, rootShape, dataset}));
+const matches = Ramp.frame({shape, dataset});
 for (const match of matches) {
   /* match.value object has ex:Annotation shape, e.g.:
     {
@@ -116,12 +108,7 @@ for (const match of matches) {
   */
 
   // ... and lift JS object back into an RDF graph
-  const quads = Ramp.flatten({
-    shapes,
-    rootShape,
-    value: match.value,
-    prefixes,
-  });
+  const quads = Ramp.flatten({shape, value: match.value});
   /* quads is Iterable<Rdf.Quad>, e.g.:
 
     :anno1 a ex:Annotation;
@@ -138,7 +125,17 @@ for (const match of matches) {
 
 // another application of defined shapes is to generate a CONSTRUCT query
 // to get necessary graph data for framing
-const query = Ramp.generateQuery({shapes, rootShape, prefixes});
+const query = Ramp.generateQuery({
+  shape,
+  // (optionally) specify prefixes for SPARQL
+  prefixes: {
+    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+    xsd: "http://www.w3.org/2001/XMLSchema#",
+    ex: "http://example.com/schema/",
+    "": "http://example.com/data/",
+  }
+});
 const queryString = new SparqlJs.Generator().stringify(query);
 /* query is a CONSTRUCT query in SPARQL.js runtime format:
 
