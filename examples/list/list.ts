@@ -4,6 +4,7 @@ import { Rdf, property, inverseProperty, self } from '../../src/index';
 import { rdf } from '../namespaces';
 import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
 
+const factory = Rdf.DefaultDataFactory;
 const dataset = Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'list.ttl')));
 
 const schema = new Ramp.ShapeBuilder();
@@ -12,16 +13,16 @@ const list = schema.list(schema.resource());
 
 const listOwner = schema.object({
   properties: {
-    list: property(Rdf.namedNode('example:hasList'), list)
+    list: property(factory.namedNode('example:hasList'), list)
   }
 });
 
 const listOfUnion = schema.object({
   properties: {
-    list: property(Rdf.namedNode('example:hasList'), schema.list(
+    list: property(factory.namedNode('example:hasList'), schema.list(
       schema.union([
-        schema.constant(Rdf.namedNode('example:b1')),
-        schema.constant(Rdf.namedNode('example:b2')),
+        schema.constant(factory.namedNode('example:b1')),
+        schema.constant(factory.namedNode('example:b2')),
       ])
     ))
   }
@@ -29,7 +30,7 @@ const listOfUnion = schema.object({
 
 const listSelf = schema.object({
   properties: {
-    owner: inverseProperty(Rdf.namedNode('example:hasList'), schema.resource()),
+    owner: inverseProperty(factory.namedNode('example:hasList'), schema.resource()),
     list: self(list),
     rest: property(rdf.rest, list),
     restAsIri: property(rdf.rest, schema.resource()),

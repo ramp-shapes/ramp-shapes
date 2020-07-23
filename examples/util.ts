@@ -3,6 +3,8 @@ import { promisify } from 'util';
 import * as N3 from 'n3';
 import { Rdf } from '../src/index';
 
+const factory = Rdf.DefaultDataFactory;
+
 export { quadsToTurtleString } from './turtle-blank';
 
 export const exists = promisify(fs.exists);
@@ -19,7 +21,7 @@ export async function makeDirectoryIfNotExists(path: string) {
 
 export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
-  const parser = N3.Parser();
+  const parser = new N3.Parser({factory, blankNodePrefix: ''});
   return parser.parse(ttl) as Rdf.Quad[];
 }
 
@@ -34,14 +36,14 @@ export function toJson(match: unknown): string {
 
 function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
   return (
-    value.type === 'uri' ? Rdf.namedNode(value.value) :
-    value.type === 'literal' ? Rdf.literal(
+    value.type === 'uri' ? factory.namedNode(value.value) :
+    value.type === 'literal' ? factory.literal(
       value.value,
       value['xml:lang'] ? value['xml:lang'] :
       value.datatype ? jsonQueryResultTermToRdf(value.datatype) :
       undefined
     ) :
-    value.type === 'bnode' ? Rdf.blankNode(value.value) :
+    value.type === 'bnode' ? factory.blankNode(value.value) :
     null
   );
 }
@@ -49,7 +51,7 @@ function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
 export function parseJsonQueryResponse(bindings: any[]): Rdf.Quad[] {
   const quads: Rdf.Quad[] = [];
   for (const {subject, predicate, object} of bindings) {
-    const quad = Rdf.quad(
+    const quad = factory.quad(
       jsonQueryResultTermToRdf(subject) as Rdf.Quad['subject'],
       jsonQueryResultTermToRdf(predicate) as Rdf.Quad['predicate'],
       jsonQueryResultTermToRdf(object) as Rdf.Quad['object'],

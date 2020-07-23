@@ -3,6 +3,7 @@ import * as Rdf from './rdf';
 import { ObjectProperty, PathSequence, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
 export interface ShapeBuilderOptions {
+  factory?: Rdf.DataFactory;
   blankUniqueKey?: string;
 }
 
@@ -50,13 +51,16 @@ interface PartialShapeReference {
 export class ShapeBuilder {
   private readonly _shapes = new HashMap<ShapeID, Shape>(Rdf.hashTerm, Rdf.equalTerms);
 
+  private readonly factory: Rdf.DataFactory;
   private readonly blankUniqueKey: string | undefined;
   private blankSequence = 1;
 
   constructor(options: ShapeBuilderOptions = {}) {
     const {
-      blankUniqueKey = Rdf.randomBlankNode('', 24).value,
+      factory = Rdf.DefaultDataFactory,
+      blankUniqueKey = Rdf.randomString('', 24),
     } = options;
+    this.factory = factory;
     this.blankUniqueKey = blankUniqueKey;
   }
 
@@ -217,7 +221,7 @@ export class ShapeBuilder {
 
   makeShapeID(prefix: string): Rdf.BlankNode {
     const index = this.blankSequence++;
-    return Rdf.blankNode(`${prefix}_${this.blankUniqueKey}_${index}`);
+    return this.factory.blankNode(`${prefix}_${this.blankUniqueKey}_${index}`);
   }
 }
 

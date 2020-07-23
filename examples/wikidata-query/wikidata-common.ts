@@ -2,6 +2,7 @@ import { join } from 'path';
 import * as Ramp from '../../src/index';
 import { readQuadsFromTurtle } from '../util';
 
+const factory = Ramp.Rdf.DefaultDataFactory;
 const wikidataShapes = Ramp.frameShapes(Ramp.Rdf.dataset(
   readQuadsFromTurtle(join(__dirname, 'wikidata-shapes.ttl'))
 ));
@@ -12,7 +13,7 @@ export const Prefixes: { [prefix: string]: string } = {
   wdt: 'http://www.wikidata.org/prop/direct/',
 };
 export namespace vocab {
-  export const wd = (s: string) => Ramp.Rdf.namedNode(Prefixes.wd + s);
+  export const wd = (s: string) => factory.namedNode(Prefixes.wd + s);
 }
 
 const schema = new Ramp.ShapeBuilder();

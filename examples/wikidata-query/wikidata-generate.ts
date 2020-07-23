@@ -2,6 +2,8 @@ import * as SparqlJs from 'sparqljs';
 import * as Ramp from '../../src/index';
 import { AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
 
+const factory = Ramp.Rdf.DefaultDataFactory;
+
 const query = Ramp.generateQuery({
   shape: AlexanderTheThirdDescendants,
   prefixes: Prefixes,
@@ -19,7 +21,7 @@ const query = Ramp.generateQuery({
               operator: 'lang',
               args: [subject],
             },
-            `"${shape.language}"` as SparqlJs.Term
+            factory.literal(shape.language)
           ]
         }
       });

@@ -14,7 +14,7 @@ export const writeFile = promisify(fs.writeFile);
 
 export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
-  const parser = N3.Parser();
+  const parser = new N3.Parser({factory: Rdf.DefaultDataFactory});
   return parser.parse(ttl) as Rdf.Quad[];
 }
 

@@ -5,7 +5,8 @@ import {
   ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, isPathSegment,
 } from './shapes';
 import {
-  makeTermMap, makeTermSet, assertUnknownShape, resolveListShapeDefaults, matchesTerm,
+  ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
+  matchesTerm,
 } from './common';
 import { RampError, ErrorCode, formatDisplayShape, formatShapeStack } from './errors';
 import { compactByReference } from './synthesize';
@@ -15,6 +16,7 @@ export interface FrameParams {
   shape: Shape;
   dataset: Rdf.Dataset;
   candidates?: Iterable<Rdf.Term>;
+  factory?: Rdf.DataFactory;
   mapper?: ValueMapper;
 }
 
@@ -26,10 +28,12 @@ export interface FrameSolution {
  * @throws {RamError}
  */
 export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
+  const factory = params.factory || Rdf.DefaultDataFactory;
   const refs = makeTermMap<unknown>() as HashMap<ShapeID, RefContext[]>;
 
   const context: FrameContext = {
-    mapper: params.mapper || ValueMapper.mapByDefault(),
+    mapper: params.mapper || ValueMapper.mapByDefault(factory),
+    listDefaults: makeListShapeDefaults(factory),
     dataset: params.dataset,
     visiting: new HashMap(MatchKey.hash, MatchKey.equals),
     matches: new HashMap(MatchKey.hash, MatchKey.equals),
@@ -50,6 +54,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
 
 interface FrameContext {
   readonly mapper: ValueMapper;
+  readonly listDefaults: ResolvedListShape;
   readonly dataset: Rdf.Dataset;
   readonly visiting: HashMap<MatchKey, CyclicMatch | null>;
   readonly matches: HashMap<MatchKey, unknown>;
@@ -408,7 +413,7 @@ function *frameList(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown[] | CyclicMatch | Mismatch> {
-  const {head: headPath, tail: tailPath, nil} = resolveListShapeDefaults(shape);
+  const {head: headPath, tail: tailPath, nil} = resolveListShape(shape, context.listDefaults);
 
   function frameListFromTerm(focusedStack: FocusedStackFrame): unknown[] | Mismatch {
     const candidate = focusedStack.focus;
@@ -687,10 +692,10 @@ function findByPath(
 }
 
 function throwFailedToMatch(stack: StackFrame): never {
-  const displyedShape = formatDisplayShape(stack.shape);
+  const displayedShape = formatDisplayShape(stack.shape);
   const baseMessage = stack.focus
-    ? `Term ${Rdf.toString(stack.focus)} does not match ${displyedShape}`
-    : `Failed to match ${displyedShape}`;
+    ? `Term ${Rdf.toString(stack.focus)} does not match ${displayedShape}`
+    : `Failed to match ${displayedShape}`;
 
   throw makeError(ErrorCode.ShapeMismatch, baseMessage, stack);
 }

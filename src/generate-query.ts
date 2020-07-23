@@ -7,12 +7,13 @@ import {
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment
 } from './shapes';
 import {
-  makeTermMap, makeTermSet, assertUnknownShape, resolveListShapeDefaults,
+  ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
 } from './common';
 import { ErrorCode, RampError, formatShapeStack } from './errors';
 
 export interface GenerateQueryParams {
   shape: Shape;
+  factory?: Rdf.DataFactory;
   base?: Rdf.NamedNode;
   prefixes?: { [prefix: string]: string };
   unstable_onEmit?: (shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]) => void;
@@ -22,6 +23,8 @@ export interface GenerateQueryParams {
  * @throws {RamError}
  */
 export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQuery {
+  const factory = params.factory || Rdf.DefaultDataFactory;
+
   const templateTriples: SparqlJs.Triple[] = [];
   const wherePatterns: SparqlJs.Pattern[] = [];
   const query: SparqlJs.ConstructQuery = {
@@ -39,18 +42,18 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     predicate: SparqlJs.PropertyPath | SparqlJs.Term,
     object: SparqlJs.Term,
   ): Iterable<SparqlJs.Triple> {
-    if (typeof predicate === 'string') {
-      yield {subject, predicate: predicate as SparqlJs.Term, object};
+    if (Rdf.looksLikeTerm(predicate)) {
+      yield {subject, predicate, object};
       return;
     }
-    const path = predicate as SparqlJs.PropertyPath;
+    const path: SparqlJs.PropertyPath = predicate;
     if (path.pathType === '^' && path.items.length === 1) {
       yield* tryGeneratePropertyPath(object, path.items[0], subject);
     } else if (path.pathType === '/') {
       let s = subject;
       for (let i = 0; i < path.items.length - 1; i++) {
         const blankIndex = templateBlankIndex++;
-        const o = `_:path_${blankIndex}` as SparqlJs.Term;
+        const o = factory.blankNode(`path_${blankIndex}`);
         yield* tryGeneratePropertyPath(s, path.items[i], o);
         s = o;
       }
@@ -63,6 +66,8 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   let varIndex = 1;
 
   const context: GenerateQueryContext = {
+    factory,
+    listDefaults: makeListShapeDefaults(factory),
     visitingShapes: makeTermSet() as HashSet<ShapeID>,
     stack: [],
     resolveSubject: (shape: Shape) => {
@@ -75,7 +80,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     },
     makeVariable: prefix => {
       const index = varIndex++;
-      return `?${prefix}_${index}` as SparqlJs.Term;
+      return factory.variable!(`${prefix}_${index}`);
     },
     addEdge: edge => {
       if (edge.subject && edge.path && !isEmptyPath(edge.path)) {
@@ -102,14 +107,15 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
 }
 
 function isEmptyPath(predicate: SparqlJs.PropertyPath | SparqlJs.Term) {
-  if (typeof predicate !== 'object') {
+  if (Rdf.looksLikeTerm(predicate)) {
     return false;
   }
-  const path = predicate as SparqlJs.PropertyPath;
-  return path.pathType === '/' && path.items.length === 0;
+  return predicate.pathType === '/' && predicate.items.length === 0;
 }
 
 interface GenerateQueryContext {
+  readonly factory: Rdf.DataFactory;
+  readonly listDefaults: ResolvedListShape;
   readonly visitingShapes: HashSet<ShapeID>;
   readonly stack: Shape[];
   resolveSubject(shape: Shape): SparqlJs.Term;
@@ -138,43 +144,12 @@ function generateEdge(edge: Edge, out: SparqlJs.Pattern[]) {
   }
 }
 
-function rdfTermToSparqlTerm(term: Rdf.Term): SparqlJs.Term {
-  switch (term.termType) {
-    case 'NamedNode':
-      return term.value as SparqlJs.Term;
-    case 'Literal': {
-      const {value, language, datatype} = term;
-      const stringLiteral = `"${escapeSparqlLiteralValue(value)}"`;
-      if (language) {
-        return stringLiteral + `@${language}` as SparqlJs.Term;
-      } else if (datatype) {
-        return stringLiteral + '^^' + datatype.value as SparqlJs.Term;
-      } else {
-        return stringLiteral as SparqlJs.Term;
-      }
-    }
-    case 'BlankNode':
-    case 'Variable':
-      return Rdf.toString(term) as SparqlJs.Term;
-    case 'DefaultGraph':
-      throw new Error('Cannot convert default graph RDF term into SPARQL.js term');
-  }
-}
-
-function escapeSparqlLiteralValue(value: string): string {
-  return value
-    .replace('"', '\\"')
-    .replace('\t', '\\t')
-    .replace('\r', '\\r')
-    .replace('\n', '\\n');
-}
-
 type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.Term;
 
 function propertyPathToSparql(path: PathSequence): SparqlJsPredicate {
   const items = path.map((element): SparqlJs.PropertyPath | SparqlJs.Term => {
     if (isPathSegment(element)) {
-      return rdfTermToSparqlTerm(element.predicate);
+      return element.predicate;
     } else {
       switch (element.operator) {
         case '|':
@@ -288,7 +263,7 @@ function generateForObject(
   generateEdge(edge, out);
   context.addEdge(edge);
 
-  if (isBreakingPointShape(shape)) {
+  if (isBreakingPointShape(shape, context)) {
     edge = generateRecursiveEdge(shape, edge, out, context);
   }
 
@@ -343,12 +318,12 @@ function generateRecursiveEdge(
 
 function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): boolean {
   if (context.visitingShapes.has(shape.id)) {
-    if (isBreakingPointShape(shape)) {
+    if (isBreakingPointShape(shape, context)) {
       return true;
     }
     for (let i = context.stack.length - 1; i >= 0; i--) {
       const frame = context.stack[i];
-      if (isBreakingPointShape(frame)) {
+      if (isBreakingPointShape(frame, context)) {
         // if we found a "breaking point" shape somewhere between current shape
         // and the previous instance of it then we should wait
         // for second instance of that shape, and only then break
@@ -362,11 +337,11 @@ function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): bool
   return false;
 }
 
-function isBreakingPointShape(shape: Shape) {
+function isBreakingPointShape(shape: Shape, context: GenerateQueryContext) {
   if (shape.type === 'object') {
     return true;
   } else if (shape.type === 'list') {
-    const {head} = resolveListShapeDefaults(shape);
+    const {head} = resolveListShape(shape, context.listDefaults);
     return head.length > 0;
   }
   return false;
@@ -416,7 +391,7 @@ function generateForNode(
     nodeEdge = {
       subject: edge.subject,
       path: edge.path,
-      object: rdfTermToSparqlTerm(value),
+      object: value,
     };
   }
   generateEdge(edge, out);
@@ -429,12 +404,12 @@ function generateForList(
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ): void {
-  const {head, tail, nil} = resolveListShapeDefaults(shape);
+  const {head, tail, nil} = resolveListShape(shape, context.listDefaults);
 
   generateEdge(edge, out);
   context.addEdge(edge);
 
-  if (isBreakingPointShape(shape)) {
+  if (isBreakingPointShape(shape, context)) {
     edge = generateRecursiveEdge(shape, edge, out, context);
   }
 
@@ -479,7 +454,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
     }
     if (!Rdf.equalTerms(shape.id, origin.id)
       && context.visitingShapes.has(shape.id)
-      && isBreakingPointShape(shape)
+      && isBreakingPointShape(shape, context)
     ) {
       return;
     }
@@ -501,7 +476,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
         break;
       }
       case 'list': {
-        const {head, tail} = resolveListShapeDefaults(shape);
+        const {head, tail} = resolveListShape(shape, context.listDefaults);
         path.push({
           type: 'path',
           pathType: '*',
@@ -594,5 +569,5 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
     term = subject;
   }
 
-  return term ? rdfTermToSparqlTerm(term) : null;
+  return term ? term : null;
 }

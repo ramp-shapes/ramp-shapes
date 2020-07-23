@@ -33,6 +33,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 }
 
 export interface SynthesizeContext {
+  readonly factory: Rdf.DataFactory;
   readonly matches: ReadonlyHashMap<Rdf.Term, ReadonlyArray<ReferenceMatch>>;
 }
 
@@ -89,7 +90,7 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
               `from non-string (${typeof match.match}) ${match.match}`
             );
           }
-          return Rdf.namedNode(match.match);
+          return context.factory.namedNode(match.match);
         default:
           throw new Error(
             `Cannot synthesize RDF resource for shape ${Rdf.toString(shape.id)} ` +
@@ -121,7 +122,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
           value = checkRefPart(match);
           break;
         case 'datatype':
-          datatype = Rdf.namedNode(checkRefPart(match));
+          datatype = context.factory.namedNode(checkRefPart(match));
           break;
         case 'language':
           language = checkRefPart(match);
@@ -132,11 +133,11 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
 
   assertPart(shape, 'value', value);
   assertPart(shape, 'datatype', datatype);
-  if (datatype && Rdf.equalTerms(datatype, rdf.langString)) {
+  if (datatype && datatype.value === rdf.langString) {
     assertPart(shape, 'language', language);
-    return Rdf.literal(value!, language);
+    return context.factory.literal(value!, language);
   } else {
-    return Rdf.literal(value!, datatype);
+    return context.factory.literal(value!, datatype);
   }
 }
 

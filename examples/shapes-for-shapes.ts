@@ -3,6 +3,8 @@ import { Rdf, vocabulary as ramp } from '../src/index';
 import { rdf, xsd } from './namespaces';
 import { quadsToTurtleString } from './util';
 
+const factory = Rdf.DefaultDataFactory;
+
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
   xsd: xsd.NAMESPACE,
@@ -16,10 +18,11 @@ async function main() {
   let blankIndex = 0;
   const generateBlankNode = (prefix: string) => {
     blankIndex++;
-    return Rdf.blankNode(`${prefix}_gen_${blankIndex}`);
+    return factory.blankNode(`${prefix}_gen_${blankIndex}`);
   };
 
-  const rootShape = Ramp.ShapesForShapes.get(ramp.Shape)!;
+  const shapesForShapes = Ramp.makeShapesForShapes();
+  const rootShape = shapesForShapes.get(factory.namedNode(ramp.Shape))!;
   const flattenedShapes = Ramp.flatten({
     shape: rootShape,
     value: rootShape,
@@ -36,7 +39,7 @@ async function main() {
   console.log(allShapesTurtle);
 
   const shapes = Ramp.frameShapes(quadSet);
-  console.log(`Source shape count = ${Ramp.ShapesForShapes.size}; framed shape count = ${shapes.length}`);
+  console.log(`Source shape count = ${shapesForShapes.size}; framed shape count = ${shapes.length}`);
 }
 
 main();

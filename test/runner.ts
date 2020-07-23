@@ -181,7 +181,7 @@ function runFlattenTest(testCase: TestCase): TestResult {
       shape,
       value: flattenTest.value,
       unstable_generateBlankNode: () => {
-        const blankNode = Ramp.Rdf.blankNode(`b${blankIndex}`);
+        const blankNode = Ramp.Rdf.DefaultDataFactory.blankNode(`b${blankIndex}`);
         blankIndex++;
         return blankNode;
       }

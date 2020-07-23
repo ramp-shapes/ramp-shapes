@@ -22,20 +22,21 @@
   },
   "devDependencies": {
     "@types/diff": "^4.0.2",
-    "@types/n3": "^1.0.7",
+    "@types/n3": "^1.4.3",
     "@types/node": "^12.0.10",
-    "@types/sparqljs": "^2.1.0",
+    "@types/rdf-js": "^3.0.3",
+    "@types/sparqljs": "^3.0.1",
     "chalk": "^2.4.2",
     "diff": "^4.0.1",
     "json-diff": "^0.5.4",
-    "n3": "^1.0.4",
-    "sparqljs": "^2.2.3",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
-    "typescript": "^3.5.2"
+    "n3": "^1.5.0",
+    "sparqljs": "^3.0.3",
+    "ts-node": "^8.10.2",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
-    "tslib": "^1.10.0"
+    "tslib": "^2.0.0"
   },
   "module": "dist/module/index.js",
   "main": "dist/cjs/index.js",

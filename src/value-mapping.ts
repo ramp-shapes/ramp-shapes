@@ -14,31 +14,30 @@ export namespace ValueMapper {
     fromRdf: value => value,
     toRdf: value => value,
   };
-  const CONVERT_TO_NATIVE_TYPES_HANDLER: ValueMapper = {
-    fromRdf: (value, shape) => {
-      if (shape.type === 'resource' && !shape.keepAsTerm && !shape.vocabulary) {
-        return tryConvertToNativeType(shape, value);
-      } else if (shape.type === 'literal' && !shape.keepAsTerm) {
-        return tryConvertToNativeType(shape, value);
-      }
-      return value;
-    },
-    toRdf: (value, shape) => {
-      if (shape.type === 'resource' && !shape.keepAsTerm && !shape.vocabulary) {
-        return tryConvertFromNativeType(shape, value);
-      } else if (shape.type === 'literal' && !shape.keepAsTerm) {
-        return tryConvertFromNativeType(shape, value);
-      }
-      return value;
-    },
-  };
 
   export function identity(): ValueMapper {
     return IDENTITY_HANDLER;
   }
 
-  export function convertToNativeTypes(): ValueMapper {
-    return CONVERT_TO_NATIVE_TYPES_HANDLER;
+  export function convertToNativeTypes(factory: Rdf.DataFactory): ValueMapper {
+    return {
+      fromRdf: (value, shape) => {
+        if (shape.type === 'resource' && !shape.keepAsTerm && !shape.vocabulary) {
+          return tryConvertToNativeType(shape, value);
+        } else if (shape.type === 'literal' && !shape.keepAsTerm) {
+          return tryConvertToNativeType(shape, value);
+        }
+        return value;
+      },
+      toRdf: (value, shape) => {
+        if (shape.type === 'resource' && !shape.keepAsTerm && !shape.vocabulary) {
+          return tryConvertFromNativeType(shape, value, factory);
+        } else if (shape.type === 'literal' && !shape.keepAsTerm) {
+          return tryConvertFromNativeType(shape, value, factory);
+        }
+        return value;
+      },
+    };
   }
 
   export function resolveVocabularies(): ValueMapper {
@@ -109,10 +108,10 @@ export namespace ValueMapper {
     };
   }
 
-  export function mapByDefault(): ValueMapper {
+  export function mapByDefault(factory: Rdf.DataFactory): ValueMapper {
     return chainAsMappingFromRdf(
       resolveVocabularies(),
-      convertToNativeTypes()
+      convertToNativeTypes(factory)
     );
   }
 }
@@ -154,14 +153,14 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
 
   if (shape.type === 'literal' && value.termType === 'Literal') {
     const datatype = effectiveDatatype(shape);
-    if (datatype) {
-      if (Rdf.equalTerms(datatype, xsd.string)) {
+    if (typeof datatype === 'string') {
+      if (datatype === xsd.string) {
         return value.value;
-      } else if (Rdf.equalTerms(datatype, rdf.langString) && shape.language) {
+      } else if (datatype === rdf.langString && shape.language) {
         return value.value;
-      } else if (Rdf.equalTerms(datatype, xsd.boolean)) {
+      } else if (datatype === xsd.boolean) {
         return Boolean(value.value);
-      } else if (isNumberType(datatype.value)) {
+      } else if (isNumberType(datatype)) {
         return Number(value.value);
       }
     }
@@ -170,28 +169,32 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
   return value;
 }
 
-export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, value: unknown): unknown {
+export function tryConvertFromNativeType(
+  shape: ResourceShape | LiteralShape,
+  value: unknown,
+  factory: Rdf.DataFactory
+): unknown {
   if (shape.type === 'resource' && typeof value === 'string') {
     return value.startsWith('_:')
-      ? Rdf.blankNode(value.substring(2))
-      : Rdf.namedNode(value);
+      ? factory.blankNode(value.substring(2))
+      : factory.namedNode(value);
   }
 
   if (shape.type === 'literal') {
     const datatype = effectiveDatatype(shape);
-    if (datatype) {
-      if (Rdf.equalTerms(datatype, xsd.string) && typeof value === 'string') {
-        return Rdf.literal(value);
+    if (typeof datatype === 'string') {
+      if (datatype === xsd.string && typeof value === 'string') {
+        return factory.literal(value);
       } else if (
-        Rdf.equalTerms(datatype, rdf.langString)
+        datatype === rdf.langString
         && shape.language
         && typeof value === 'string'
       ) {
-        return Rdf.literal(value, shape.language);
-      } else if (Rdf.equalTerms(datatype, xsd.boolean) && typeof value === 'boolean') {
-        return Rdf.literal(value ? 'true' : 'false', shape.datatype);
-      } else if (isNumberType(datatype.value) && typeof value === 'number') {
-        return Rdf.literal(value.toString(), shape.datatype);
+        return factory.literal(value, shape.language);
+      } else if (datatype === xsd.boolean && typeof value === 'boolean') {
+        return factory.literal(value ? 'true' : 'false', shape.datatype);
+      } else if (isNumberType(datatype) && typeof value === 'number') {
+        return factory.literal(value.toString(), shape.datatype);
       }
     }
   }
@@ -199,10 +202,15 @@ export function tryConvertFromNativeType(shape: ResourceShape | LiteralShape, va
   return value;
 }
 
-function effectiveDatatype(shape: LiteralShape): Rdf.NamedNode | undefined {
-  return shape.datatype
-    || (shape.language ? rdf.langString : undefined)
-    || (shape.value ? shape.value.datatype : undefined);
+function effectiveDatatype(shape: LiteralShape): string | undefined {
+  if (shape.datatype) {
+    return shape.datatype.value;
+  } else if (shape.language) {
+    return rdf.langString;
+  } else if (shape.value) {
+    return shape.value.datatype.value;
+  }
+  return undefined;
 }
 
 function isNumberType(datatype: string) {
@@ -211,14 +219,14 @@ function isNumberType(datatype: string) {
 
 function isIntegerType(datatype: string) {
   return (
-    datatype === xsd.integer.value ||
-    datatype === xsd.nonNegativeInteger.value
+    datatype === xsd.integer ||
+    datatype === xsd.nonNegativeInteger
   );
 }
 
 function isFractionalType(datatype: string) {
   return (
-    datatype === xsd.decimal.value ||
-    datatype === xsd.double.value
+    datatype === xsd.decimal ||
+    datatype === xsd.double
   );
 }

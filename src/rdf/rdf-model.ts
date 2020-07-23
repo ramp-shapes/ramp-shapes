@@ -1,37 +1,16 @@
+import * as RdfJs from 'rdf-js';
+
 import { escapeRdfValue } from './rdf-escape';
 
 export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
 
-interface TermBase {
-  readonly termType: string;
-  readonly value: string;
-  equals(other: Term | undefined | null): boolean;
-  hashCode?(): number;
-  toString(): string;
-}
+export type NamedNode = RdfJs.NamedNode;
+export type BlankNode = RdfJs.BlankNode;
+export type Literal = RdfJs.Literal;
+export type Variable = RdfJs.Variable;
+export type DefaultGraph = RdfJs.DefaultGraph;
 
-export interface NamedNode extends TermBase {
-  readonly termType: 'NamedNode';
-}
-
-export interface BlankNode extends TermBase {
-  readonly termType: 'BlankNode';
-}
-
-export interface Literal extends TermBase {
-  readonly termType: 'Literal';
-  readonly language: string;
-  readonly datatype: NamedNode;
-}
-
-export interface Variable extends TermBase {
-  readonly termType: 'Variable';
-}
-
-export interface DefaultGraph extends TermBase {
-  readonly termType: 'DefaultGraph';
-  readonly value: '';
-}
+export type DataFactory = RdfJs.DataFactory;
 
 class RdfNamedNode implements NamedNode {
   get termType() { return 'NamedNode' as const; }
@@ -157,44 +136,42 @@ class RdfQuad implements Quad {
   }
 }
 
-export function namedNode(value: string): NamedNode {
-  return new RdfNamedNode(value);
+class RdfDataFactory implements RdfJs.DataFactory {
+  namedNode = (value: string): RdfJs.NamedNode => {
+    return new RdfNamedNode(value);
+  }
+  blankNode = (value?: string | undefined): RdfJs.BlankNode => {
+    return new RdfBlankNode(typeof value === 'string' ? value : randomString('b', 48));
+  }
+  literal = (value: string, languageOrDatatype?: string | RdfJs.NamedNode | undefined): RdfJs.Literal => {
+    return new RdfLiteral(value, languageOrDatatype);
+  }
+  variable = (value: string): RdfJs.Variable => {
+    return new RdfVariable(value);
+  }
+  defaultGraph(): RdfJs.DefaultGraph {
+    return RdfDefaultGraph.instance;
+  }
+  quad(
+    subject: RdfJs.Quad_Subject,
+    predicate: RdfJs.Quad_Predicate,
+    object: RdfJs.Quad_Object,
+    graph?: RdfJs.BlankNode | RdfJs.Variable | RdfJs.DefaultGraph | RdfJs.NamedNode | undefined
+  ): RdfJs.Quad {
+    return new RdfQuad(subject, predicate, object, graph);
+  }
 }
 
-export function blankNode(value?: string): BlankNode {
-  return typeof value === 'string'
-    ? new RdfBlankNode(value) : randomBlankNode('b', 48);
-}
+export const DefaultDataFactory: RdfJs.DataFactory = new RdfDataFactory();
 
-export function randomBlankNode(prefix: string, randomBitCount: number): BlankNode {
+export function randomString(prefix: string, randomBitCount: number): string {
   if (randomBitCount > 48) {
     throw new Error(`Cannot generate random blank node with > 48 bits of randomness`);
   }
   const hexDigitCount = Math.ceil(randomBitCount / 4);
   const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
   const value = prefix + num.toString(16).padStart(hexDigitCount, '0');
-  return blankNode(value);
-}
-
-export function literal(value: string, languageOrDatatype?: string | NamedNode): Literal {
-  return new RdfLiteral(value, languageOrDatatype);
-}
-
-export function variable(value: string): Variable {
-  return new RdfVariable(value);
-}
-
-export function defaultGraph(): DefaultGraph {
-  return RdfDefaultGraph.instance;
-}
-
-export function quad(
-  subject: Quad['subject'],
-  predicate: Quad['predicate'],
-  object: Quad['object'],
-  graph?: Quad['graph'],
-): Quad {
-  return new RdfQuad(subject, predicate, object, graph);
+  return value;
 }
 
 export function wrap(
@@ -204,19 +181,20 @@ export function wrap(
     Pick<Literal, 'termType' | 'value' | 'language'>
       & { datatype: Pick<NamedNode, 'termType' | 'value'> } |
     Pick<Variable, 'termType' | 'value'> |
-    Pick<DefaultGraph, 'termType'>
+    Pick<DefaultGraph, 'termType'>,
+  factory: RdfJs.DataFactory
 ): Term | undefined {
   switch (v.termType) {
     case 'NamedNode':
-      return namedNode(v.value);
+      return factory.namedNode(v.value);
     case 'BlankNode':
-      return blankNode(v.value);
+      return factory.blankNode(v.value);
     case 'Literal':
-      return literal(v.value, v.language || wrap(v.datatype) as NamedNode);
+      return factory.literal(v.value, v.language || wrap(v.datatype, factory) as NamedNode);
     case 'Variable':
-      return variable(v.value);
+      return factory.variable!(v.value);
     case 'DefaultGraph':
-      return defaultGraph();
+      return factory.defaultGraph();
   }
 }
 
@@ -266,7 +244,7 @@ export function hashTerm(node: Term): number {
       hash = hashFnv32a(node.value);
       break;
   }
-  return hash;
+  return dropHighestNonSignBit(hash);
 }
 
 export function equalTerms(a: Term, b: Term): boolean {
@@ -297,7 +275,7 @@ export function hashQuad(quad: Quad): number {
   h = (h * 31 + hashTerm(quad.predicate)) | 0;
   h = (h * 31 + hashTerm(quad.object)) | 0;
   h = (h * 31 + hashTerm(quad.graph)) | 0;
-  return h;
+  return dropHighestNonSignBit(h);
   /* tslint:enable: no-bitwise */
 }
 
@@ -311,7 +289,7 @@ export function equalQuads(a: Quad, b: Quad): boolean {
 }
 
 export function hashString(str: string): number {
-  return hashFnv32a(str);
+  return dropHighestNonSignBit(hashFnv32a(str));
 }
 
 /**
@@ -334,6 +312,11 @@ function hashFnv32a(str: string, seed = 0x811c9dc5): number {
   }
   return hval >>> 0;
   /* tslint:enable: no-bitwise */
+}
+
+export function dropHighestNonSignBit(i32: number): number {
+  // tslint:disable-next-line: no-bitwise
+  return ((i32 >>> 1) & 0x40000000) | (i32 & 0xBFFFFFFF);
 }
 
 export function looksLikeTerm(value: unknown): value is Term {

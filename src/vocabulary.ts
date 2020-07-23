@@ -2,86 +2,93 @@ import * as Rdf from './rdf';
 
 export namespace rdf {
   export const NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-  export const first = Rdf.namedNode(NAMESPACE + 'first');
-  export const langString = Rdf.namedNode(NAMESPACE + 'langString');
-  export const nil = Rdf.namedNode(NAMESPACE + 'nil');
-  export const rest = Rdf.namedNode(NAMESPACE + 'rest');
-  export const type = Rdf.namedNode(NAMESPACE + 'type');
+  export const first = NAMESPACE + 'first';
+  export const langString = NAMESPACE + 'langString';
+  export const nil = NAMESPACE + 'nil';
+  export const rest = NAMESPACE + 'rest';
+  export const type = NAMESPACE + 'type';
 }
 
 export namespace xsd {
   export const NAMESPACE = 'http://www.w3.org/2001/XMLSchema#';
-  export const string = Rdf.namedNode(NAMESPACE + 'string');
-  export const boolean = Rdf.namedNode(NAMESPACE + 'boolean');
-  export const integer = Rdf.namedNode(NAMESPACE + 'integer');
-  export const double = Rdf.namedNode(NAMESPACE + 'double');
-  export const decimal = Rdf.namedNode(NAMESPACE + 'decimal');
-  export const nonNegativeInteger = Rdf.namedNode(NAMESPACE + 'nonNegativeInteger');
-  export const dateTime = Rdf.namedNode(NAMESPACE + 'dateTime');
+  export const string = NAMESPACE + 'string';
+  export const boolean = NAMESPACE + 'boolean';
+  export const integer = NAMESPACE + 'integer';
+  export const double = NAMESPACE + 'double';
+  export const decimal = NAMESPACE + 'decimal';
+  export const nonNegativeInteger = NAMESPACE + 'nonNegativeInteger';
+  export const dateTime = NAMESPACE + 'dateTime';
 }
 
 export namespace ramp {
   export const NAMESPACE = 'http://ramp-shapes.github.io/schema#';
+  export const Shape = NAMESPACE + 'Shape';
+}
 
-  export const Shape = Rdf.namedNode(NAMESPACE + 'Shape');
-  export const ShapeID = Rdf.namedNode(NAMESPACE + 'ShapeID');
-  export const lenient = Rdf.namedNode(NAMESPACE + 'lenient');
+export function makeRampVocabulary(factory: Rdf.DataFactory) {
+  const NAMESPACE = ramp.NAMESPACE;
+  return {
+    NAMESPACE,
+    Shape: factory.namedNode(NAMESPACE + 'Shape'),
+    ShapeID: factory.namedNode(NAMESPACE + 'ShapeID'),
+    lenient: factory.namedNode(NAMESPACE + 'lenient'),
 
-  // Object
-  export const ObjectShape = Rdf.namedNode(NAMESPACE + 'ObjectShape');
-  export const typeProperty = Rdf.namedNode(NAMESPACE + 'typeProperty');
-  export const property = Rdf.namedNode(NAMESPACE + 'property');
+    // Object
+    ObjectShape: factory.namedNode(NAMESPACE + 'ObjectShape'),
+    typeProperty: factory.namedNode(NAMESPACE + 'typeProperty'),
+    property: factory.namedNode(NAMESPACE + 'property'),
 
-  // ObjectProperty
-  export const ObjectProperty = Rdf.namedNode(NAMESPACE + 'ObjectProperty');
-  export const PathSequence = Rdf.namedNode(NAMESPACE + 'PathSequence');
-  export const PathElement = Rdf.namedNode(NAMESPACE + 'PathElement');
-  export const PathExpression = Rdf.namedNode(NAMESPACE + 'PathExpression');
-  export const PathSegment = Rdf.namedNode(NAMESPACE + 'PathSegment');
-  export const name = Rdf.namedNode(NAMESPACE + 'name');
-  export const shape = Rdf.namedNode(NAMESPACE + 'shape');
-  export const path = Rdf.namedNode(NAMESPACE + 'path');
-  export const operator = Rdf.namedNode(NAMESPACE + 'operator');
-  export const predicate = Rdf.namedNode(NAMESPACE + 'predicate');
+    // ObjectProperty
+    ObjectProperty: factory.namedNode(NAMESPACE + 'ObjectProperty'),
+    PathSequence: factory.namedNode(NAMESPACE + 'PathSequence'),
+    PathElement: factory.namedNode(NAMESPACE + 'PathElement'),
+    PathExpression: factory.namedNode(NAMESPACE + 'PathExpression'),
+    PathSegment: factory.namedNode(NAMESPACE + 'PathSegment'),
+    name: factory.namedNode(NAMESPACE + 'name'),
+    shape: factory.namedNode(NAMESPACE + 'shape'),
+    path: factory.namedNode(NAMESPACE + 'path'),
+    operator: factory.namedNode(NAMESPACE + 'operator'),
+    predicate: factory.namedNode(NAMESPACE + 'predicate'),
 
-  // Resource and Literal
-  export const ResourceShape = Rdf.namedNode(NAMESPACE + 'ResourceShape');
-  export const LiteralShape = Rdf.namedNode(NAMESPACE + 'LiteralShape');
-  export const termDatatype = Rdf.namedNode(NAMESPACE + 'termDatatype');
-  export const termLanguage = Rdf.namedNode(NAMESPACE + 'termLanguage');
-  export const termValue = Rdf.namedNode(NAMESPACE + 'termValue');
-  export const keepAsTerm = Rdf.namedNode(NAMESPACE + 'keepAsTerm');
+    // Resource and Literal
+    ResourceShape: factory.namedNode(NAMESPACE + 'ResourceShape'),
+    LiteralShape: factory.namedNode(NAMESPACE + 'LiteralShape'),
+    termDatatype: factory.namedNode(NAMESPACE + 'termDatatype'),
+    termLanguage: factory.namedNode(NAMESPACE + 'termLanguage'),
+    termValue: factory.namedNode(NAMESPACE + 'termValue'),
+    keepAsTerm: factory.namedNode(NAMESPACE + 'keepAsTerm'),
 
-  // Union
-  export const UnionShape = Rdf.namedNode(NAMESPACE + 'UnionShape');
-  export const variant = Rdf.namedNode(NAMESPACE + 'variant');
+    // Union
+    UnionShape: factory.namedNode(NAMESPACE + 'UnionShape'),
+    variant: factory.namedNode(NAMESPACE + 'variant'),
 
-  // Optional and Set
-  export const OptionalShape = Rdf.namedNode(NAMESPACE + 'OptionalShape');
-  export const SetShape = Rdf.namedNode(NAMESPACE + 'SetShape');
-  export const item = Rdf.namedNode(NAMESPACE + 'item');
+    // Optional and Set
+    OptionalShape: factory.namedNode(NAMESPACE + 'OptionalShape'),
+    SetShape: factory.namedNode(NAMESPACE + 'SetShape'),
+    item: factory.namedNode(NAMESPACE + 'item'),
 
-  // List; also uses "item"
-  export const ListShape = Rdf.namedNode(NAMESPACE + 'ListShape');
-  export const headPath = Rdf.namedNode(NAMESPACE + 'headPath');
-  export const tailPath = Rdf.namedNode(NAMESPACE + 'tailPath');
-  export const nil = Rdf.namedNode(NAMESPACE + 'nil');
+    // List; also uses "item"
+    ListShape: factory.namedNode(NAMESPACE + 'ListShape'),
+    headPath: factory.namedNode(NAMESPACE + 'headPath'),
+    tailPath: factory.namedNode(NAMESPACE + 'tailPath'),
+    nil: factory.namedNode(NAMESPACE + 'nil'),
 
-  // Map; also uses "item"
-  export const MapShape = Rdf.namedNode(NAMESPACE + 'MapShape');
-  export const mapKey = Rdf.namedNode(NAMESPACE + 'mapKey');
-  export const mapValue = Rdf.namedNode(NAMESPACE + 'mapValue');
+    // Map; also uses "item"
+    MapShape: factory.namedNode(NAMESPACE + 'MapShape'),
+    mapKey: factory.namedNode(NAMESPACE + 'mapKey'),
+    mapValue: factory.namedNode(NAMESPACE + 'mapValue'),
 
-  // ShapeReference
-  export const ShapeReference = Rdf.namedNode(NAMESPACE + 'ShapeReference');
-  export const TermDatatype = Rdf.namedNode(NAMESPACE + 'TermDatatype');
-  export const TermLanguage = Rdf.namedNode(NAMESPACE + 'TermLanguage');
-  export const TermValue = Rdf.namedNode(NAMESPACE + 'TermValue');
-  export const termPart = Rdf.namedNode(NAMESPACE + 'termPart');
+    // ShapeReference
+    ShapeReference: factory.namedNode(NAMESPACE + 'ShapeReference'),
+    TermDatatype: factory.namedNode(NAMESPACE + 'TermDatatype'),
+    TermLanguage: factory.namedNode(NAMESPACE + 'TermLanguage'),
+    TermValue: factory.namedNode(NAMESPACE + 'TermValue'),
+    termPart: factory.namedNode(NAMESPACE + 'termPart'),
 
-  // Vocabulary; also uses "termValue"
-  export const Vocabulary = Rdf.namedNode(NAMESPACE + 'Vocabulary');
-  export const vocabulary = Rdf.namedNode(NAMESPACE + 'vocabulary');
-  export const vocabItem = Rdf.namedNode(NAMESPACE + 'vocabItem');
-  export const vocabKey = Rdf.namedNode(NAMESPACE + 'vocabKey');
+    // Vocabulary; also uses "termValue"
+    Vocabulary: factory.namedNode(NAMESPACE + 'Vocabulary'),
+    vocabulary: factory.namedNode(NAMESPACE + 'vocabulary'),
+    vocabItem: factory.namedNode(NAMESPACE + 'vocabItem'),
+    vocabKey: factory.namedNode(NAMESPACE + 'vocabKey'),
+  };
 }

@@ -29,20 +29,25 @@ export function matchesTerm(shape: ResourceShape | LiteralShape, node: Rdf.Term)
   }
 }
 
-const DEFAULT_LIST_HEAD: PathSequence = [{predicate: rdf.first}];
-const DEFAULT_LIST_TAIL: PathSequence = [{predicate: rdf.rest}];
-
 export interface ResolvedListShape {
   head: PathSequence;
   tail: PathSequence;
   nil: Rdf.NamedNode;
 }
 
-export function resolveListShapeDefaults(shape: ListShape): ResolvedListShape {
+export function makeListShapeDefaults(factory: Rdf.DataFactory): ResolvedListShape {
   return {
-    head: shape.headPath || DEFAULT_LIST_HEAD,
-    tail: shape.tailPath || DEFAULT_LIST_TAIL,
-    nil: shape.nil || rdf.nil,
+    head: [{predicate: factory.namedNode(rdf.first)}],
+    tail: [{predicate: factory.namedNode(rdf.rest)}],
+    nil: factory.namedNode(rdf.nil),
+  };
+}
+
+export function resolveListShape(shape: ListShape, defaults: ResolvedListShape): ResolvedListShape {
+  return {
+    head: shape.headPath || defaults.head,
+    tail: shape.tailPath || defaults.tail,
+    nil: shape.nil || defaults.nil,
   };
 }
 
