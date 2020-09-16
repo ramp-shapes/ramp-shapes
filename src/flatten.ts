@@ -1,4 +1,4 @@
-import { HashMap } from './hash-map';
+import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
   Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
@@ -192,8 +192,9 @@ function flattenObject(
   }
   if (!matchProperties(shape.properties, true, value, matches, context)) {
     if (shape.typeProperties) {
-      throw new Error(
-        `Invalid value for shape ${Rdf.toString(shape.id)}: failed to match properties.`
+      throw context.makeError(
+        ErrorCode.FailedToMatchProperties,
+        `Invalid value for shape ${formatDisplayShape(shape)}: failed to match properties.`
       );
     } else {
       return undefined;
@@ -228,6 +229,9 @@ function isObjectWithProperties(obj: unknown): obj is { [propertyName: string]: 
   return Boolean(typeof obj === 'object' && obj);
 }
 
+const EMPTY_REF_MATCHES: ReadonlyHashMap<Rdf.Term, ReferenceMatch[]> =
+  makeTermMap<ReferenceMatch[]>();
+
 function matchProperties(
   properties: ReadonlyArray<ObjectProperty>,
   required: boolean,
@@ -236,13 +240,24 @@ function matchProperties(
   context: LowerContext
 ): boolean {
   for (const property of properties) {
-    const propertyValue = value[property.name];
+    let propertyValue: unknown;
+    if (property.transient) {
+      propertyValue = synthesizeShape(property.valueShape, {
+        factory: context.factory,
+        matches: EMPTY_REF_MATCHES,
+      });
+    } else {
+      propertyValue = value[property.name];
+    }
     const frame: StackFrame = {shape: property.valueShape, edge: property.name};
     const match = flattenShape(property.valueShape, required, propertyValue, frame, context);
     if (match) {
       matches.push({property, match});
     } else if (required) {
-      throw new Error(`Failed to match property "${property.name}"`);
+      throw context.makeError(
+        ErrorCode.FailedToMatchProperty,
+        `Failed to match property "${property.name}"`
+      );
     } else {
       return false;
     }
@@ -279,7 +294,8 @@ function *generatePropertyPath(
     const element = path[i];
     if (isPathSegment(element)) {
       if (s.termType === 'Literal') {
-        throw new Error(
+        throw context.makeError(
+          ErrorCode.CannotUseLiteralAsSubject,
           `Cannot put literal ${Rdf.toString(s)} as subject with ` +
           `predicate ${Rdf.toString(element.predicate)}`
         );

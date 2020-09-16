@@ -1,0 +1,22 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://ramp-shapes.github.io/schema#>.
+
+ex:Items a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path ([ :predicate rdf:type ]);
+        :shape [ a :ResourceShape; :termValue ex:Items ];
+        :transient true
+    ];
+    :property [
+        :name "items";
+        :path ([ :predicate ex:hasItem ]);
+        :shape [
+            a :SetShape;
+            :item [ a :LiteralShape; :termDatatype xsd:integer ];
+            :minCount 2;
+            :maxCount 4
+        ]
+    ].

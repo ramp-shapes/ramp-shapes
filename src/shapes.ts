@@ -43,6 +43,7 @@ export interface ObjectProperty {
   readonly name: string;
   readonly path: PathSequence;
   readonly valueShape: Shape;
+  readonly transient?: boolean;
 }
 
 export type PathSequence = ReadonlyArray<PathElement>;
@@ -65,6 +66,8 @@ export interface SetShape extends ShapeBase {
   readonly type: 'set';
   readonly id: ShapeID;
   readonly itemShape: Shape;
+  readonly minCount?: number;
+  readonly maxCount?: number;
 }
 
 export interface OptionalShape extends ShapeBase {

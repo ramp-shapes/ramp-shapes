@@ -1,0 +1,8 @@
+{
+  "shapes": "set-min-max-count",
+  "matches": [
+    {
+      "items": [1, 2, 3]
+    }
+  ]
+}

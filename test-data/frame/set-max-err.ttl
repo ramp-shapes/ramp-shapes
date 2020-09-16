@@ -1,0 +1,9 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:items a ex:Items;
+    ex:hasItem 1;
+    ex:hasItem 2;
+    ex:hasItem 3;
+    ex:hasItem 4;
+    ex:hasItem 5 .

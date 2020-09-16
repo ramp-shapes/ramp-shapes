@@ -212,7 +212,9 @@ function *frameObject(
           ) : false;
         }
         found = true;
-        if (value instanceof CyclicMatch) {
+        if (property.transient) {
+          /* ignore property value */
+        } else if (value instanceof CyclicMatch) {
           value.addHole({target: template, property: property.name});
           template[property.name] = undefined;
         } else {
@@ -359,6 +361,22 @@ function *frameSet(
     } else {
       matches.push(match);
     }
+  }
+  if (typeof shape.minCount === 'number' && matches.length < shape.minCount) {
+    if (required) {
+      const message = `Set item count ${matches.length} is less than minimum (${shape.minCount})`;
+      throw makeError(ErrorCode.MinCountMismatch, message, stack);
+    }
+    yield MISMATCH;
+    return;
+  }
+  if (typeof shape.maxCount === 'number' && matches.length > shape.maxCount) {
+    if (required) {
+      const message = `Set item count ${matches.length} is greater than maximum (${shape.maxCount})`;
+      throw makeError(ErrorCode.MaxCountMismatch, message, stack);
+    }
+    yield MISMATCH;
+    return;
   }
   yield matches;
 }

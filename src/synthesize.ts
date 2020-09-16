@@ -1,7 +1,8 @@
 import { ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
+import { ErrorCode, RampError, formatDisplayShape } from './errors';
 import {
-  ObjectProperty, LiteralShape, ResourceShape, Shape, ShapeReference
+  ObjectProperty, SetShape, LiteralShape, ResourceShape, Shape, ShapeReference
 } from './shapes';
 import { rdf } from './vocabulary';
 
@@ -13,7 +14,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Compacting term value by reference allowed only for resource or literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target.id)}`
+          `value is (${typeof value}) ${value}, target is ${formatDisplayShape(ref.target)}`
         );
       }
     case 'datatype':
@@ -24,7 +25,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Framing term datatype or language as map key allowed only for literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${Rdf.toString(ref.target.id)}`
+          `value is (${typeof value}) ${value}, target is ${formatDisplayShape(ref.target)}`
         );
       }
     default:
@@ -55,12 +56,19 @@ export function synthesizeShape(
       synthesizeProperties(result, shape.properties, context);
       return result;
     }
+    case 'set':
+      return synthesizeSet(shape, context);
+    case 'optional':
+      return shape.emptyValue;
     case 'resource':
       return synthesizeResource(shape, context);
     case 'literal':
       return synthesizeLiteral(shape, context);
     default:
-      throw new Error('Cannot synthesize value for shape ' + Rdf.toString(shape.id));
+      throw makeError(
+        ErrorCode.CannotSynthesizeShapeType,
+        'Cannot synthesize value for shape ' + formatDisplayShape(shape)
+      );
   }
 }
 
@@ -74,6 +82,15 @@ function synthesizeProperties(
   }
 }
 
+function synthesizeSet(shape: SetShape, context: SynthesizeContext) {
+  const count = shape.minCount ?? 0;
+  const result: unknown[] = [];
+  for (let i = 0; i < count; i++) {
+    result.push(synthesizeShape(shape.itemShape, context));
+  }
+  return result;
+}
+
 function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
   if (shape.value) {
     return shape.value;
@@ -85,22 +102,25 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
           return match.match;
         case 'value':
           if (typeof match.match !== 'string') {
-            throw new Error(
-              `Cannot synthesize RDF resource for shape ${Rdf.toString(shape.id)} ` +
+            throw makeError(
+              ErrorCode.CannotSynthesizeResourceFromNonString,
+              `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
               `from non-string (${typeof match.match}) ${match.match}`
             );
           }
           return context.factory.namedNode(match.match);
         default:
-          throw new Error(
-            `Cannot synthesize RDF resource for shape ${Rdf.toString(shape.id)} ` +
+          throw makeError(
+            ErrorCode.CannotSynthesizeResourceFromPart,
+            `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
             `from reference part '${match.ref.part}'`
           );
       }
     }
   }
-  throw new Error(
-    `Failed to find matches to synthesize RDF resource for shape ${Rdf.toString(shape.id)}`
+  throw makeError(
+    ErrorCode.NoMatchesToSynthesize,
+    `Failed to find matches to synthesize RDF resource for shape ${formatDisplayShape(shape)}`
   );
 }
 
@@ -143,8 +163,9 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
 
 function checkRefPart(match: ReferenceMatch): string {
   if (typeof match.match !== 'string') {
-    throw new Error(
-      `Cannot synthesize '${match.ref.part}' part for shape ${Rdf.toString(match.ref.target.id)} ` +
+    throw makeError(
+      ErrorCode.CannotSynthesizePartFromNonString,
+      `Cannot synthesize '${match.ref.part}' part for shape ${formatDisplayShape(match.ref.target)} ` +
       `from non-string value (${typeof match.match}) ${match.match}`
     );
   }
@@ -157,8 +178,17 @@ function assertPart(
   partValue: unknown
 ) {
   if (partValue === undefined) {
-    throw new Error(
-      `Failed to find '${part}' part for shape ${Rdf.toString(shape.id)}`
+    throw makeError(
+      ErrorCode.NoPartToSynthesize,
+      `Failed to find '${part}' part for shape ${formatDisplayShape(shape)}`
     );
   }
+}
+
+function makeError(code: ErrorCode, message: string): RampError {
+  const error = new Error(
+    `RAMP${code}: ${message}`
+  ) as RampError;
+  error.rampErrorCode = code;
+  return error;
 }

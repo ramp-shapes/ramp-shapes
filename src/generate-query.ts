@@ -375,7 +375,13 @@ function generateForSetLikeShape(
   const patterns: SparqlJs.Pattern[] = [];
   generateForShape(shape.itemShape, edge, patterns, context);
   if (patterns.length > 0) {
-    out.push({type: 'optional', patterns});
+    if (shape.type === 'set' && (shape.minCount ?? 0) > 0) {
+      for (const pattern of patterns) {
+        out.push(pattern);
+      }
+    } else {
+      out.push({type: 'optional', patterns});
+    }
   }
 }
 
