@@ -36,6 +36,21 @@ export const enum ErrorCode {
   CyclicMatch = 216,
   NoMapKeyMatches = 217,
   NoMapValueMatches = 218,
+  MinCountMismatch = 219,
+  MaxCountMismatch = 220,
+
+  // Synthesize errors
+  CannotSynthesizeShapeType = 301,
+  CannotSynthesizeResourceFromNonString = 302,
+  CannotSynthesizeResourceFromPart = 303,
+  CannotSynthesizePartFromNonString = 304,
+  NoMatchesToSynthesize = 305,
+  NoPartToSynthesize = 306,
+
+  // Flatten/validate errors
+  FailedToMatchProperties = 401,
+  FailedToMatchProperty = 402,
+  CannotUseLiteralAsSubject = 403,
 }
 
 export function isRampError(error: unknown): error is RampError {

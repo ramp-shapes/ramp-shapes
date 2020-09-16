@@ -49,6 +49,7 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     path: factory.namedNode(NAMESPACE + 'path'),
     operator: factory.namedNode(NAMESPACE + 'operator'),
     predicate: factory.namedNode(NAMESPACE + 'predicate'),
+    transient: factory.namedNode(NAMESPACE + 'transient'),
 
     // Resource and Literal
     ResourceShape: factory.namedNode(NAMESPACE + 'ResourceShape'),
@@ -66,6 +67,8 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     OptionalShape: factory.namedNode(NAMESPACE + 'OptionalShape'),
     SetShape: factory.namedNode(NAMESPACE + 'SetShape'),
     item: factory.namedNode(NAMESPACE + 'item'),
+    minCount: factory.namedNode(NAMESPACE + 'minCount'),
+    maxCount: factory.namedNode(NAMESPACE + 'maxCount'),
 
     // List; also uses "item"
     ListShape: factory.namedNode(NAMESPACE + 'ListShape'),

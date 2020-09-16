@@ -1,0 +1,10 @@
+{
+  "shapes": "set-min-max-count",
+  "error": {
+    "code": 219,
+    "stack": [
+      {"shape": "http://example.com/schema#Items", "focus": "<http://example.com/data#items>"},
+      {"edge": "items", "shape": {"type": "set"}}
+    ]
+  }
+}

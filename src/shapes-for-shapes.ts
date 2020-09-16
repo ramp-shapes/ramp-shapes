@@ -8,6 +8,7 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   const RDF_TYPE = factory.namedNode(rdf.type);
   const XSD_BOOLEAN = factory.namedNode(xsd.boolean);
   const XSD_STRING = factory.namedNode(xsd.string);
+  const XSD_INTEGER = factory.namedNode(xsd.integer);
   const ramp = makeRampVocabulary(factory);
 
   const schema = new ShapeBuilder({factory, blankUniqueKey: 'shapes'});
@@ -70,6 +71,9 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
       name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
       path: property(ramp.path, ramp.PathSequence),
       valueShape: property(ramp.shape, ramp.Shape),
+      transient: property(ramp.transient, schema.optional(
+        schema.literal({datatype: XSD_BOOLEAN})
+      )),
     }
   });
 
@@ -128,6 +132,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     properties: {
       ...makeBaseProperties(),
       itemShape: property(ramp.item, ramp.Shape),
+      minCount: property(ramp.minCount, schema.optional(
+        schema.literal({datatype: XSD_INTEGER})
+      )),
+      maxCount: property(ramp.maxCount, schema.optional(
+        schema.literal({datatype: XSD_INTEGER})
+      )),
     }
   });
 
