@@ -12,6 +12,22 @@
  * Construct SPARQL queries to fetch necessary data for given shapes.
  * *(In the future)* Validate that runtime object structure matches specified shape.
 
+### Feature comparison with other RDF modelling languages
+
+| Feature | [OWL/RDFS](https://www.w3.org/TR/owl2-overview/) | [SHACL](https://www.w3.org/TR/shacl/) | [ShEx](https://shex.io/shex-semantics/index.html) | [JSON-LD](https://www.w3.org/TR/json-ld11/) | [**RAMP Shapes**](https://ramp-shapes.github.io/) |
+|---|---|---|---|---|---|
+| Describes closed RDF graph structure | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Describes data mapping / serialization | ❌ | ❌ | ❌ | requires frame definition | ✅ |
+| Has ability to generate query and deserialize results based on shapes | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Supports RDF lists | ❌ | ✅ | ❌ | ✅ | ✅ |
+| Supports shape unions | ✅ | through shape targets | ✅ | ❌ | ✅ |
+| Does not depend on blank nodes semantics | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Has RDF representation | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Supports cardinality constraints (min/max) | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Supports recursive shapes | ✅ | depends on implementation | ✅ | ❌ | ✅ |
+| Supports property paths | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Supports ignoring optional non-matching shapes | ❌ | by declaring shape severity | ❌ | ❌ | ✅ |
+
 ## Installation
 
 Install with `npm install --save ramp-shapes`
