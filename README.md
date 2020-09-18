@@ -19,10 +19,10 @@
 | Describes closed RDF graph structure | ❌ | ✅ | ✅ | ✅ | ✅ |
 | Describes data mapping / serialization | ❌ | ❌ | ❌ | requires frame definition | ✅ |
 | Has ability to generate query and deserialize results based on shapes | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Has RDF representation | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Does not depend on blank nodes semantics | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Supports RDF lists | ❌ | ✅ | ❌ | ✅ | ✅ |
 | Supports shape unions | ✅ | through shape targets | ✅ | ❌ | ✅ |
-| Does not depend on blank nodes semantics | ✅ | ❌ | ✅ | ✅ | ✅ |
-| Has RDF representation | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Supports cardinality constraints (min/max) | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Supports recursive shapes | ✅ | depends on implementation | ✅ | ❌ | ✅ |
 | Supports property paths | ❌ | ✅ | ❌ | ❌ | ✅ |
