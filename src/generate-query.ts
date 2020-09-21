@@ -39,10 +39,11 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   let templateBlankIndex = 1;
   function *tryGeneratePropertyPath(
     subject: SparqlJs.Term,
-    predicate: SparqlJs.PropertyPath | SparqlJs.Term,
+    predicate: SparqlJs.PropertyPath | SparqlJs.IriTerm,
     object: SparqlJs.Term,
   ): Iterable<SparqlJs.Triple> {
     if (Rdf.looksLikeTerm(predicate)) {
+      assertValidSubject(subject);
       yield {subject, predicate, object};
       return;
     }
@@ -62,7 +63,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     }
   }
 
-  const subjects = makeTermMap<SparqlJs.Term | null>();
+  const subjects = makeTermMap<SparqlJs.Triple['subject'] | null>();
   let varIndex = 1;
 
   const context: GenerateQueryContext = {
@@ -118,8 +119,8 @@ interface GenerateQueryContext {
   readonly listDefaults: ResolvedListShape;
   readonly visitingShapes: HashSet<ShapeID>;
   readonly stack: Shape[];
-  resolveSubject(shape: Shape): SparqlJs.Term;
-  makeVariable(prefix: string): SparqlJs.Term;
+  resolveSubject(shape: Shape): SparqlJs.Triple['subject'];
+  makeVariable(prefix: string): SparqlJs.VariableTerm;
   addEdge(edge: Edge): void;
   makeError(code: ErrorCode, message: string): RampError;
   onEmit(shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]): void;
@@ -127,12 +128,13 @@ interface GenerateQueryContext {
 
 interface Edge {
   subject?: SparqlJs.Term;
-  path?: SparqlJs.PropertyPath | SparqlJs.Term;
+  path?: SparqlJs.PropertyPath | SparqlJs.IriTerm;
   object: SparqlJs.Term;
 }
 
 function generateEdge(edge: Edge, out: SparqlJs.Pattern[]) {
   if (edge.subject && edge.path && !isEmptyPath(edge.path)) {
+    assertValidSubject(edge.subject);
     out.push({
       type: 'bgp',
       triples: [{
@@ -144,10 +146,22 @@ function generateEdge(edge: Edge, out: SparqlJs.Pattern[]) {
   }
 }
 
-type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.Term;
+function assertValidSubject(term: SparqlJs.Term): asserts term is SparqlJs.Triple['subject'] {
+  switch (term.termType) {
+    case 'NamedNode':
+    case 'BlankNode':
+    case 'Variable':
+      /* allowed */
+      break;
+    default:
+      throw new Error('Cannot generate triple with given subject: ' + Rdf.toString(term));
+  }
+}
+
+type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.IriTerm;
 
 function propertyPathToSparql(path: PathSequence): SparqlJsPredicate {
-  const items = path.map((element): SparqlJs.PropertyPath | SparqlJs.Term => {
+  const items = path.map((element): SparqlJsPredicate => {
     if (isPathSegment(element)) {
       return element.predicate;
     } else {
@@ -299,6 +313,7 @@ function generateRecursiveEdge(
     return edge;
   }
 
+  assertValidSubject(edge.object);
   const object = context.makeVariable(shape.type + '_r');
   out.push({
     type: 'bgp',

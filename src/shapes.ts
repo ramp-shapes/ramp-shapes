@@ -104,7 +104,8 @@ export interface ShapeReference {
 }
 
 export interface Vocabulary {
-  terms: { [literal: string]: Rdf.NamedNode };
+  readonly id?: Rdf.NamedNode | Rdf.BlankNode;
+  readonly terms: { [literal: string]: Rdf.NamedNode };
 }
 
 export function isPathSegment(element: PathElement): element is PathSegment {

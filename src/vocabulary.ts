@@ -31,6 +31,7 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     NAMESPACE,
     Shape: factory.namedNode(NAMESPACE + 'Shape'),
     ShapeID: factory.namedNode(NAMESPACE + 'ShapeID'),
+    ShapeTypeVocabulary: factory.namedNode(NAMESPACE + 'ShapeTypeVocabulary'),
     lenient: factory.namedNode(NAMESPACE + 'lenient'),
 
     // Object

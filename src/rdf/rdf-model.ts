@@ -2,20 +2,21 @@ import * as RdfJs from 'rdf-js';
 
 import { escapeRdfValue } from './rdf-escape';
 
-export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph;
+export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph | Quad;
 
-export type NamedNode = RdfJs.NamedNode;
+export type NamedNode<Iri extends string = string> = RdfJs.NamedNode<Iri>;
 export type BlankNode = RdfJs.BlankNode;
 export type Literal = RdfJs.Literal;
 export type Variable = RdfJs.Variable;
 export type DefaultGraph = RdfJs.DefaultGraph;
+export type Quad = RdfJs.Quad;
 
 export type DataFactory = RdfJs.DataFactory;
 
-class RdfNamedNode implements NamedNode {
+class RdfNamedNode<Iri extends string> implements NamedNode<Iri> {
   get termType() { return 'NamedNode' as const; }
   constructor(
-    readonly value: string,
+    readonly value: Iri,
   ) {}
   equals(other: Term | undefined | null): boolean {
     return other && equalTerms(this, other) || false;
@@ -104,23 +105,15 @@ class RdfDefaultGraph implements DefaultGraph {
   }
 }
 
-export interface Quad {
-  readonly subject: NamedNode | BlankNode | Variable;
-  readonly predicate: NamedNode | Variable;
-  readonly object: NamedNode | BlankNode | Literal | Variable;
-  readonly graph: DefaultGraph | NamedNode | BlankNode | Variable;
-  hashCode?(): number;
-  equals(other: Quad | undefined | null): boolean;
-  toString(): string;
-}
-
 class RdfQuad implements Quad {
   constructor(
-    readonly subject: NamedNode | BlankNode | Variable,
+    readonly subject: NamedNode | BlankNode | Variable | Quad,
     readonly predicate: NamedNode | Variable,
-    readonly object: NamedNode | BlankNode | Literal | Variable,
+    readonly object: NamedNode | BlankNode | Literal | Variable | Quad,
     readonly graph: DefaultGraph | NamedNode | BlankNode | Variable = RdfDefaultGraph.instance,
   ) {}
+  get termType() { return 'Quad' as const; }
+  readonly value = '';
   hashCode(): number {
     return hashQuad(this);
   }
@@ -137,8 +130,8 @@ class RdfQuad implements Quad {
 }
 
 class RdfDataFactory implements RdfJs.DataFactory {
-  namedNode = (value: string): RdfJs.NamedNode => {
-    return new RdfNamedNode(value);
+  namedNode = <Iri extends string = string>(value: Iri): RdfJs.NamedNode<Iri> => {
+    return new RdfNamedNode<Iri>(value);
   }
   blankNode = (value?: string | undefined): RdfJs.BlankNode => {
     return new RdfBlankNode(typeof value === 'string' ? value : randomString('b', 48));
@@ -181,7 +174,8 @@ export function wrap(
     Pick<Literal, 'termType' | 'value' | 'language'>
       & { datatype: Pick<NamedNode, 'termType' | 'value'> } |
     Pick<Variable, 'termType' | 'value'> |
-    Pick<DefaultGraph, 'termType'>,
+    Pick<DefaultGraph, 'termType'> |
+    Pick<Quad, 'termType' | 'subject' | 'predicate' | 'object' | 'graph'>,
   factory: RdfJs.DataFactory
 ): Term | undefined {
   switch (v.termType) {
@@ -195,6 +189,13 @@ export function wrap(
       return factory.variable!(v.value);
     case 'DefaultGraph':
       return factory.defaultGraph();
+    case 'Quad':
+      return factory.quad(
+        wrap(v.subject, factory) as Quad['subject'],
+        wrap(v.predicate, factory) as Quad['predicate'],
+        wrap(v.object, factory) as Quad['object'],
+        v.graph ? wrap(v.graph, factory) as Quad['graph'] : undefined
+      );
   }
 }
 
@@ -219,6 +220,17 @@ export function toString(node: Term): string {
       return '(default graph)';
     case 'Variable':
       return `?${node.value}`;
+    case 'Quad': {
+      let str = `<< `;
+      str += toString(node.subject) + ' ';
+      str += toString(node.predicate) + ' ';
+      str += toString(node.object) + ' ';
+      if (node.graph.termType !== 'DefaultGraph') {
+        str += toString(node.graph) + ' ';
+      }
+      str += '>>';
+      return str;
+    }
   }
 }
 
@@ -243,6 +255,15 @@ export function hashTerm(node: Term): number {
     case 'Variable':
       hash = hashFnv32a(node.value);
       break;
+    case 'Quad': {
+      /* tslint:disable: no-bitwise */
+      hash = (hash * 31 + hashTerm(node.subject)) | 0;
+      hash = (hash * 31 + hashTerm(node.predicate)) | 0;
+      hash = (hash * 31 + hashTerm(node.object)) | 0;
+      hash = (hash * 31 + hashTerm(node.graph)) | 0;
+      /* tslint:enable: no-bitwise */
+      break;
+    }
   }
   return dropHighestNonSignBit(hash);
 }
@@ -265,27 +286,24 @@ export function equalTerms(a: Term, b: Term): boolean {
         && a.datatype.value === datatype.value
         && a.language === language;
     }
+    case 'Quad': {
+      const {subject, predicate, object, graph} = b as Quad;
+      return (
+        equalTerms(a.subject, subject) &&
+        equalTerms(a.predicate, predicate) &&
+        equalTerms(a.object, object) &&
+        equalTerms(a.graph, graph)
+      );
+    }
   }
 }
 
 export function hashQuad(quad: Quad): number {
-  /* tslint:disable: no-bitwise */
-  let h = 0;
-  h = (h * 31 + hashTerm(quad.subject)) | 0;
-  h = (h * 31 + hashTerm(quad.predicate)) | 0;
-  h = (h * 31 + hashTerm(quad.object)) | 0;
-  h = (h * 31 + hashTerm(quad.graph)) | 0;
-  return dropHighestNonSignBit(h);
-  /* tslint:enable: no-bitwise */
+  return hashTerm(quad);
 }
 
 export function equalQuads(a: Quad, b: Quad): boolean {
-  return (
-    equalTerms(a.subject, b.subject) &&
-    equalTerms(a.predicate, b.predicate) &&
-    equalTerms(a.object, b.object) &&
-    equalTerms(a.graph, b.graph)
-  );
+  return equalTerms(a, b);
 }
 
 export function hashString(str: string): number {

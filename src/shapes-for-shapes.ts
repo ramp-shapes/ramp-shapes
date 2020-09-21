@@ -32,6 +32,7 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   });
 
   const ShapeTypeVocabulary: Vocabulary = {
+    id: ramp.ShapeTypeVocabulary,
     terms: {
       'object': ramp.ObjectShape,
       'union': ramp.UnionShape,
@@ -186,6 +187,7 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   schema.object({
     id: ramp.Vocabulary,
     properties: {
+      id: self(schema.optional(schema.resource())),
       terms: property(ramp.vocabItem, schema.map({
         key: {target: VocabularyItemKey},
         value: {target: VocabularyItemTerm},
