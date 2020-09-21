@@ -16,6 +16,8 @@ export interface FrameParams {
   shape: Shape;
   dataset: Rdf.Dataset;
   candidates?: Iterable<Rdf.Term>;
+  /** Default is `true` if there are initial candidates otherwise `false`. */
+  strict?: boolean;
   factory?: Rdf.DataFactory;
   mapper?: ValueMapper;
 }
@@ -41,8 +43,9 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   };
 
   const candidates = params.candidates || findAllCandidates(params.dataset);
+  const strict = Boolean(params.candidates);
   const stack = new StackFrame(undefined, params.shape);
-  for (const value of frameShape(params.shape, false, candidates, stack, context)) {
+  for (const value of frameShape(params.shape, strict, candidates, stack, context)) {
     if (value === MISMATCH) {
       continue;
     } else if (value instanceof CyclicMatch) {
