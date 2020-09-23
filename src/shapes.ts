@@ -18,6 +18,7 @@ export interface ShapeBase {
 
 export interface ResourceShape extends ShapeBase {
   readonly type: 'resource';
+  readonly onlyNamed?: boolean;
   readonly value?: Rdf.NamedNode | Rdf.BlankNode;
   readonly keepAsTerm?: boolean;
   readonly vocabulary?: Vocabulary;
@@ -41,19 +42,47 @@ export interface ObjectShape extends ShapeBase {
 
 export interface ObjectProperty {
   readonly name: string;
-  readonly path: PathSequence;
+  readonly path: PropertyPath;
   readonly valueShape: Shape;
   readonly transient?: boolean;
 }
 
-export type PathSequence = ReadonlyArray<PathElement>;
-export type PathElement = PathExpression | PathSegment;
-export interface PathExpression {
-  operator: '|' | '^' | '*' | '+' | '?' | '!';
-  path: PathSequence;
+export type PropertyPath =
+  | PredicatePath
+  | SequencePath
+  | InversePath
+  | AlternativePath
+  | ZeroOrMorePath
+  | ZeroOrOnePath
+  | OneOrMorePath;
+
+export interface PredicatePath {
+  readonly type: 'predicate';
+  readonly predicate: Rdf.NamedNode;
 }
-export interface PathSegment {
-  predicate: Rdf.NamedNode;
+export interface SequencePath {
+  readonly type: 'sequence';
+  readonly sequence: ReadonlyArray<PropertyPath>;
+}
+export interface InversePath {
+  readonly type: 'inverse';
+  readonly inverse: PropertyPath;
+}
+export interface AlternativePath {
+  readonly type: 'alternative';
+  readonly alternatives: ReadonlyArray<PropertyPath>;
+}
+export interface ZeroOrMorePath {
+  readonly type: 'zeroOrMore';
+  readonly zeroOrMore: PropertyPath;
+}
+export interface ZeroOrOnePath {
+  readonly type: 'zeroOrOne';
+  readonly zeroOrOne: PropertyPath;
+}
+export interface OneOrMorePath {
+  readonly type: 'oneOrMore';
+  readonly oneOrMore: PropertyPath;
 }
 
 export interface UnionShape extends ShapeBase {
@@ -82,10 +111,10 @@ export interface ListShape extends ShapeBase {
   readonly type: 'list';
   readonly id: ShapeID;
   readonly itemShape: Shape;
-  /** @default [{predicate: (rdf:first)}] */
-  readonly headPath?: PathSequence;
-  /** @default [{predicate: (rdf:rest)}] */
-  readonly tailPath?: PathSequence;
+  /** @default rdf:first */
+  readonly headPath?: PropertyPath;
+  /** @default rdf:rest */
+  readonly tailPath?: PropertyPath;
   /** @default rdf:nil */
   readonly nil?: Rdf.NamedNode;
 }
@@ -108,6 +137,12 @@ export interface Vocabulary {
   readonly terms: { [literal: string]: Rdf.NamedNode };
 }
 
-export function isPathSegment(element: PathElement): element is PathSegment {
-  return Boolean((element as { predicate?: Rdf.NamedNode }).predicate);
+export function getNestedPropertyPath(path: ZeroOrMorePath | ZeroOrOnePath | OneOrMorePath): PropertyPath {
+  switch (path.type) {
+    case 'zeroOrMore': return path.zeroOrMore;
+    case 'zeroOrOne': return path.zeroOrOne;
+    case 'oneOrMore': return path.oneOrMore;
+    default:
+      throw new Error(`"${(path as PropertyPath).type}" nested path cannot be undefined`);
+  }
 }

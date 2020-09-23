@@ -20,7 +20,6 @@
 | Describes data mapping / serialization | ❌ | ❌ | ❌ | requires frame definition | ✅ |
 | Has ability to generate query and deserialize results based on shapes | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Has RDF representation | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Does not depend on blank nodes semantics | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Supports RDF lists | ❌ | ✅ | ❌ | ✅ | ✅ |
 | Supports shape unions | ✅ | through shape targets | ✅ | ❌ | ✅ |
 | Supports cardinality constraints (min/max) | ✅ | ✅ | ✅ | ❌ | ✅ |
@@ -65,7 +64,7 @@ const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
     ex:Annotation a :ObjectShape;
         :typeProperty [
             :name "type";
-            :path ([ :predicate rdf:type ]);
+            :path rdf:type;
             :shape [ a :ResourceShape; :termValue ex:Annotation ]
         ];
         :property [
@@ -75,12 +74,12 @@ const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
         ];
         :property [
             :name "start";
-            :path ([ :predicate ex:start ]);
+            :path ex:start;
             :shape ex:Selector
         ];
         :property [
             :name "end";
-            :path ([ :predicate ex:end ]);
+            :path ex:end;
             :shape [ a :OptionalShape; :item ex:Selector ]
         ].
 
@@ -90,12 +89,12 @@ const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
     ex:Point a :ObjectShape;
         :typeProperty [
             :name "type";
-            :path ([ :predicate rdf:type ]);
+            :path rdf:type;
             :shape [ a :ResourceShape; :termValue ex:Point ]
         ];
         :property [
             :name "position";
-            :path ([ :predicate ex:position ]);
+            :path ex:position;
             :shape [ a :LiteralShape; :termDatatype xsd:integer ]
         ].
 

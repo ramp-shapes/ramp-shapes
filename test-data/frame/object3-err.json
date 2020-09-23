@@ -1,7 +1,7 @@
 {
   "shapes": "points-simple",
   "error": {
-    "code": 201,
+    "code": 223,
     "stack": [
       {"shape": "http://example.com/schema#Point", "focus": "_:blank"},
       {"edge": "x", "shape": {"type": "literal"}, "focus": "\"15\"^^<http://www.w3.org/2001/XMLSchema#string>"}

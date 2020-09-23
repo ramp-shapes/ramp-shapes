@@ -3,13 +3,13 @@ import * as SparqlJs from 'sparqljs';
 import { HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment
+  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, getNestedPropertyPath,
 } from './shapes';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
 } from './common';
-import { ErrorCode, RampError, formatShapeStack } from './errors';
+import { ErrorCode, RampError, makeRampError } from './errors';
 
 export interface GenerateQueryParams {
   shape: Shape;
@@ -92,11 +92,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     },
     makeError: (code, message) => {
       const stack = context.stack.map(shape => ({shape}));
-      const stackString = formatShapeStack(stack);
-      const error = new Error(`RAMP${code}: ${message} at ${stackString}`) as RampError;
-      error.rampErrorCode = code;
-      error.rampStack = stack;
-      return error;
+      return makeRampError(code, message, stack);
     },
     onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
   };
@@ -160,35 +156,34 @@ function assertValidSubject(term: SparqlJs.Term): asserts term is SparqlJs.Tripl
 
 type SparqlJsPredicate = SparqlJs.PropertyPath | SparqlJs.IriTerm;
 
-function propertyPathToSparql(path: PathSequence): SparqlJsPredicate {
-  const items = path.map((element): SparqlJsPredicate => {
-    if (isPathSegment(element)) {
-      return element.predicate;
-    } else {
-      switch (element.operator) {
-        case '|':
-          return {
-            type: 'path',
-            pathType: '|',
-            items: element.path.map(subElement => propertyPathToSparql([subElement])),
-          };
-        case '!':
-        case '^':
-        case '*':
-        case '+':
-        case '?':
-          return {
-            type: 'path',
-            // TODO: fix Sparql.js typings for property path operator '?'
-            pathType: element.operator as SparqlJs.PropertyPath['pathType'],
-            items: [propertyPathToSparql(element.path)],
-          };
-        default:
-          throw new Error(`Unknown path operator "${element.operator}"`);
-      }
-    }
-  });
-  return items.length === 1 ? items[0] : {type: 'path', pathType: '/', items};
+function propertyPathToSparql(path: PropertyPath): SparqlJsPredicate {
+  switch (path.type) {
+    case 'predicate':
+      return path.predicate;
+    case 'sequence':
+      return {
+        type: 'path',
+        pathType: '/',
+        items: path.sequence.map(propertyPathToSparql),
+      };
+    case 'inverse':
+      return {type: 'path', pathType: '^', items: [propertyPathToSparql(path.inverse)]};
+    case 'alternative':
+      return {
+        type: 'path',
+        pathType: '|',
+        items: path.alternatives.map(propertyPathToSparql),
+      };
+    case 'zeroOrMore':
+      return {type: 'path', pathType: '*', items: [propertyPathToSparql(path.zeroOrMore)]};
+    case 'zeroOrOne':
+      // TODO: fix Sparql.js typings for property path operator '?'
+      return {type: 'path', pathType: '?' as any, items: [propertyPathToSparql(path.zeroOrOne)]};
+    case 'oneOrMore':
+      return {type: 'path', pathType: '+', items: [propertyPathToSparql(path.oneOrMore)]};
+    default:
+      throw new Error(`Unknown path type "${(path as PropertyPath).type}"`);
+  }
 }
 
 function concatSparqlPaths(
@@ -296,10 +291,14 @@ function generateForProperties(
     const edge: Edge = {
       subject,
       path: propertyPathToSparql(property.path),
-      object: property.path.length === 0 ? subject : context.resolveSubject(shape),
+      object: isSelfPath(property.path) ? subject : context.resolveSubject(shape),
     };
     generateForShape(shape, edge, out, context);
   }
+}
+
+function isSelfPath(path: PropertyPath) {
+  return path.type === 'sequence' && path.sequence.length === 0;
 }
 
 function generateRecursiveEdge(
@@ -357,7 +356,7 @@ function isBreakingPointShape(shape: Shape, context: GenerateQueryContext) {
     return true;
   } else if (shape.type === 'list') {
     const {head} = resolveListShape(shape, context.listDefaults);
-    return head.length > 0;
+    return !isSelfPath(head);
   }
   return false;
 }
@@ -441,7 +440,7 @@ function generateForList(
     items: [nextPath],
   };
 
-  const listNode = head.length === 0
+  const listNode = isSelfPath(head)
     ? edge.object : context.makeVariable('listNode');
   const listNodeEdge: Edge = {subject: edge.object, path: nodePath, object: listNode};
   generateEdge(listNodeEdge, out);
@@ -452,7 +451,7 @@ function generateForList(
   generateEdge(nextEdge, out);
   context.addEdge(nextEdge);
 
-  if (head.length === 0) {
+  if (isSelfPath(head)) {
     generateForShape(shape.itemShape, {object: listNode}, out, context);
   } else {
     const headPath = propertyPathToSparql(head);
@@ -503,11 +502,11 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
           pathType: '*',
           items: [propertyPathToSparql(tail)],
         });
-        if (head.length > 0) {
+        if (!isSelfPath(head)) {
           path.push(propertyPathToSparql(head));
         }
         yield* visit(shape.itemShape);
-        if (head.length > 0) {
+        if (!isSelfPath(head)) {
           path.pop();
         }
         path.pop();
@@ -575,7 +574,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
     properties: ReadonlyArray<ObjectProperty>
   ): Iterable<Rdf.NamedNode>  {
     for (const property of properties) {
-      if (property.path.length === 0) {
+      if (isSelfPath(property.path)) {
         yield* visit(property.valueShape);
       }
     }

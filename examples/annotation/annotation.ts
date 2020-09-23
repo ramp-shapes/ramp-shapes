@@ -18,7 +18,13 @@ schema.object({
   properties: {
     xpath: property(rdf.value, xpathLiteral),
     offset: propertyPath(
-      [{predicate: oa.refinedBy}, {predicate: oa.start}],
+      {
+        type: 'sequence',
+        sequence: [
+          {type: 'predicate', predicate: oa.refinedBy},
+          {type: 'predicate', predicate: oa.start},
+        ],
+      },
       schema.literal({datatype: xsd.nonNegativeInteger})
     ),
     refinedBy: property(oa.refinedBy, schema.optional(schema.resource())),

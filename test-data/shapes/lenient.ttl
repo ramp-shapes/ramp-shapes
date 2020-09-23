@@ -6,17 +6,17 @@
 ex:Location a :ObjectShape;
     :typeProperty [
         :name "type";
-        :path ([ :predicate rdf:type ]);
+        :path rdf:type;
         :shape [ a :ResourceShape; :termValue ex:Location ]
     ];
     :property [
         :name "center";
-        :path ([ :predicate ex:centerPoint ]);
+        :path ex:centerPoint;
         :shape [ a :OptionalShape; :item ex:Point ]
     ];
     :property [
         :name "border";
-        :path ([ :predicate ex:borderPoint ]);
+        :path ex:borderPoint;
         :shape [ a :SetShape; :item _:LenientPoint ]
     ].
 
@@ -27,11 +27,11 @@ _:LenientPoint a :UnionShape;
 ex:Point a :ObjectShape;
     :property [
         :name "x";
-        :path ([ :predicate ex:xCoord ]);
+        :path ex:xCoord;
         :shape [ a :LiteralShape; :termDatatype xsd:integer ]
     ];
     :property [
         :name "y";
-        :path ([ :predicate ex:yCoord ]);
+        :path ex:yCoord;
         :shape [ a :LiteralShape; :termDatatype xsd:integer ]
     ].

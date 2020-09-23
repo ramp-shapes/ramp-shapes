@@ -11,7 +11,7 @@ ex:rootList a :ObjectShape;
     ];
     :property [
         :name "body";
-        :path ([ :predicate ex:body ]);
+        :path ex:body;
         :shape ex:ListOfLists
     ].
 

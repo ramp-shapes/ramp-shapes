@@ -1,8 +1,9 @@
 import { HashMap, HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ListShape, LiteralShape, PathSequence, ResourceShape, Shape,
+  ListShape, LiteralShape, PropertyPath, ResourceShape, Shape,
 } from './shapes';
+import { ErrorCode, RampError } from './errors';
 import { rdf } from './vocabulary';
 
 export function makeTermSet() {
@@ -17,28 +18,89 @@ export function assertUnknownShape(shape: never): never {
   throw new Error(`Unknown shape type ${(shape as Shape).type}`);
 }
 
-export function matchesTerm(shape: ResourceShape | LiteralShape, node: Rdf.Term): boolean {
+export function matchesTerm(
+  shape: ResourceShape | LiteralShape,
+  node: Rdf.Term,
+  makeError?: (code: ErrorCode, message: string) => RampError
+): boolean {
   if (shape.type === 'resource') {
-    return (node.termType === 'NamedNode' || node.termType === 'BlankNode')
-      && (!shape.value || Rdf.equalTerms(shape.value, node));
+    if (!(node.termType === 'NamedNode' || node.termType === 'BlankNode')) {
+      if (makeError) {
+        throw makeError(
+          ErrorCode.NonMatchingTermType,
+          `Expected "NamedNode" or "BlankNode" term type but found "${node.termType}"`
+        );
+      } else {
+        return false;
+      }
+    }
+    if (shape.onlyNamed && node.termType !== 'NamedNode') {
+      if (makeError) {
+        throw makeError(
+          ErrorCode.NonMatchingTermType,
+          `Expected only "NamedNode" term type but found "${node.termType}"`
+        );
+      } else {
+        return false;
+      }
+    }
   } else {
-    return node.termType === 'Literal'
-      && (!shape.datatype || shape.datatype.value === node.datatype.value)
-      && (!shape.language || shape.language === node.language)
-      && (!shape.value || Rdf.equalTerms(shape.value, node));
+    if (node.termType !== 'Literal') {
+      if (makeError) {
+        throw makeError(
+          ErrorCode.NonMatchingTermType,
+          `Expected "Literal" term type but found "${node.termType}"`
+        );
+      } else {
+        return false;
+      }
+    }
+    if (shape.datatype && shape.datatype.value !== node.datatype.value) {
+      if (makeError) {
+        const expectedDatatype = Rdf.toString(shape.datatype);
+        const foundDatatype = Rdf.toString(node.datatype);
+        throw makeError(
+          ErrorCode.NonMatchingLiteralDatatype,
+          `Expected literal datatype ${expectedDatatype} but found ${foundDatatype}`
+        );
+      } else {
+        return false;
+      }
+    }
+    if (shape.language && shape.language !== node.language) {
+      if (makeError) {
+        throw makeError(
+          ErrorCode.NonMatchingLiteralLanguage,
+          `Expected literal language "${shape.language}" but found "${node.language}"`
+        );
+      } else {
+        return false;
+      }
+    }
   }
+  if (shape.value && !Rdf.equalTerms(shape.value, node)) {
+    if (makeError) {
+      throw makeError(
+        ErrorCode.NonMatchingTermValue,
+        `Expected different term value ${shape.value} but found ${node}`
+      );
+    } else {
+      return false;
+    }
+  }
+  return true;
 }
 
 export interface ResolvedListShape {
-  head: PathSequence;
-  tail: PathSequence;
+  head: PropertyPath;
+  tail: PropertyPath;
   nil: Rdf.NamedNode;
 }
 
 export function makeListShapeDefaults(factory: Rdf.DataFactory): ResolvedListShape {
   return {
-    head: [{predicate: factory.namedNode(rdf.first)}],
-    tail: [{predicate: factory.namedNode(rdf.rest)}],
+    head: {type: 'predicate', predicate: factory.namedNode(rdf.first)},
+    tail: {type: 'predicate', predicate: factory.namedNode(rdf.rest)},
     nil: factory.namedNode(rdf.nil),
   };
 }

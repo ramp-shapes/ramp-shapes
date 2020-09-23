@@ -6,13 +6,13 @@
 ex:Items a :ObjectShape;
     :typeProperty [
         :name "type";
-        :path ([ :predicate rdf:type ]);
+        :path rdf:type;
         :shape [ a :ResourceShape; :termValue ex:Items ];
         :transient true
     ];
     :property [
         :name "items";
-        :path ([ :predicate ex:hasItem ]);
+        :path ex:hasItem;
         :shape [
             a :SetShape;
             :item [ a :LiteralShape; :termDatatype xsd:integer ];

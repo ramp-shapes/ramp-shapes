@@ -1,6 +1,6 @@
 import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
-import { ObjectProperty, PathSequence, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
+import { ObjectProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
 export interface ShapeBuilderOptions {
   factory?: Rdf.DataFactory;
@@ -18,8 +18,9 @@ interface ObjectShapeProps extends ShapeBaseProps {
 }
 
 interface PartialProperty {
-  path: PathSequence;
+  path: PropertyPath;
   valueShape: ShapeID;
+  transient?: boolean;
 }
 
 interface OptionalShapeProps extends ShapeBaseProps {
@@ -31,10 +32,21 @@ interface ConstantShapeProps extends ShapeBaseProps {
   vocabulary?: Vocabulary;
 }
 
+interface ResourceShapeProps extends ShapeBaseProps {
+  onlyNamed?: boolean;
+  keepAsTerm?: boolean;
+  vocabulary?: Vocabulary;
+}
+
 interface LiteralShapeProps extends ShapeBaseProps {
   datatype?: Rdf.NamedNode;
   language?: string;
   keepAsTerm?: boolean;
+}
+
+interface SetShapeProps extends ShapeBaseProps {
+  minCount?: number;
+  maxCount?: number;
 }
 
 interface MapShapeProps extends ShapeBaseProps {
@@ -79,10 +91,11 @@ export class ShapeBuilder {
     const {_shapes} = this;
 
     function toField(name: string, partial: PartialProperty): ObjectProperty {
-      const {path, valueShape} = partial;
+      const {path, valueShape, transient} = partial;
       return {
         name,
         path,
+        transient,
         get valueShape() {
           return _shapes.get(valueShape)!;
         }
@@ -116,13 +129,15 @@ export class ShapeBuilder {
     return id;
   }
 
-  set(itemShape: ShapeID, props: ShapeBaseProps = {}): ShapeID {
-    const {id = this.makeShapeID('set'), lenient} = props;
+  set(itemShape: ShapeID, props: SetShapeProps = {}): ShapeID {
+    const {id = this.makeShapeID('set'), lenient, minCount, maxCount} = props;
     const {_shapes} = this;
     this._shapes.set(id, {
       type: 'set',
       id,
       lenient,
+      minCount,
+      maxCount,
       get itemShape() {
         return _shapes.get(itemShape)!;
       }
@@ -167,9 +182,9 @@ export class ShapeBuilder {
     return shape.id;
   }
 
-  resource(props: ConstantShapeProps = {}): ShapeID {
-    const {id = this.makeShapeID('resource'), lenient, keepAsTerm, vocabulary} = props;
-    this._shapes.set(id, {type: 'resource', id, lenient, keepAsTerm, vocabulary});
+  resource(props: ResourceShapeProps = {}): ShapeID {
+    const {id = this.makeShapeID('resource'), lenient, onlyNamed, keepAsTerm, vocabulary} = props;
+    this._shapes.set(id, {type: 'resource', id, lenient, onlyNamed, keepAsTerm, vocabulary});
     return id;
   }
 
@@ -225,18 +240,45 @@ export class ShapeBuilder {
   }
 }
 
-export function self(valueShape: ShapeID): PartialProperty {
-  return {path: [], valueShape};
+export interface PropertyProps {
+  transient?: boolean;
 }
 
-export function property(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
-  return {path: [{predicate}], valueShape};
+export function self(valueShape: ShapeID, props: PropertyProps = {}): PartialProperty {
+  const {transient} = props;
+  return {path: {type: 'sequence', sequence: []}, valueShape, transient};
 }
 
-export function inverseProperty(predicate: Rdf.NamedNode, valueShape: ShapeID): PartialProperty {
-  return {path: [{operator: '^', path: [{predicate}]}], valueShape};
+export function property(
+  predicate: Rdf.NamedNode,
+  valueShape: ShapeID,
+  props: PropertyProps = {}
+): PartialProperty {
+  const {transient} = props;
+  return {path: {type: 'predicate', predicate}, valueShape, transient};
 }
 
-export function propertyPath(path: PathSequence, valueShape: ShapeID): PartialProperty {
-  return {path, valueShape};
+export function inverseProperty(
+  predicate: Rdf.NamedNode,
+  valueShape: ShapeID,
+  props: PropertyProps = {}
+): PartialProperty {
+  const {transient} = props;
+  return {
+    path: {
+      type: 'inverse',
+      inverse: {type: 'predicate', predicate}
+    },
+    valueShape,
+    transient,
+  };
+}
+
+export function propertyPath(
+  path: PropertyPath,
+  valueShape: ShapeID,
+  props: PropertyProps = {}
+): PartialProperty {
+  const {transient} = props;
+  return {path, valueShape, transient};
 }

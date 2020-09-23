@@ -38,6 +38,11 @@ export const enum ErrorCode {
   NoMapValueMatches = 218,
   MinCountMismatch = 219,
   MaxCountMismatch = 220,
+  // term matching
+  NonMatchingTermType = 221,
+  NonMatchingTermValue = 222,
+  NonMatchingLiteralDatatype = 223,
+  NonMatchingLiteralLanguage = 224,
 
   // Synthesize errors
   CannotSynthesizeShapeType = 301,
@@ -56,6 +61,20 @@ export const enum ErrorCode {
 export function isRampError(error: unknown): error is RampError {
   return typeof error === 'object'
     && typeof (error as RampError).rampErrorCode === 'number';
+}
+
+export function makeRampError(
+  code: ErrorCode,
+  message: string,
+  stack?: ReadonlyArray<StackFrame>
+): RampError {
+  const stackString = stack ? formatShapeStack(stack) : undefined;
+  const error = new Error(
+    `RAMP${code}: ${message}` + (stackString ? ` at ${stackString}` : '')
+  ) as RampError;
+  error.rampErrorCode = code;
+  error.rampStack = stack;
+  return error;
 }
 
 export function formatDisplayShape(shape: Shape, focus?: Rdf.Term): string {
