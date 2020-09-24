@@ -245,11 +245,11 @@ export function hashTerm(node: Term): number {
       hash = hashFnv32a(node.value);
       if (node.datatype) {
         // tslint:disable-next-line: no-bitwise
-        hash = (hash * 31 + hashFnv32a(node.datatype.value)) | 0;
+        hash = (Math.imul(hash, 31) + hashFnv32a(node.datatype.value)) | 0;
       }
       if (node.language) {
         // tslint:disable-next-line: no-bitwise
-        hash = (hash * 31 + hashFnv32a(node.language)) | 0;
+        hash = (Math.imul(hash, 31) + hashFnv32a(node.language)) | 0;
       }
       break;
     case 'Variable':
@@ -257,10 +257,10 @@ export function hashTerm(node: Term): number {
       break;
     case 'Quad': {
       /* tslint:disable: no-bitwise */
-      hash = (hash * 31 + hashTerm(node.subject)) | 0;
-      hash = (hash * 31 + hashTerm(node.predicate)) | 0;
-      hash = (hash * 31 + hashTerm(node.object)) | 0;
-      hash = (hash * 31 + hashTerm(node.graph)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(node.subject)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(node.predicate)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(node.object)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(node.graph)) | 0;
       /* tslint:enable: no-bitwise */
       break;
     }
