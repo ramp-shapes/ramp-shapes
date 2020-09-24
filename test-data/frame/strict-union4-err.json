@@ -1,0 +1,12 @@
+{
+  "shapes": "strict-union",
+  "error": {
+    "code": 223,
+    "stack": [
+      {"shape": "http://example.com/schema#Items", "focus": "<http://example.com/data#items>"},
+      {"edge": "trivialUnion", "shape": {"type": "set"}},
+      {"shape": "http://example.com/schema#TrivialInteger"},
+      {"shape": {"type": "literal"}, "focus": "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"}
+    ]
+  }
+}

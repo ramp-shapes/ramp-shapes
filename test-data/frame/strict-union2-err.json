@@ -1,0 +1,12 @@
+{
+  "shapes": "strict-union",
+  "error": {
+    "code": 223,
+    "stack": [
+      {"shape": "http://example.com/schema#Items", "focus": "<http://example.com/data#items>"},
+      {"edge": "atomic", "shape": {"type": "set"}},
+      {"shape": "http://example.com/schema#StringOrInteger"},
+      {"shape": {"type": "literal"}, "focus": "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"}
+    ]
+  }
+}
