@@ -1,14 +1,14 @@
 import { HashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape, OptionalShape,
-  ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, isPathSegment,
+  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape, OptionalShape,
+  ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, getNestedPropertyPath,
 } from './shapes';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm,
 } from './common';
-import { RampError, ErrorCode, formatDisplayShape, formatShapeStack } from './errors';
+import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors';
 import { compactByReference } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
@@ -275,32 +275,26 @@ function *frameObject(
 }
 
 function findByPropertyPath(
-  path: PathSequence,
+  path: PropertyPath,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   context: FrameContext
 ): Iterable<Rdf.Term> {
-  if (path.length === 0) {
-    return [candidate];
-  } else if (path.length === 1) {
-    const element = path[0];
-    if (isPathSegment(element)) {
-      // optimize for single forward predicate
-      const objects: Rdf.Term[] = [];
-      for (const q of context.dataset.iterateMatches(candidate, element.predicate, null)) {
-        objects.push(q.object);
-      }
-      return objects;
-    } else if (element.operator === '^' && element.path.length === 1) {
-      const reversed = element.path[0];
-      if (isPathSegment(reversed)) {
-        // optimize for single backwards predicate
-        const subjects: Rdf.Term[] = [];
-        for (const q of context.dataset.iterateMatches(null, reversed.predicate, candidate)) {
-          subjects.push(q.subject);
-        }
-        return subjects;
-      }
+  if (path.type === 'predicate') {
+    // optimize for single forward predicate
+    const objects: Rdf.Term[] = [];
+    for (const q of context.dataset.iterateMatches(candidate, path.predicate, null)) {
+      objects.push(q.object);
     }
+    return objects;
+  } else if (path.type === 'inverse' && path.inverse.type === 'predicate') {
+    // optimize for single backwards predicate
+    const subjects: Rdf.Term[] = [];
+    for (const q of context.dataset.iterateMatches(null, path.inverse.predicate, candidate)) {
+      subjects.push(q.subject);
+    }
+    return subjects;
+  } else if (path.type === 'sequence' && path.sequence.length === 0) {
+    return [candidate];
   }
 
   // use full/slow search in all other cases
@@ -350,6 +344,7 @@ function *frameSet(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<unknown> {
+  const {minCount = 0, maxCount = Infinity} = shape;
   const nextStack = new StackFrame(stack, shape.itemShape);
   const matches: unknown[] = [];
   for (const match of frameShape(shape.itemShape, required, candidates, nextStack, context)) {
@@ -365,7 +360,7 @@ function *frameSet(
       matches.push(match);
     }
   }
-  if (typeof shape.minCount === 'number' && matches.length < shape.minCount) {
+  if (matches.length < minCount) {
     if (required) {
       const message = `Set item count ${matches.length} is less than minimum (${shape.minCount})`;
       throw makeError(ErrorCode.MinCountMismatch, message, stack);
@@ -373,7 +368,7 @@ function *frameSet(
     yield MISMATCH;
     return;
   }
-  if (typeof shape.maxCount === 'number' && matches.length > shape.maxCount) {
+  if (matches.length > maxCount) {
     if (required) {
       const message = `Set item count ${matches.length} is greater than maximum (${shape.maxCount})`;
       throw makeError(ErrorCode.MaxCountMismatch, message, stack);
@@ -420,7 +415,11 @@ function *frameNode(
     if (matchesTerm(shape, candidate)) {
       yield candidate;
     } else if (required) {
-      return throwFailedToMatch(stack.setFocus(candidate));
+      throw matchesTerm(
+        shape,
+        candidate,
+        (code, message) => makeError(code, message, stack.setFocus(candidate))
+      );
     } else {
       yield MISMATCH;
     }
@@ -637,79 +636,76 @@ function findAllCandidates(dataset: Rdf.Dataset) {
 
 function findByPath(
   sources: ReadonlyHashSet<Rdf.Term>,
-  path: PathSequence,
+  path: PropertyPath,
   reverse: boolean,
   context: FrameContext
 ): HashSet<Rdf.Term> {
-  const iteratedPath = reverse ? [...path].reverse() : path;
-  let next: HashSet<Rdf.Term> | undefined;
-
-  for (const element of iteratedPath) {
-    const current = next || sources;
-    next = makeTermSet();
-
-    if (isPathSegment(element)) {
-      for (const source of current) {
+  switch (path.type) {
+    case 'predicate': {
+      const next = makeTermSet();
+      for (const source of sources) {
         const matches = reverse
-          ? context.dataset.iterateMatches(null, element.predicate, source)
-          : context.dataset.iterateMatches(source, element.predicate, null);
+          ? context.dataset.iterateMatches(null, path.predicate, source)
+          : context.dataset.iterateMatches(source, path.predicate, null);
         for (const q of matches) {
           next.add(q.object);
         }
       }
-    } else {
-      switch (element.operator) {
-        case '|':
-          for (const alternative of element.path) {
-            for (const term of findByPath(current, [alternative], reverse, context)) {
-              next.add(term);
-            }
-          }
-          break;
-        case '^': {
-          for (const term of findByPath(current, element.path, !reverse, context)) {
-            next.add(term);
-          }
-          break;
-        }
-        case '!': {
-          const excluded = makeTermSet();
-          for (const term of findByPath(current, element.path, reverse, context)) {
-            excluded.add(term);
-          }
-          for (const term of findAllCandidates(context.dataset)) {
-            if (!excluded.has(term)) {
-              next.add(term);
-            }
-          }
-          break;
-        }
-        case '*':
-        case '+':
-        case '?': {
-          if (element.operator === '*' || element.operator === '?') {
-            for (const term of current) {
-              next.add(term);
-            }
-          }
-
-          const once = element.operator === '?';
-          let foundAtStep: HashSet<Rdf.Term> | undefined;
-          do {
-            foundAtStep = findByPath(foundAtStep || current, element.path, reverse, context);
-            for (const term of foundAtStep) {
-              if (next.has(term)) {
-                foundAtStep.delete(term);
-              } else {
-                next.add(term);
-              }
-            }
-          } while (foundAtStep.size > 0 && !once);
+      return next;
+    }
+    case 'sequence': {
+      const iteratedPath = reverse ? [...path.sequence].reverse() : path.sequence;
+      let next: HashSet<Rdf.Term> | undefined;
+      for (const element of iteratedPath) {
+        const current = next || sources;
+        next = makeTermSet();
+        for (const term of findByPath(current, element, reverse, context)) {
+          next.add(term);
         }
       }
+      return next || makeTermSet();
+    }
+    case 'alternative': {
+      const next = makeTermSet();
+      for (const alternative of path.alternatives) {
+        for (const term of findByPath(sources, alternative, reverse, context)) {
+          next.add(term);
+        }
+      }
+      return next;
+    }
+    case 'inverse': {
+      return findByPath(sources, path.inverse, !reverse, context);
+    }
+    case 'zeroOrMore':
+    case 'zeroOrOne':
+    case 'oneOrMore': {
+      const next = makeTermSet();
+      if (path.type === 'zeroOrMore' || path.type === 'zeroOrOne') {
+        for (const term of sources) {
+          next.add(term);
+        }
+      }
+
+      const nestedPath = getNestedPropertyPath(path);
+      const once = path.type === 'zeroOrOne';
+      let foundAtStep: HashSet<Rdf.Term> | undefined;
+      do {
+        foundAtStep = findByPath(foundAtStep || sources, nestedPath, reverse, context);
+        for (const term of foundAtStep) {
+          if (next.has(term)) {
+            foundAtStep.delete(term);
+          } else {
+            next.add(term);
+          }
+        }
+      } while (foundAtStep.size > 0 && !once);
+      return next;
+    }
+    default: {
+      throw new Error(`Unknown path type "${(path as PropertyPath).type}"`);
     }
   }
-  return next || makeTermSet();
 }
 
 function throwFailedToMatch(stack: StackFrame): never {
@@ -761,13 +757,7 @@ function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
 
 function makeError(code: ErrorCode, message: string, stack?: StackFrame): RampError {
   const stackArray = stack ? stackToArray(stack) : undefined;
-  const stackString = stackArray ? formatShapeStack(stackArray) : undefined;
-  const error = new Error(
-    `RAMP${code}: ${message}` + (stackString ? ` at ${stackString}` : '')
-  ) as RampError;
-  error.rampErrorCode = code;
-  error.rampStack = stackArray;
-  return error;
+  return makeRampError(code, message, stackArray);
 }
 
 function stackToArray(stack: StackFrame): StackFrame[] {

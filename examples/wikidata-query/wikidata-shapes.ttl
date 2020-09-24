@@ -7,7 +7,8 @@
 wd:Q5 a :ObjectShape;
     :typeProperty [
         :name "type";
-        :path ([ :predicate wdt:P31 ]);
+        :path wdt:P31;
+        :transient true;
         :shape [ a :ResourceShape; :termValue wd:Q5 ]
     ];
     :property [
@@ -17,11 +18,11 @@ wd:Q5 a :ObjectShape;
     ];
     :property [
         :name "label";
-        :path ([ :predicate rdfs:label ]);
+        :path rdfs:label;
         :shape [ a :LiteralShape; :termLanguage "en" ]
     ];
     :property [
         :name "children";
-        :path ([ :predicate wdt:P40 ]);
+        :path wdt:P40;
         :shape [ a :SetShape; :item wd:Q5 ]
     ].

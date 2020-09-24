@@ -1,14 +1,15 @@
 import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  Shape, ObjectShape, ObjectProperty, PathSequence, UnionShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, isPathSegment, ShapeID, ShapeReference,
+  Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeID, ShapeReference,
+  getNestedPropertyPath,
 } from './shapes';
 import {
   ResolvedListShape, SubjectMemo, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm, makeTermMap,
 } from './common';
-import { RampError, ErrorCode, StackFrame, formatDisplayShape, formatShapeStack } from './errors';
+import { RampError, ErrorCode, StackFrame, formatDisplayShape, makeRampError } from './errors';
 import { ReferenceMatch, synthesizeShape } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
@@ -51,11 +52,7 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
     generateSubject: shape => generateBlankNode(shape.type),
     generateBlankNode,
     makeError: (code, message) => {
-      const stackString = formatShapeStack(context.stack);
-      const error = new Error(`RAMP${code}: ${message} at ${stackString}`) as RampError;
-      error.rampErrorCode = code;
-      error.rampStack = [...context.stack];
-      return error;
+      return makeRampError(code, message, [...context.stack]);
     },
   };
   const rootShape = params.shape;
@@ -190,8 +187,9 @@ function flattenObject(
   if (!matchProperties(shape.typeProperties, required, value, matches, context)) {
     return undefined;
   }
-  if (!matchProperties(shape.properties, true, value, matches, context)) {
-    if (shape.typeProperties) {
+  const checkProperties = required || shape.typeProperties.length > 0;
+  if (!matchProperties(shape.properties, checkProperties, value, matches, context)) {
+    if (checkProperties) {
       throw context.makeError(
         ErrorCode.FailedToMatchProperties,
         `Invalid value for shape ${formatDisplayShape(shape)}: failed to match properties.`
@@ -267,7 +265,7 @@ function matchProperties(
 
 interface Edge {
   subject: Rdf.NamedNode | Rdf.BlankNode;
-  path: PathSequence;
+  path: PropertyPath;
 }
 
 function generateEdge(
@@ -280,60 +278,63 @@ function generateEdge(
 
 function *generatePropertyPath(
   subject: RdfNode,
-  path: PathSequence,
+  path: PropertyPath,
   object: RdfNode,
   context: LowerContext
 ): Iterable<Rdf.Quad> {
-  if (path.length === 0) {
-    return;
-  }
-  let s = subject;
-  for (let i = 0; i < path.length; i++) {
-    const o = i === path.length - 1
-      ? object : context.generateBlankNode('path');
-    const element = path[i];
-    if (isPathSegment(element)) {
-      if (s.termType === 'Literal') {
+  switch (path.type) {
+    case 'predicate': {
+      if (subject.termType === 'Literal') {
         throw context.makeError(
           ErrorCode.CannotUseLiteralAsSubject,
-          `Cannot put literal ${Rdf.toString(s)} as subject with ` +
-          `predicate ${Rdf.toString(element.predicate)}`
+          `Cannot put literal ${Rdf.toString(subject)} as subject with ` +
+          `predicate ${Rdf.toString(path.predicate)}`
         );
       }
-      yield context.factory.quad(s, element.predicate, o);
-    } else {
-      switch (element.operator) {
-        case '|': {
-          if (element.path.length > 0) {
-            // take only the first alternative
-            const alternative = element.path.slice(0, 1);
-            yield* generatePropertyPath(s, alternative, o, context);
-          }
-          break;
-        }
-        case '^': {
-          // switch subject and predicate
-          yield* generatePropertyPath(o, element.path, s, context);
-          break;
-        }
-        case '*':
-        case '+':
-        case '?': {
-          // always generate a path with length === 1
-          yield* generatePropertyPath(s, element.path, o, context);
-          break;
-        }
-        case '!':
-          // ignore negated paths (should we do anything else instead?)
-          break;
-      }
+      yield context.factory.quad(subject, path.predicate, object);
+      break;
     }
-    s = o;
+    case 'sequence': {
+      const {sequence} = path;
+      if (sequence.length === 0) {
+        return;
+      }
+      let s = subject;
+      for (let i = 0; i < sequence.length; i++) {
+        const o = i === sequence.length - 1
+          ? object : context.generateBlankNode('path');
+        const element = sequence[i];
+        yield* generatePropertyPath(s, element, o, context);
+        s = o;
+      }
+      break;
+    }
+    case 'inverse': {
+      // switch subject and predicate
+      yield* generatePropertyPath(object, path.inverse, subject, context);
+      break;
+    }
+    case 'alternative': {
+      if (path.alternatives.length > 0) {
+        // take only the first alternative
+        const alternative = path.alternatives[0];
+        yield* generatePropertyPath(subject, alternative, object, context);
+      }
+      break;
+    }
+    case 'zeroOrMore':
+    case 'zeroOrOne':
+    case 'oneOrMore': {
+      // always generate a path with length === 1
+      const nestedPath = getNestedPropertyPath(path);
+      yield* generatePropertyPath(subject, nestedPath, object, context);
+      break;
+    }
   }
 }
 
 function isSelfProperty(property: ObjectProperty) {
-  return property.path.length === 0;
+  return property.path.type === 'sequence' && property.path.sequence.length === 0;
 }
 
 function flattenUnion(
@@ -424,8 +425,13 @@ function flattenNode(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  if (!(Rdf.looksLikeTerm(value) && matchesTerm(shape, value))) {
-    return undefined;
+  if (!Rdf.looksLikeTerm(value)) { return undefined; }
+  if (!matchesTerm(shape, value)) {
+    if (required) {
+      throw matchesTerm(shape, value, (code, message) => context.makeError(code, message));
+    } else {
+      return undefined;
+    }
   }
   const node = value as RdfNode;
   function nodes(): Iterable<RdfNode> {
