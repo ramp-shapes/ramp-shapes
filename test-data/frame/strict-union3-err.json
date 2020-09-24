@@ -1,0 +1,13 @@
+{
+  "shapes": "strict-union",
+  "error": {
+    "code": 223,
+    "stack": [
+      {"shape": "http://example.com/schema#Items", "focus": "<http://example.com/data#items>"},
+      {"edge": "differentCardinality", "shape": {"type": "set"}},
+      {"shape": "http://example.com/schema#SetOrSingle"},
+      {"shape": {"type": "set"}},
+      {"shape": {"type": "literal"}, "focus": "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"}
+    ]
+  }
+}

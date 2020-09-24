@@ -1,0 +1,54 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://ramp-shapes.github.io/schema#>.
+
+ex:Items a :ObjectShape;
+    :typeProperty [
+        :name "type";
+        :path rdf:type;
+        :shape [ a :ResourceShape; :termValue ex:Items ];
+        :transient true
+    ];
+    :property [
+        :name "atomic";
+        :path ex:atomic;
+        :shape [ a :SetShape; :item ex:StringOrInteger ]
+    ];
+    :property [
+        :name "differentCardinality";
+        :path ex:differentCardinality;
+        :shape [ a :SetShape; :item ex:SetOrSingle ]
+    ];
+    :property [
+        :name "trivialUnion";
+        :path ex:trivialUnion;
+        :shape [ a :SetShape; :item ex:TrivialInteger ]
+    ];
+    :property [
+        :name "nestedUnion";
+        :path ex:nestedUnion;
+        :shape [ a :SetShape; :item ex:NestedUnion ]
+    ].
+
+ex:StringOrInteger a :UnionShape;
+    :variant [ a :LiteralShape; :termDatatype xsd:string ];
+    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+
+ex:SetOrSingle a :UnionShape;
+    :variant [
+        a :SetShape;
+        :item  [ a :LiteralShape; :termDatatype xsd:integer ]
+    ];
+    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+
+ex:TrivialInteger a :UnionShape;
+    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+
+ex:NestedUnion a :UnionShape;
+    :variant [
+        a :UnionShape;
+        :variant [ a :LiteralShape; :termDatatype xsd:integer ];
+        :variant [ a :LiteralShape; :termDatatype xsd:boolean ]
+    ];
+    :variant [ a :LiteralShape; :termDatatype xsd:string ].

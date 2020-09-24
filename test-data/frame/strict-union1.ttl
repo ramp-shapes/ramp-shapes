@@ -1,0 +1,8 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:items a ex:Items;
+    ex:atomic 1, "s2", 3, 4, "s5", "s6";
+    ex:differentCardinality 1, 2, 3;
+    ex:trivialUnion 1, 2, 3, 4;
+    ex:nestedUnion 1, "s2", true, 4, "s5", false.

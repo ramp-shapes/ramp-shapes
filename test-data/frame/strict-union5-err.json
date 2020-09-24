@@ -1,0 +1,13 @@
+{
+  "shapes": "strict-union",
+  "error": {
+    "code": 221,
+    "stack": [
+      {"shape": "http://example.com/schema#Items", "focus": "<http://example.com/data#items>"},
+      {"edge": "nestedUnion", "shape": {"type": "set"}},
+      {"shape": "http://example.com/schema#NestedUnion"},
+      {"shape": {"type": "union"}},
+      {"shape": {"type": "literal"}, "focus": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"}
+    ]
+  }
+}
