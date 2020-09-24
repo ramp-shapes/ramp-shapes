@@ -159,7 +159,7 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
       } else if (datatype === rdf.langString && shape.language) {
         return value.value;
       } else if (datatype === xsd.boolean) {
-        return Boolean(value.value);
+        return value.value !== 'false';
       } else if (isNumberType(datatype)) {
         return Number(value.value);
       }
