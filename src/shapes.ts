@@ -36,6 +36,7 @@ export interface LiteralShape extends ShapeBase {
 export interface ObjectShape extends ShapeBase {
   readonly type: 'object';
   readonly id: ShapeID;
+  readonly extends?: ObjectShape;
   readonly typeProperties: ReadonlyArray<ObjectProperty>;
   readonly properties: ReadonlyArray<ObjectProperty>;
   readonly computedProperties: ReadonlyArray<ComputedProperty>;

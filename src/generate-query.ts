@@ -276,6 +276,9 @@ function generateForObject(
     edge = generateRecursiveEdge(shape, edge, out, context);
   }
 
+  if (shape.extends) {
+    generateForShape(shape.extends, edge, out, context);
+  }
   generateForProperties(edge.object, shape.typeProperties, out, context);
   generateForProperties(edge.object, shape.properties, out, context);
 }
@@ -481,6 +484,9 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
     visiting.add(shape.id);
     switch (shape.type) {
       case 'object':
+        if (shape.extends) {
+          yield* visit(shape.extends);
+        }
         yield* visitProperties(shape.typeProperties);
         yield* visitProperties(shape.properties);
         break;

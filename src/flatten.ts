@@ -211,6 +211,11 @@ function flattenObject(
   if (!matchProperties(shape.typeProperties, required, value, matches, context)) {
     return undefined;
   }
+
+  const baseMatch = shape.extends
+    ? flattenShape(shape.extends, required, value, {shape: shape.extends}, context)
+    : undefined;
+
   const checkProperties = required || shape.typeProperties.length > 0;
   if (!matchProperties(shape.properties, checkProperties, value, matches, context)) {
     if (checkProperties) {
@@ -224,6 +229,11 @@ function flattenObject(
   }
 
   const memo = new SubjectMemo(shape);
+  if (baseMatch) {
+    for (const node of baseMatch.nodes()) {
+      memo.set(node);
+    }
+  }
   for (const {property, match} of matches) {
     if (isSelfProperty(property)) {
       for (const node of match.nodes()) {
@@ -239,6 +249,9 @@ function flattenObject(
 
   function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     yield* generateEdge(edge, subject, context);
+    if (baseMatch) {
+      baseMatch.generate(edge);
+    }
     for (const {property, match} of matches) {
       yield* context.pushMatchGeneration({subject, path: property.path}, match);
     }

@@ -32,10 +32,12 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     Shape: factory.namedNode(NAMESPACE + 'Shape'),
     ShapeID: factory.namedNode(NAMESPACE + 'ShapeID'),
     ShapeTypeVocabulary: factory.namedNode(NAMESPACE + 'ShapeTypeVocabulary'),
+    ShapeBase: factory.namedNode(NAMESPACE + 'ShapeBase'),
     lenient: factory.namedNode(NAMESPACE + 'lenient'),
 
     // Object
     ObjectShape: factory.namedNode(NAMESPACE + 'ObjectShape'),
+    extends: factory.namedNode(NAMESPACE + 'extends'),
     typeProperty: factory.namedNode(NAMESPACE + 'typeProperty'),
     property: factory.namedNode(NAMESPACE + 'property'),
     computedProperty: factory.namedNode(NAMESPACE + 'computedProperty'),

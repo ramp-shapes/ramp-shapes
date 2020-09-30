@@ -45,22 +45,26 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     }
   };
 
-  const makeBaseProperties = () => ({
-    id: self(ramp.ShapeID),
-    lenient: property(ramp.lenient, schema.optional(
-      schema.literal({datatype: XSD_BOOLEAN})
-    )),
+  schema.object({
+    id: ramp.ShapeBase,
+    properties: {
+      id: self(ramp.ShapeID),
+      lenient: property(ramp.lenient, schema.optional(
+        schema.literal({datatype: XSD_BOOLEAN})
+      )),
+    }
   });
 
   schema.object({
     id: ramp.ObjectShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.ObjectShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
+      extends: property(ramp.extends, schema.optional(ramp.ObjectShape)),
       typeProperties: property(ramp.typeProperty, schema.set(ramp.ObjectProperty)),
       properties: property(ramp.property, schema.set(ramp.ObjectProperty)),
       computedProperties: property(ramp.computedProperty,
@@ -222,26 +226,26 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
 
   schema.object({
     id: ramp.UnionShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.UnionShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       variants: property(ramp.variant, schema.set(ramp.Shape)),
     }
   });
 
   schema.object({
     id: ramp.SetShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.SetShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       itemShape: property(ramp.item, ramp.Shape),
       minCount: property(ramp.minCount, schema.optional(
         schema.literal({datatype: XSD_INTEGER})
@@ -254,26 +258,26 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
 
   schema.object({
     id: ramp.OptionalShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.OptionalShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       itemShape: property(ramp.item, ramp.Shape),
     }
   });
 
   schema.object({
     id: ramp.ResourceShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.ResourceShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       onlyNamed: property(ramp.onlyNamed, schema.optional(
         schema.literal({datatype: XSD_BOOLEAN})
       )),
@@ -311,13 +315,13 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
 
   schema.object({
     id: ramp.LiteralShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.LiteralShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       datatype: property(ramp.termDatatype, schema.optional(schema.resource({keepAsTerm: true}))),
       language: property(ramp.termLanguage, schema.optional(schema.literal({datatype: XSD_STRING}))),
       value: property(ramp.termValue, schema.optional(schema.literal({keepAsTerm: true}))),
@@ -329,13 +333,13 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
 
   schema.object({
     id: ramp.ListShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.ListShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       itemShape: property(ramp.item, ramp.Shape),
       headPath: property(ramp.headPath, schema.optional(ramp.PropertyPath)),
       tailPath: property(ramp.tailPath, schema.optional(ramp.PropertyPath)),
@@ -345,13 +349,13 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
 
   schema.object({
     id: ramp.MapShape,
+    extends: ramp.ShapeBase,
     typeProperties: {
       type: property(RDF_TYPE, schema.constant(
         ramp.MapShape, {vocabulary: ShapeTypeVocabulary}
       )),
     },
     properties: {
-      ...makeBaseProperties(),
       key: property(ramp.mapKey, ramp.ShapeReference),
       value: property(ramp.mapValue, schema.optional(ramp.ShapeReference)),
       itemShape: property(ramp.item, ramp.Shape),

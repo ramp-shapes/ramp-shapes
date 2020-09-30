@@ -58,7 +58,8 @@ export function synthesizeShape(
   let value: unknown;
   switch (shape.type) {
     case 'object': {
-      const result: { [propertyName: string]: unknown } = {};
+      const result: { [propertyName: string]: unknown } =
+        shape.extends ? synthesizeShape(shape.extends, context) as {} : {};
       synthesizeProperties(result, shape.typeProperties, context);
       synthesizeProperties(result, shape.properties, context);
       if (shape.computedProperties) {

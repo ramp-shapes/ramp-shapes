@@ -13,6 +13,7 @@ interface ShapeBaseProps {
 }
 
 interface ObjectShapeProps extends ShapeBaseProps {
+  extends?: ShapeID;
   typeProperties?: { [name: string]: PartialProperty };
   properties?: { [name: string]: PartialProperty };
   computedProperties?: { [name: string]: ShapeID };
@@ -122,6 +123,14 @@ export class ShapeBuilder {
     this._shapes.set(id, {
       type: 'object',
       id,
+      get extends() {
+        if (!props.extends) { return undefined; }
+        const baseShape = _shapes.get(props.extends);
+        if (!(baseShape && baseShape.type === 'object')) {
+          throw new Error('Missing or invalid base shape');
+        }
+        return baseShape;
+      },
       typeProperties: typeProperties ? toFields(typeProperties) : [],
       properties: properties ? toFields(properties) : [],
       computedProperties: computedProperties

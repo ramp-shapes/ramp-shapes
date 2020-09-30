@@ -237,8 +237,10 @@ function *frameObject(
 
     if (frameProperties(shape.typeProperties, required, candidate, template, focusedStack, context)) {
       const strictByType = required || shape.typeProperties.length > 0;
-      if (frameProperties(shape.properties, strictByType, candidate, template, focusedStack, context)) {
-        foundMatch = true;
+      if (!shape.extends || frameBase(shape.extends, strictByType, candidate, template, focusedStack, context)) {
+        if (frameProperties(shape.properties, strictByType, candidate, template, focusedStack, context)) {
+          foundMatch = true;
+        }
       }
     }
 
@@ -297,6 +299,54 @@ function frameProperties(
     }
   }
   return true;
+}
+
+function frameBase(
+  baseShape: ObjectShape,
+  required: boolean,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
+  template: { [fieldName: string]: unknown },
+  focusedStack: FocusedStackFrame,
+  context: FrameContext,
+): boolean {
+  let foundBase = false;
+  for (const base of frameObject(baseShape, required, [candidate], focusedStack, context)) {
+    if (base instanceof Mismatch) {
+      return required ? failMatch(
+        focusedStack,
+        ErrorCode.BaseShapeMismatch,
+        `Mismatch for base shape "${formatDisplayShape(baseShape)}"`
+      ) : false;
+    } else if (base instanceof CyclicMatch) {
+      return failMatch(
+        focusedStack,
+        ErrorCode.CyclicMatch,
+        `Found cyclic match for base shape ${formatDisplayShape(baseShape)}`
+      );
+    } else if (foundBase) {
+      return failMatch(
+        focusedStack,
+        ErrorCode.MultipleBashShapeMatches,
+        `Found multiple matches for base shape "${formatDisplayShape(baseShape)}"`
+      );
+    } else {
+      foundBase = true;
+      // assign only non-overridden properties from base shape
+      for (const key of Object.keys(base.value)) {
+        if (!Object.prototype.hasOwnProperty.call(template, key)) {
+          template[key] = base.value[key];
+        }
+      }
+    }
+  }
+  if (!foundBase && required) {
+    return failMatch(
+      focusedStack,
+      ErrorCode.NoBaseShapeMatches,
+      `No matches for base shape "${formatDisplayShape(baseShape)}"`
+    );
+  }
+  return foundBase;
 }
 
 function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: string): never {

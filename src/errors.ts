@@ -43,6 +43,10 @@ export const enum ErrorCode {
   NonMatchingTermValue = 222,
   NonMatchingLiteralDatatype = 223,
   NonMatchingLiteralLanguage = 224,
+  // base shape
+  BaseShapeMismatch = 225,
+  MultipleBashShapeMatches = 226,
+  NoBaseShapeMatches = 227,
 
   // Synthesize errors
   CannotSynthesizeShapeType = 301,
