@@ -38,10 +38,13 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     ObjectShape: factory.namedNode(NAMESPACE + 'ObjectShape'),
     typeProperty: factory.namedNode(NAMESPACE + 'typeProperty'),
     property: factory.namedNode(NAMESPACE + 'property'),
+    computedProperty: factory.namedNode(NAMESPACE + 'computedProperty'),
 
-    // ObjectProperty
+    // ObjectProperty and ComputedProperty
     ObjectProperty: factory.namedNode(NAMESPACE + 'ObjectProperty'),
+    ComputedProperty: factory.namedNode(NAMESPACE + 'ComputedProperty'),
     PropertyPath: factory.namedNode(NAMESPACE + 'PropertyPath'),
+    PropertyPathVocabulary: factory.namedNode(NAMESPACE + 'PropertyPathVocabulary'),
     PredicatePath: factory.namedNode(NAMESPACE + 'PredicatePath'),
     SequencePath: factory.namedNode(NAMESPACE + 'SequencePath'),
     InversePath: factory.namedNode(NAMESPACE + 'InversePath'),
@@ -92,6 +95,7 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
 
     // ShapeReference
     ShapeReference: factory.namedNode(NAMESPACE + 'ShapeReference'),
+    TermPartVocabulary: factory.namedNode(NAMESPACE + 'TermPartVocabulary'),
     TermDatatype: factory.namedNode(NAMESPACE + 'TermDatatype'),
     TermLanguage: factory.namedNode(NAMESPACE + 'TermLanguage'),
     TermValue: factory.namedNode(NAMESPACE + 'TermValue'),

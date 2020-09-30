@@ -38,6 +38,7 @@ export interface ObjectShape extends ShapeBase {
   readonly id: ShapeID;
   readonly typeProperties: ReadonlyArray<ObjectProperty>;
   readonly properties: ReadonlyArray<ObjectProperty>;
+  readonly computedProperties: ReadonlyArray<ComputedProperty>;
 }
 
 export interface ObjectProperty {
@@ -45,6 +46,11 @@ export interface ObjectProperty {
   readonly path: PropertyPath;
   readonly valueShape: Shape;
   readonly transient?: boolean;
+}
+
+export interface ComputedProperty {
+  readonly name: string;
+  readonly valueShape: Shape;
 }
 
 export type PropertyPath =

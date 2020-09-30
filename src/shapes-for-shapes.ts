@@ -1,8 +1,7 @@
 import { ShapeBuilder, property, self } from './builder';
 import * as Rdf from './rdf';
-import { PropertyPath, Shape, Vocabulary } from './shapes';
+import { Shape, Vocabulary } from './shapes';
 import { frame } from './frame';
-import { ValueMapper } from './value-mapping';
 import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary';
 
 export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
@@ -64,6 +63,9 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
       ...makeBaseProperties(),
       typeProperties: property(ramp.typeProperty, schema.set(ramp.ObjectProperty)),
       properties: property(ramp.property, schema.set(ramp.ObjectProperty)),
+      computedProperties: property(ramp.computedProperty,
+        schema.set(ramp.ComputedProperty)
+      ),
     }
   });
 
@@ -79,6 +81,14 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     }
   });
 
+  schema.object({
+    id: ramp.ComputedProperty,
+    properties: {
+      name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
+      valueShape: property(ramp.shape, ramp.Shape),
+    }
+  });
+
   schema.union([
     ramp.PredicatePath,
     ramp.SequencePath,
@@ -90,6 +100,19 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   ], {
     id: ramp.PropertyPath,
   });
+
+  const PropertyPathTypeVocabulary: Vocabulary = {
+    id: ramp.PropertyPathVocabulary,
+    terms: {
+      'predicate': ramp.PredicatePath,
+      'sequence': ramp.SequencePath,
+      'inverse': ramp.InversePath,
+      'alternative': ramp.AlternativePath,
+      'zeroOrMore': ramp.ZeroOrMorePath,
+      'zeroOrOne': ramp.ZeroOrOnePath,
+      'oneOrMore': ramp.OneOrMorePath,
+    }
+  };
 
   schema.object({
     id: ramp.PredicatePath,
@@ -110,6 +133,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
         ),
         {transient: true}
       ),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.PredicatePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -117,6 +146,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.SequencePath,
     properties: {
       sequence: self(schema.list(ramp.PropertyPath)),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.SequencePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -124,6 +159,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.InversePath,
     properties: {
       inverse: property(ramp.inversePath, ramp.PropertyPath),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.InversePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -131,6 +172,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.AlternativePath,
     properties: {
       alternatives: property(ramp.alternativePath, schema.list(ramp.PropertyPath)),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.AlternativePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -138,6 +185,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.ZeroOrMorePath,
     properties: {
       zeroOrMore: property(ramp.zeroOrMorePath, ramp.PropertyPath),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.ZeroOrMorePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -145,6 +198,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.ZeroOrOnePath,
     properties: {
       zeroOrOne: property(ramp.zeroOrOnePath, ramp.PropertyPath),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.ZeroOrOnePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -152,6 +211,12 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
     id: ramp.OneOrMorePath,
     properties: {
       oneOrMore: property(ramp.oneOrMorePath, ramp.PropertyPath),
+    },
+    computedProperties: {
+      type: schema.constant(
+        ramp.OneOrMorePath,
+        {vocabulary: PropertyPathTypeVocabulary}
+      ),
     }
   });
 
@@ -294,6 +359,7 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   });
 
   const TermPartVocabulary: Vocabulary = {
+    id: ramp.TermPartVocabulary,
     terms: {
       'datatype': ramp.TermDatatype,
       'value': ramp.TermValue,
@@ -316,49 +382,10 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   return schema.shapes;
 }
 
-const PROPERTY_TYPE_MAPPER: ValueMapper = {
-  fromRdf(value: unknown, shape: Shape): unknown {
-    const type = getPropertyPathType(shape);
-    return type ? {...(value as PropertyPath), type} : value;
-  },
-  toRdf(value: unknown, shape: Shape): unknown {
-    return value;
-  }
-};
-
-const DEFAULT_RAMP_VOCABULARY = makeRampVocabulary(Rdf.DefaultDataFactory);
-function getPropertyPathType(shape: Shape): PropertyPath['type'] | undefined {
-  const ramp = DEFAULT_RAMP_VOCABULARY;
-  switch (shape.id.value) {
-    case ramp.PredicatePath.value:
-      return 'predicate';
-    case ramp.SequencePath.value:
-      return 'sequence';
-    case ramp.InversePath.value:
-      return 'inverse';
-    case ramp.AlternativePath.value:
-      return 'alternative';
-    case ramp.ZeroOrMorePath.value:
-      return 'zeroOrMore';
-    case ramp.ZeroOrOnePath.value:
-      return 'zeroOrOne';
-    case ramp.OneOrMorePath.value:
-      return 'oneOrMore';
-    default:
-      return undefined;
-  }
-}
-
 export function frameShapes(dataset: Rdf.Dataset, factory = Rdf.DefaultDataFactory): Shape[] {
   const shapesForShapes = makeShapesForShapes(factory);
-  const framingResults = frame({
-    shape: shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!,
-    dataset,
-    mapper: ValueMapper.chainAsMappingFromRdf(
-      ValueMapper.mapByDefault(factory),
-      PROPERTY_TYPE_MAPPER
-    ),
-  });
+  const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!;
+  const framingResults = frame({shape: rootShape, dataset});
   const shapes: Shape[] = [];
   for (const {value} of framingResults) {
     shapes.push(value as Shape);

@@ -2,8 +2,10 @@ import { ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
 import { ErrorCode, formatDisplayShape, makeRampError } from './errors';
 import {
-  ObjectProperty, SetShape, LiteralShape, ResourceShape, Shape, ShapeReference
+  SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
 } from './shapes';
+import { makeTermMap } from './common';
+import { ValueMapper } from './value-mapping';
 import { rdf } from './vocabulary';
 
 export function compactByReference(value: unknown, shape: Shape, ref: ShapeReference): unknown {
@@ -35,6 +37,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 
 export interface SynthesizeContext {
   readonly factory: Rdf.DataFactory;
+  readonly mapper: ValueMapper;
   readonly matches: ReadonlyHashMap<Rdf.Term, ReadonlyArray<ReferenceMatch>>;
 }
 
@@ -43,38 +46,62 @@ export interface ReferenceMatch {
   match: unknown;
 }
 
+export const EMPTY_REF_MATCHES: ReadonlyHashMap<Rdf.Term, ReferenceMatch[]> =
+  makeTermMap<ReferenceMatch[]>();
+
 const EMPTY_MATCHES: ReadonlyArray<ReferenceMatch> = [];
 
 export function synthesizeShape(
   shape: Shape,
   context: SynthesizeContext
 ): unknown {
+  let value: unknown;
   switch (shape.type) {
     case 'object': {
       const result: { [propertyName: string]: unknown } = {};
       synthesizeProperties(result, shape.typeProperties, context);
       synthesizeProperties(result, shape.properties, context);
-      return result;
+      if (shape.computedProperties) {
+        synthesizeProperties(result, shape.computedProperties, context);
+      }
+      value = result;
+      break;
     }
-    case 'set':
-      return synthesizeSet(shape, context);
-    case 'optional':
-      return shape.emptyValue;
-    case 'resource':
-      return synthesizeResource(shape, context);
-    case 'literal':
-      return synthesizeLiteral(shape, context);
-    default:
+    case 'set': {
+      value = synthesizeSet(shape, context);
+      break;
+    }
+    case 'optional': {
+      value = shape.emptyValue;
+      break;
+    }
+    case 'resource': {
+      value = synthesizeResource(shape, context);
+      break;
+    }
+    case 'literal': {
+      value = synthesizeLiteral(shape, context);
+      break;
+    }
+    default: {
       throw makeRampError(
         ErrorCode.CannotSynthesizeShapeType,
         'Cannot synthesize value for shape ' + formatDisplayShape(shape)
       );
+    }
   }
+  const typed = context.mapper.fromRdf(value, shape);
+  return typed;
+}
+
+interface AnyObjectProperty {
+  readonly name: string;
+  readonly valueShape: Shape;
 }
 
 function synthesizeProperties(
   template: { [propertyName: string]: unknown },
-  properties: ReadonlyArray<ObjectProperty>,
+  properties: ReadonlyArray<AnyObjectProperty>,
   context: SynthesizeContext
 ) {
   for (const property of properties) {

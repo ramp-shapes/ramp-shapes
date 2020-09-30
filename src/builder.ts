@@ -15,6 +15,7 @@ interface ShapeBaseProps {
 interface ObjectShapeProps extends ShapeBaseProps {
   typeProperties?: { [name: string]: PartialProperty };
   properties?: { [name: string]: PartialProperty };
+  computedProperties?: { [name: string]: ShapeID };
 }
 
 interface PartialProperty {
@@ -87,7 +88,7 @@ export class ShapeBuilder {
   }
 
   object(props: ObjectShapeProps): ShapeID {
-    const {id = this.makeShapeID('object'), typeProperties, properties} = props;
+    const {id = this.makeShapeID('object'), typeProperties, properties, computedProperties} = props;
     const {_shapes} = this;
 
     function toField(name: string, partial: PartialProperty): ObjectProperty {
@@ -106,11 +107,25 @@ export class ShapeBuilder {
       return Object.keys(partials).map(name => toField(name, partials[name]));
     }
 
+    function toComputedFields(partials: { [name: string]: ShapeID }) {
+      return Object.keys(partials).map(name => {
+        const computedShape = partials[name];
+        return {
+          name,
+          get valueShape() {
+            return _shapes.get(computedShape)!;
+          }
+        };
+      });
+    }
+
     this._shapes.set(id, {
       type: 'object',
       id,
       typeProperties: typeProperties ? toFields(typeProperties) : [],
       properties: properties ? toFields(properties) : [],
+      computedProperties: computedProperties
+        ? toComputedFields(computedProperties) : [],
     });
     return id;
   }

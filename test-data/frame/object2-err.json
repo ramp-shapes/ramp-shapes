@@ -3,7 +3,7 @@
   "error": {
     "code": 203,
     "stack": [
-      {"shape": "http://example.com/schema#Point"}
+      {"shape": "http://example.com/schema#Point", "focus": "_:blank"}
     ]
   }
 }

@@ -1,15 +1,15 @@
 import { HashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape, OptionalShape,
-  ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, getNestedPropertyPath,
+  ShapeID, Shape, ObjectShape, ObjectProperty, ComputedProperty, PropertyPath, UnionShape, SetShape,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, getNestedPropertyPath,
 } from './shapes';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm,
 } from './common';
 import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors';
-import { compactByReference } from './synthesize';
+import { SynthesizeContext, synthesizeShape, compactByReference, EMPTY_REF_MATCHES } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
 export interface FrameParams {
@@ -34,6 +34,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
   const refs = makeTermMap<unknown>() as HashMap<ShapeID, RefContext[]>;
 
   const context: FrameContext = {
+    factory,
     mapper: params.mapper || ValueMapper.mapByDefault(factory),
     listDefaults: makeListShapeDefaults(factory),
     dataset: params.dataset,
@@ -56,6 +57,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
 }
 
 interface FrameContext {
+  readonly factory: Rdf.DataFactory;
   readonly mapper: ValueMapper;
   readonly listDefaults: ResolvedListShape;
   readonly dataset: Rdf.Dataset;
@@ -142,27 +144,41 @@ function *frameShape(
   context: FrameContext
 ): Iterable<CandidateMatch | CyclicMatch | Mismatch> {
   const required = strict && !shape.lenient;
-  const solutions = ((): Iterable<CandidateMatch | CyclicMatch | Mismatch> => {
-    switch (shape.type) {
-      case 'object':
-        return frameObject(shape, required, candidates, stack, context);
-      case 'union':
-        return frameUnion(shape, required, candidates, stack, context);
-      case 'set':
-        return frameSet(shape, required, candidates, stack, context);
-      case 'optional':
-        return frameOptional(shape, required, candidates, stack, context);
-      case 'resource':
-      case 'literal':
-        return frameNode(shape, required, candidates, stack, context);
-      case 'list':
-        return frameList(shape, required, candidates, stack, context);
-      case 'map':
-        return frameMap(shape, required, candidates, stack, context);
-      default:
-        return assertUnknownShape(shape);
+  let solutions: Iterable<CandidateMatch | CyclicMatch | Mismatch>;
+  switch (shape.type) {
+    case 'object': {
+      solutions = frameObject(shape, required, candidates, stack, context);
+      break;
     }
-  })();
+    case 'union': {
+      solutions = frameUnion(shape, required, candidates, stack, context);
+      break;
+    }
+    case 'set': {
+      solutions = frameSet(shape, required, candidates, stack, context);
+      break;
+    }
+    case 'optional': {
+      solutions = frameOptional(shape, required, candidates, stack, context);
+      break;
+    }
+    case 'resource':
+    case 'literal': {
+      solutions = frameNode(shape, required, candidates, stack, context);
+      break;
+    }
+    case 'list': {
+      solutions = frameList(shape, required, candidates, stack, context);
+      break;
+    }
+    case 'map': {
+      solutions = frameMap(shape, required, candidates, stack, context);
+      break;
+    }
+    default: {
+      return assertUnknownShape(shape);
+    }
+  }
 
   for (const value of solutions) {
     if (value instanceof Mismatch) {
@@ -192,60 +208,6 @@ function *frameObject(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<CandidateMatch<{ [fieldName: string]: unknown }> | CyclicMatch | Mismatch> {
-  function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: string): never {
-    const fullMessage = message +
-      ` when framing subject ${Rdf.toString(focusedStack.focus)}` +
-      ` to shape ${Rdf.toString(shape.id)}`;
-    throw makeError(code, fullMessage, stack);
-  }
-
-  function frameProperties(
-    properties: ReadonlyArray<ObjectProperty>,
-    required: boolean,
-    candidate: Rdf.NamedNode | Rdf.BlankNode,
-    template: { [fieldName: string]: unknown },
-    focusedStack: FocusedStackFrame
-  ): boolean {
-    for (const property of properties) {
-      const values = findByPropertyPath(property.path, candidate, context);
-      const nextStack = new StackFrame(focusedStack, property.valueShape, property.name);
-      let found = false;
-      for (const match of frameShape(property.valueShape, required, values, nextStack, context)) {
-        if (match instanceof Mismatch) {
-          return required ? failMatch(
-            focusedStack,
-            ErrorCode.PropertyMismatch,
-            `Failed to match property "${property.name}"`
-          ) : false;
-        }
-        if (found) {
-          return required ? failMatch(
-            focusedStack,
-            ErrorCode.MultiplePropertyMatches,
-            `Found multiple matches for property "${property.name}"`
-          ) : false;
-        }
-        found = true;
-        if (property.transient) {
-          /* ignore property value */
-        } else if (match instanceof CyclicMatch) {
-          match.addHole({target: template, property: property.name});
-          template[property.name] = undefined;
-        } else {
-          template[property.name] = match.value;
-        }
-      }
-      if (!found) {
-        return required ? failMatch(
-          focusedStack,
-          ErrorCode.NoPropertyMatches,
-          `Found no matches for property "${property.name}"`
-        ) : false;
-      }
-    }
-    return true;
-  }
-
   for (const candidate of candidates) {
     if (!isResource(candidate)) {
       yield required
@@ -273,18 +235,90 @@ function *frameObject(
     const template: { [fieldName: string]: unknown } = {};
     const focusedStack = stack.setFocus(candidate);
 
-    if (frameProperties(shape.typeProperties, required, candidate, template, focusedStack)) {
-      const checkProperties = required || shape.typeProperties.length > 0;
-      if (frameProperties(shape.properties, checkProperties, candidate, template, focusedStack)) {
+    if (frameProperties(shape.typeProperties, required, candidate, template, focusedStack, context)) {
+      const strictByType = required || shape.typeProperties.length > 0;
+      if (frameProperties(shape.properties, strictByType, candidate, template, focusedStack, context)) {
         foundMatch = true;
       }
     }
 
     if (foundMatch) {
+      synthesizeComputedProperties(shape.computedProperties, template, context);
       fillCyclicHoles(context, matchKey, template);
     }
     context.visiting.delete(matchKey);
     yield foundMatch ? new CandidateMatch(template, candidate) : MISMATCH;
+  }
+}
+
+function frameProperties(
+  properties: ReadonlyArray<ObjectProperty>,
+  required: boolean,
+  candidate: Rdf.NamedNode | Rdf.BlankNode,
+  template: { [fieldName: string]: unknown },
+  focusedStack: FocusedStackFrame,
+  context: FrameContext
+): boolean {
+  for (const property of properties) {
+    const values = findByPropertyPath(property.path, candidate, context);
+    const nextStack = new StackFrame(focusedStack, property.valueShape, property.name);
+    let found = false;
+    for (const match of frameShape(property.valueShape, required, values, nextStack, context)) {
+      if (match instanceof Mismatch) {
+        return required ? failMatch(
+          focusedStack,
+          ErrorCode.PropertyMismatch,
+          `Failed to match property "${property.name}"`
+        ) : false;
+      }
+      if (found) {
+        return required ? failMatch(
+          focusedStack,
+          ErrorCode.MultiplePropertyMatches,
+          `Found multiple matches for property "${property.name}"`
+        ) : false;
+      }
+      found = true;
+      if (property.transient) {
+        /* ignore property value */
+      } else if (match instanceof CyclicMatch) {
+        match.addHole({target: template, property: property.name});
+        template[property.name] = undefined;
+      } else {
+        template[property.name] = match.value;
+      }
+    }
+    if (!found) {
+      return required ? failMatch(
+        focusedStack,
+        ErrorCode.NoPropertyMatches,
+        `Found no matches for property "${property.name}"`
+      ) : false;
+    }
+  }
+  return true;
+}
+
+function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: string): never {
+  const fullMessage =
+    `${message} when framing object shape ${formatDisplayShape(focusedStack.shape)}`;
+  throw makeError(code, fullMessage, focusedStack);
+}
+
+function synthesizeComputedProperties(
+  properties: ReadonlyArray<ComputedProperty>,
+  template: { [fieldName: string]: unknown },
+  context: FrameContext
+) {
+  if (properties.length === 0) { return; }
+  const synthesizeContext: SynthesizeContext = {
+    factory: context.factory,
+    mapper: context.mapper,
+    matches: EMPTY_REF_MATCHES,
+  };
+  for (const property of properties) {
+    const value = synthesizeShape(property.valueShape, synthesizeContext);
+    template[property.name] = value;
   }
 }
 

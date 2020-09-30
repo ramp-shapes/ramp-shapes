@@ -1,4 +1,4 @@
-import { HashMap, ReadonlyHashMap } from './hash-map';
+import { HashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
   Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape,
@@ -10,7 +10,7 @@ import {
   matchesTerm, makeTermMap,
 } from './common';
 import { RampError, ErrorCode, StackFrame, formatDisplayShape, makeRampError } from './errors';
-import { ReferenceMatch, synthesizeShape } from './synthesize';
+import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
 export interface FlattenParams {
@@ -227,9 +227,6 @@ function isObjectWithProperties(obj: unknown): obj is { [propertyName: string]: 
   return Boolean(typeof obj === 'object' && obj);
 }
 
-const EMPTY_REF_MATCHES: ReadonlyHashMap<Rdf.Term, ReferenceMatch[]> =
-  makeTermMap<ReferenceMatch[]>();
-
 function matchProperties(
   properties: ReadonlyArray<ObjectProperty>,
   required: boolean,
@@ -242,6 +239,7 @@ function matchProperties(
     if (property.transient) {
       propertyValue = synthesizeShape(property.valueShape, {
         factory: context.factory,
+        mapper: context.mapper,
         matches: EMPTY_REF_MATCHES,
       });
     } else {
@@ -510,7 +508,11 @@ function flattenMap(
       const refs = makeTermMap<ReferenceMatch[]>();
       addRefMatch(refs, shape.key, key);
       addRefMatch(refs, shape.value, valueAtKey);
-      item = synthesizeShape(shape.itemShape, {factory: context.factory, matches: refs});
+      item = synthesizeShape(shape.itemShape, {
+        factory: context.factory,
+        mapper: context.mapper,
+        matches: refs,
+      });
     }
 
     const match = flattenShape(itemShape, required, item, frame, context);
