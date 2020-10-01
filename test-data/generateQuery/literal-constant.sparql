@@ -1,0 +1,9 @@
+PREFIX ex: <http://example.com/schema#>
+CONSTRUCT {
+  ?object_1 ex:cardType "Creature".
+  ?object_1 ex:creaturePower ?literal_3.
+}
+WHERE {
+  ?object_1 ex:cardType "Creature";
+    ex:creaturePower ?literal_3.
+}

@@ -406,16 +406,18 @@ function generateForNode(
   context: GenerateQueryContext,
 ): void {
   const {value} = shape;
-  let nodeEdge = edge;
-  if (value && (value.termType === 'NamedNode' || value.termType === 'BlankNode')) {
-    nodeEdge = {
+  let effectiveEdge: Edge;
+  if (value) {
+    effectiveEdge = {
       subject: edge.subject,
       path: edge.path,
       object: value,
     };
+  } else {
+    effectiveEdge = edge;
   }
-  generateEdge(edge, out);
-  context.addEdge(edge);
+  generateEdge(effectiveEdge, out);
+  context.addEdge(effectiveEdge);
 }
 
 function generateForList(
