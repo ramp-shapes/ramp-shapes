@@ -18,14 +18,25 @@ export interface FlattenParams {
   shape: Shape;
   factory?: Rdf.DataFactory;
   mapper?: ValueMapper;
+  /**
+   * Causes quads for entities with non-blank subject to appear only after current stack of
+   * blank groups or lists are emitted to produce better looking Turtle serialization.
+   *
+   * @default true
+   */
+  postponeNamed?: boolean;
   unstable_generateBlankNode?: (prefix: string) => Rdf.BlankNode;
 }
 
-export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
-  const factory = params.factory || Rdf.DefaultDataFactory;
+export function *flatten(params: FlattenParams): Iterable<Rdf.Quad> {
+  const {
+    factory = Rdf.DefaultDataFactory,
+    postponeNamed = true,
+  } = params;
   const generateBlankNode = params.unstable_generateBlankNode || makeDefaultBlankNodeGenerator(factory);
 
   const matches = new HashMap<ShapeID, Map<unknown, ShapeMatch | null>>(Rdf.hashTerm, Rdf.equalTerms);
+  const queuedGenerations: Array<{ match: ShapeMatch; edge?: Edge }> = [];
 
   const context: LowerContext = {
     stack: [],
@@ -54,6 +65,14 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
     makeError: (code, message) => {
       return makeRampError(code, message, [...context.stack]);
     },
+    pushMatchGeneration: (edge, match) => {
+      if (postponeNamed && edge?.subject.termType === 'NamedNode') {
+        queuedGenerations.push({match, edge});
+        return [];
+      } else {
+        return match.generate(edge);
+      }
+    },
   };
   const rootShape = params.shape;
   const match = flattenShape(rootShape, true, params.value, {shape: rootShape}, context);
@@ -64,7 +83,11 @@ export function flatten(params: FlattenParams): Iterable<Rdf.Quad> {
       `Value does not match root shape ${displayedShape}`
     );
   }
-  return match.generate(undefined);
+  queuedGenerations.push({match});
+  while (queuedGenerations.length > 0) {
+    const {match, edge} = queuedGenerations.shift()!;
+    yield* match.generate(edge);
+  }
 }
 
 type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
@@ -79,6 +102,7 @@ interface LowerContext {
   generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
   generateBlankNode: (prefix: string) => Rdf.BlankNode;
   makeError(code: ErrorCode, message: string): RampError;
+  pushMatchGeneration(edge: Edge | undefined, match: ShapeMatch): Iterable<Rdf.Quad>;
 }
 
 interface ShapeMatch {
@@ -216,7 +240,7 @@ function flattenObject(
   function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
     yield* generateEdge(edge, subject, context);
     for (const {property, match} of matches) {
-      yield* match.generate({subject, path: property.path});
+      yield* context.pushMatchGeneration({subject, path: property.path}, match);
     }
   }
 
@@ -474,7 +498,7 @@ function flattenList(
     let current = list;
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
-      yield* match.generate({subject: current, path: head});
+      yield* context.pushMatchGeneration({subject: current, path: head}, match);
       const next = i === matches.length - 1
         ? nil : context.generateBlankNode('list');
       yield* generatePropertyPath(current, tail, next, context);

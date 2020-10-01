@@ -1,7 +1,8 @@
+import * as path from 'path';
 import * as Ramp from '../src/index';
 import { Rdf, vocabulary as ramp } from '../src/index';
 import { rdf, xsd } from './namespaces';
-import { quadsToTurtleString } from './util';
+import { makeDirectoryIfNotExists, writeFile, quadsToTurtleString } from './util';
 
 const factory = Rdf.DefaultDataFactory;
 
@@ -37,6 +38,15 @@ async function main() {
 
   const allShapesTurtle = await quadsToTurtleString(quads, PREFIXES);
   console.log(allShapesTurtle);
+
+  const outDir = path.join(__dirname, '../out');
+  makeDirectoryIfNotExists(outDir);
+
+  await writeFile(
+    path.join(outDir, 'ramp-shapes.ttl'),
+    allShapesTurtle,
+    {encoding: 'utf-8'}
+  );
 
   const shapes = Ramp.frameShapes(quadSet);
   console.log(`Source shape count = ${shapesForShapes.size}; framed shape count = ${shapes.length}`);
