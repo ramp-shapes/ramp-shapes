@@ -20,7 +20,7 @@
 | Describes data mapping / serialization | ❌ | ❌ | ❌ | requires frame definition | ✅ |
 | Has ability to generate query and deserialize results based on shapes | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Has RDF representation | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Supports RDF lists | ❌ | ✅ | ❌ | ✅ | ✅ |
+| Supports RDF lists | ❌ | [with workaround](https://www.topquadrant.com/constraints-on-rdflists-using-shacl/) | ❌ | ✅ | ✅ |
 | Supports shape unions | ✅ | through shape targets | ✅ | ❌ | ✅ |
 | Supports cardinality constraints (min/max) | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Supports recursive shapes | ✅ | depends on implementation | ✅ | ❌ | ✅ |
