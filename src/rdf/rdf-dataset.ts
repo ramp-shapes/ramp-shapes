@@ -96,9 +96,11 @@ class SourcePredicateIndexedDataset implements Dataset {
   ): Iterable<Quad> {
     let result: Iterable<Quad>;
     if (subject && predicate) {
-      result = this.bySubjectPredicate.get({source: subject, predicate}) || EMPTY_QUADS;
+      const indexed = this.bySubjectPredicate.get({source: subject, predicate}) || EMPTY_QUADS;
+      result = filterBySPO(indexed, null, null, object);
     } else if (predicate && object) {
-      result = this.byObjectPredicate.get({source: object, predicate}) || EMPTY_QUADS;
+      const indexed = this.byObjectPredicate.get({source: object, predicate}) || EMPTY_QUADS;
+      result = filterBySPO(indexed, subject, null, null);
     } else {
       result = filterBySPO(this, subject, predicate, object);
     }
