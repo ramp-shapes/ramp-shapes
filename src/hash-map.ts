@@ -6,13 +6,15 @@ export interface ReadonlyHashSet<K> extends ReadonlySet<K> {
   clone(): HashSet<K>;
 }
 
+type Bucket<K, V> = { readonly k: K; readonly v: V } | Array<{ readonly k: K; readonly v: V }>;
+
 export class HashMap<K, V> implements ReadonlyMap<K, V> {
-  private readonly map = new Map<number, Array<{ readonly key: K; readonly value: V }>>();
+  private readonly map = new Map<number, Bucket<K, V>>();
   private _size = 0;
 
   constructor(
-    private hashCode: (key: K) => number,
-    private equals: (k1: K, k2: K) => boolean,
+    private hashKey: (key: K) => number,
+    private equalKeys: (k1: K, k2: K) => boolean,
   ) {}
 
   get size() {
@@ -20,57 +22,79 @@ export class HashMap<K, V> implements ReadonlyMap<K, V> {
   }
 
   has(key: K): boolean {
-    const items = this.map.get(this.hashCode(key));
-    if (!items) { return false; }
-    for (const item of items) {
-      if (this.equals(item.key, key)) { return true; }
+    const bucket = this.map.get(this.hashKey(key));
+    if (!bucket) { return false; }
+    if (Array.isArray(bucket)) {
+      for (const item of bucket) {
+        if (this.equalKeys(item.k, key)) { return true; }
+      }
+    } else {
+      return this.equalKeys(bucket.k, key);
     }
     return false;
   }
 
   get(key: K): V | undefined {
-    const items = this.map.get(this.hashCode(key));
-    if (!items) { return undefined; }
-    for (const item of items) {
-      if (this.equals(item.key, key)) { return item.value; }
+    const bucket = this.map.get(this.hashKey(key));
+    if (!bucket) { return undefined; }
+    if (Array.isArray(bucket)) {
+      for (const item of bucket) {
+        if (this.equalKeys(item.k, key)) { return item.v; }
+      }
+    } else if (this.equalKeys(bucket.k, key)) {
+      return bucket.v;
     }
     return undefined;
   }
 
   set(key: K, value: V): this {
-    const hash = this.hashCode(key);
-    let items = this.map.get(hash);
-    if (items) {
+    const hash = this.hashKey(key);
+    let bucket = this.map.get(hash);
+    if (!bucket) {
+      bucket = {k: key, v: value};
+      this.map.set(hash, bucket);
+      this._size++;
+    } else if (Array.isArray(bucket)) {
       let index = -1;
-      for (let i = 0; i < items.length; i++) {
-        if (this.equals(items[i].key, key)) {
+      for (let i = 0; i < bucket.length; i++) {
+        if (this.equalKeys(bucket[i].k, key)) {
           index = i;
           break;
         }
       }
       if (index >= 0) {
-        items.splice(index, 1);
+        bucket.splice(index, 1);
       } else {
         this._size++;
       }
-      items.push({key, value});
+      bucket.push({k: key, v: value});
+    } else if (this.equalKeys(bucket.k, key)) {
+      this.map.set(hash, {k: key, v: value});
     } else {
-      items = [{key, value}];
-      this.map.set(hash, items);
+      const single = bucket;
+      bucket = [single, {k: key, v: value}];
+      this.map.set(hash, bucket);
       this._size++;
     }
     return this;
   }
 
   delete(key: K): boolean {
-    const items = this.map.get(this.hashCode(key));
-    if (!items) { return false; }
-    for (let i = 0; i < items.length; i++) {
-      if (this.equals(items[i].key, key)) {
-        items.splice(i, 1);
-        this._size--;
-        return true;
+    const hash = this.hashKey(key);
+    const bucket = this.map.get(hash);
+    if (!bucket) { return false; }
+    if (Array.isArray(bucket)) {
+      for (let i = 0; i < bucket.length; i++) {
+        if (this.equalKeys(bucket[i].k, key)) {
+          bucket.splice(i, 1);
+          this._size--;
+          return true;
+        }
       }
+    } else if (this.equalKeys(bucket.k, key)) {
+      this.map.delete(hash);
+      this._size--;
+      return true;
     }
     return false;
   }
@@ -81,9 +105,11 @@ export class HashMap<K, V> implements ReadonlyMap<K, V> {
   }
 
   clone(): HashMap<K, V> {
-    const clone = new HashMap<K, V>(this.hashCode, this.equals);
+    const clone = new HashMap<K, V>(this.hashKey, this.equalKeys);
     clone._size = this.size;
-    this.map.forEach((value, key) => clone.map.set(key, [...value]));
+    for (const [hash, bucket] of this.map) {
+      clone.map.set(hash, Array.isArray(bucket) ? [...bucket] : bucket);
+    }
     return clone;
   }
 
@@ -94,25 +120,37 @@ export class HashMap<K, V> implements ReadonlyMap<K, V> {
   }
 
   *keys(): IterableIterator<K> {
-    for (const items of this.map.values()) {
-      for (const {key} of items) {
-        yield key;
+    for (const bucket of this.map.values()) {
+      if (Array.isArray(bucket)) {
+        for (const entry of bucket) {
+          yield entry.k;
+        }
+      } else {
+        yield bucket.k;
       }
     }
   }
 
   *values(): IterableIterator<V> {
-    for (const items of this.map.values()) {
-      for (const {value} of items) {
-        yield value;
+    for (const bucket of this.map.values()) {
+      if (Array.isArray(bucket)) {
+        for (const entry of bucket) {
+          yield entry.v;
+        }
+      } else {
+        yield bucket.v;
       }
     }
   }
 
   *entries(): IterableIterator<[K, V]> {
-    for (const [, items] of this.map) {
-      for (const {key, value} of items) {
-        yield [key, value];
+    for (const bucket of this.map.values()) {
+      if (Array.isArray(bucket)) {
+        for (const entry of bucket) {
+          yield [entry.k, entry.v];
+        }
+      } else {
+        yield [bucket.k, bucket.v];
       }
     }
   }
