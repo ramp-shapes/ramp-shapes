@@ -1,46 +1,94 @@
-import { HashMap, HashSet } from '../hash-map';
-import { Quad, Term, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model';
+import { HashMap } from '../hash-map';
+import { Quad, Term, DefaultDataFactory, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model';
 
 export interface Dataset extends Iterable<Quad> {
   readonly size: number;
   add(quad: Quad): this;
   addAll(quads: Iterable<Quad>): this;
   delete(quad: Quad): this;
+  clear(): void;
   has(quad: Quad): boolean;
-  match(
+  hasMatches(
     subject: Term | undefined | null,
     predicate: Term | undefined | null,
     object: Term | undefined | null,
     graph?: Term | null
-  ): Dataset;
+  ): boolean;
   iterateMatches(
     subject: Term | undefined | null,
     predicate: Term | undefined | null,
     object: Term | undefined | null,
     graph?: Term | null
   ): Iterable<Quad>;
+  forEach(callback: (quad: Quad) => void): void;
+}
+
+export enum IndexQuadBy {
+  /** Index by whole quad (default, required). */
+  OnlyQuad = 0,
+  /** Index by subject. */
+  S = 1,
+  /** Index by predicate. */
+  P = 2,
+  /** Index by object. */
+  O = 4,
+  /** Index by subject and predicate. */
+  SP = 8,
+  /** Index by object and predicate. */
+  OP = 16,
+  /* Reserved: SO = 32 */
+  /** Index by graph */
+  G = 64,
 }
 
 export function dataset(quads?: Iterable<Quad>): Dataset {
-  const result = new SourcePredicateIndexedDataset();
+  const dataset = makeIndexedDataset(IndexQuadBy.SP | IndexQuadBy.OP);
   if (quads) {
-    result.addAll(quads);
+    dataset.addAll(quads);
   }
-  return result;
+  return dataset;
 }
 
-const EMPTY_QUADS: ReadonlyArray<Quad> = [];
+export function makeIndexedDataset(indexBy: IndexQuadBy): Dataset {
+  return new IndexedDataset(indexBy);
+}
 
-class SourcePredicateIndexedDataset implements Dataset {
+class IndexedDataset implements Dataset {
   private _size = 0;
 
-  private byQuad = new HashSet(hashQuad, equalQuads);
-  private bySubjectPredicate = new HashMap<SourcePredicateKey, Quad[]>(
-    SourcePredicateKey.hashCode, SourcePredicateKey.equals
-  );
-  private byObjectPredicate = new HashMap<SourcePredicateKey, Quad[]>(
-    SourcePredicateKey.hashCode, SourcePredicateKey.equals
-  );
+  private readonly byQuad: HashMap<Quad, Quad>;
+  private readonly bySubject: HashMap<Term, SmallQuadSet> | undefined;
+  private readonly byPredicate: HashMap<Term, SmallQuadSet> | undefined;
+  private readonly byObject: HashMap<Term, SmallQuadSet> | undefined;
+  private readonly bySubjectPredicate: HashMap<SourcePredicateKey, SmallQuadSet> | undefined;
+  private readonly byObjectPredicate: HashMap<SourcePredicateKey, SmallQuadSet> | undefined;
+  private readonly byGraph: HashMap<Term, SmallQuadSet> | undefined;
+
+  constructor(indexBy: IndexQuadBy) {
+    this.byQuad = new HashMap<Quad, Quad>(hashQuad, equalQuads);
+    if (indexBy & IndexQuadBy.S) {
+      this.bySubject = new HashMap<Term, SmallQuadSet>(hashTerm, equalTerms);
+    }
+    if (indexBy & IndexQuadBy.P) {
+      this.byPredicate = new HashMap<Term, SmallQuadSet>(hashTerm, equalTerms);
+    }
+    if (indexBy & IndexQuadBy.O) {
+      this.byObject = new HashMap<Term, SmallQuadSet>(hashTerm, equalTerms);
+    }
+    if (indexBy & IndexQuadBy.G) {
+      this.byGraph = new HashMap<Term, SmallQuadSet>(hashTerm, equalTerms);
+    }
+    if (indexBy & IndexQuadBy.SP) {
+      this.bySubjectPredicate = new HashMap<SourcePredicateKey, SmallQuadSet>(
+        SourcePredicateKey.hashCode, SourcePredicateKey.equals
+      );
+    }
+    if (indexBy & IndexQuadBy.OP) {
+      this.byObjectPredicate = new HashMap<SourcePredicateKey, SmallQuadSet>(
+        SourcePredicateKey.hashCode, SourcePredicateKey.equals
+      );
+    }
+  }
 
   get size(): number {
     return this._size;
@@ -48,9 +96,33 @@ class SourcePredicateIndexedDataset implements Dataset {
 
   add(quad: Quad): this {
     if (!this.byQuad.has(quad)) {
-      this.byQuad.add(quad);
-      pushToIndex(this.bySubjectPredicate, {source: quad.subject, predicate: quad.predicate}, quad);
-      pushToIndex(this.byObjectPredicate, {source: quad.object, predicate: quad.predicate}, quad);
+      this.byQuad.set(quad, quad);
+      if (this.bySubject) {
+        pushToIndex(this.bySubject, quad.subject, quad);
+      }
+      if (this.byPredicate) {
+        pushToIndex(this.byPredicate, quad.predicate, quad);
+      }
+      if (this.byObject) {
+        pushToIndex(this.byObject, quad.object, quad);
+      }
+      if (this.byGraph) {
+        pushToIndex(this.byGraph, quad.graph, quad);
+      }
+      if (this.bySubjectPredicate) {
+        pushToIndex(
+          this.bySubjectPredicate,
+          {source: quad.subject, predicate: quad.predicate},
+          quad
+        );
+      }
+      if (this.byObjectPredicate) {
+        pushToIndex(
+          this.byObjectPredicate,
+          {source: quad.object, predicate: quad.predicate},
+          quad
+        );
+      }
       this._size++;
     }
     return this;
@@ -64,51 +136,121 @@ class SourcePredicateIndexedDataset implements Dataset {
   }
 
   delete(quad: Quad): this {
-    if (this.byQuad.has(quad)) {
-      this.byQuad.delete(quad);
-      deleteFromIndex(this.bySubjectPredicate, {source: quad.subject, predicate: quad.predicate}, quad);
-      deleteFromIndex(this.byObjectPredicate, {source: quad.object, predicate: quad.predicate}, quad);
+    const existing = this.byQuad.get(quad);
+    if (existing) {
+      this.byQuad.delete(existing);
+      if (this.bySubject) {
+        deleteFromIndex(this.bySubject, existing.subject, existing);
+      }
+      if (this.byPredicate) {
+        deleteFromIndex(this.byPredicate, existing.predicate, existing);
+      }
+      if (this.byObject) {
+        deleteFromIndex(this.byObject, existing.object, existing);
+      }
+      if (this.byGraph) {
+        deleteFromIndex(this.byGraph, existing.graph, existing);
+      }
+      if (this.bySubjectPredicate) {
+        deleteFromIndex(
+          this.bySubjectPredicate,
+          {source: quad.subject, predicate: quad.predicate},
+          existing
+        );
+      }
+      if (this.byObjectPredicate) {
+        deleteFromIndex(
+          this.byObjectPredicate,
+          {source: quad.object, predicate: quad.predicate},
+          existing
+        );
+      }
       this._size--;
     }
     return this;
+  }
+
+  clear(): void {
+    this._size = 0;
+    this.byQuad.clear();
+    if (this.bySubject) {
+      this.bySubject.clear();
+    }
+    if (this.byPredicate) {
+      this.byPredicate.clear();
+    }
+    if (this.byObject) {
+      this.byObject.clear();
+    }
+    if (this.byGraph) {
+      this.byGraph.clear();
+    }
+    if (this.bySubjectPredicate) {
+      this.bySubjectPredicate.clear();
+    }
+    if (this.byObjectPredicate) {
+      this.byObjectPredicate.clear();
+    }
   }
 
   has(quad: Quad): boolean {
     return this.byQuad.has(quad);
   }
 
-  match(
-    subject: Term | undefined | null,
-    predicate: Term | undefined | null,
-    object: Term | undefined | null,
-    graph?: Term | null
-  ): Dataset {
-    const result = new SourcePredicateIndexedDataset();
-    result.addAll(this.iterateMatches(subject, predicate, object, graph));
-    return result;
+  hasMatches(
+    subject: Quad['subject'] | undefined | null,
+    predicate: Quad['predicate'] | undefined | null,
+    object: Quad['object'] | undefined | null,
+    graph?: Quad['graph'] | null
+  ): boolean {
+    for (const q of this.iterateMatches(subject, predicate, object, graph)) {
+      return true;
+    }
+    return false;
   }
 
   iterateMatches(
-    subject: Term | undefined | null,
-    predicate: Term | undefined | null,
-    object: Term | undefined | null,
-    graph?: Term | null
+    subject: Quad['subject'] | undefined | null,
+    predicate: Quad['predicate'] | undefined | null,
+    object: Quad['object'] | undefined | null,
+    graph?: Quad['graph'] | null
   ): Iterable<Quad> {
     let result: Iterable<Quad>;
-    if (subject && predicate) {
-      const indexed = this.bySubjectPredicate.get({source: subject, predicate}) || EMPTY_QUADS;
-      result = filterBySPO(indexed, null, null, object);
-    } else if (predicate && object) {
-      const indexed = this.byObjectPredicate.get({source: object, predicate}) || EMPTY_QUADS;
-      result = filterBySPO(indexed, subject, null, null);
+    if (subject && predicate && object && graph) {
+      const found = this.byQuad.get(DefaultDataFactory.quad(subject, predicate, object, graph));
+      result = found ? [found] : [];
+    } else if (this.bySubjectPredicate && subject && predicate) {
+      const indexed = this.bySubjectPredicate.get({ source: subject, predicate });
+      result = filterBySPO(iterateSmallSet(indexed), null, null, object);
+    } else if (this.byObjectPredicate && predicate && object) {
+      const indexed = this.byObjectPredicate.get({ source: object, predicate });
+      result = filterBySPO(iterateSmallSet(indexed), subject, null, null);
+    } else if (this.bySubject && subject) {
+      const indexed = this.bySubject.get(subject);
+      result = filterBySPO(iterateSmallSet(indexed), null, predicate, object);
+    } else if (this.byPredicate && predicate) {
+      const indexed = this.byPredicate.get(predicate);
+      result = filterBySPO(iterateSmallSet(indexed), subject, null, object);
+    } else if (this.byObject && object) {
+      const indexed = this.byObject.get(object);
+      result = filterBySPO(iterateSmallSet(indexed), subject, predicate, null);
+    } else if (this.byGraph && graph) {
+      const indexed = this.byGraph.get(graph);
+      result = filterBySPO(iterateSmallSet(indexed), subject, predicate, object);
+      // avoid double-filtering by graph
+      return result;
     } else {
-      result = filterBySPO(this, subject, predicate, object);
+      result = filterBySPO(this.byQuad.values(), subject, predicate, object);
     }
     return graph ? filterByGraph(result, graph) : result;
   }
 
   [Symbol.iterator](): Iterator<Quad> {
-    return this.byQuad[Symbol.iterator]();
+    return this.byQuad.values();
+  }
+
+  forEach(callback: (t: Quad) => void): void {
+    this.byQuad.forEach(callback);
   }
 }
 
@@ -118,7 +260,6 @@ interface SourcePredicateKey {
 }
 namespace SourcePredicateKey {
   export function hashCode(key: SourcePredicateKey): number {
-    // tslint:disable-next-line: no-bitwise
     return (hashTerm(key.source) * 31 + hashTerm(key.predicate)) | 0;
   }
   export function equals(a: SourcePredicateKey, b: SourcePredicateKey): boolean {
@@ -126,56 +267,54 @@ namespace SourcePredicateKey {
   }
 }
 
-function pushToIndex(
-  index: HashMap<SourcePredicateKey, Quad[]>,
-  key: SourcePredicateKey,
-  quad: Quad
-) {
-  let items = index.get(key);
-  if (!items) {
-    items = [];
-    index.set(key, items);
-  }
-  items.push(quad);
+type SmallQuadSet = Quad | Set<Quad> | undefined;
+
+function iterateSmallSet(set: SmallQuadSet): Iterable<Quad> {
+  return set instanceof Set ? set : (set ? [set] : []);
 }
 
-function deleteFromIndex(
-  index: HashMap<SourcePredicateKey, Quad[]>,
-  key: SourcePredicateKey,
-  quad: Quad
-) {
+function pushToIndex<K>(index: HashMap<K, SmallQuadSet>, key: K, quad: Quad) {
+  let bucket = index.get(key);
+  if (!bucket) {
+    bucket = quad;
+    index.set(key, bucket);
+  } else if (bucket instanceof Set) {
+    bucket.add(quad);
+  } else {
+    const single = bucket;
+    bucket = new Set<Quad>();
+    bucket.add(single);
+    bucket.add(quad);
+    index.set(key, bucket);
+  }
+}
+
+function deleteFromIndex<K>(index: HashMap<K, SmallQuadSet>, key: K, quad: Quad) {
   const items = index.get(key);
   if (items) {
-    for (let i = 0; i < items.length; i++) {
-      if (equalQuads(items[i], quad)) {
-        items.splice(i, 1);
-        break;
-      }
+    if (items instanceof Set) {
+      items.delete(quad);
+    } else {
+      index.delete(key);
     }
   }
 }
 
-function *filterBySPO(
+function* filterBySPO(
   quads: Iterable<Quad>,
   subject: Term | undefined | null,
   predicate: Term | undefined | null,
   object: Term | undefined | null,
-) {
+): Iterable<Quad> {
   for (const quad of quads) {
-    if (subject && !equalTerms(subject, quad.subject)) {
-      continue;
-    }
-    if (predicate && !equalTerms(predicate, quad.predicate)) {
-      continue;
-    }
-    if (object && !equalTerms(object, quad.object)) {
-      continue;
-    }
+    if (subject && !equalTerms(subject, quad.subject)) { continue; }
+    if (predicate && !equalTerms(predicate, quad.predicate)) { continue; }
+    if (object && !equalTerms(object, quad.object)) { continue; }
     yield quad;
   }
 }
 
-function *filterByGraph(quads: Iterable<Quad>, graph: Term) {
+function* filterByGraph(quads: Iterable<Quad>, graph: Term): Iterable<Quad> {
   for (const quad of quads) {
     if (equalTerms(quad.graph, graph)) {
       yield quad;
