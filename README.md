@@ -58,48 +58,48 @@ const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
-    @prefix : <http://ramp-shapes.github.io/schema#>.
+    @prefix ramp: <http://ramp-shapes.github.io/schema#>.
     @prefix ex: <http://example.com/schema/>.
 
-    ex:Annotation a :ObjectShape;
-        :typeProperty [
-            :name "type";
-            :path rdf:type;
-            :shape [ a :ResourceShape; :termValue ex:Annotation ]
+    ex:Annotation a ramp:Record;
+        ramp:typeProperty [
+            ramp:name "type";
+            ramp:path rdf:type;
+            ramp:shape [ a ramp:Resource; ramp:termValue ex:Annotation ]
         ];
-        :property [
-            :name "id";
-            :path ();
-            :shape [ a :ResourceShape ]
+        ramp:property [
+            ramp:name "id";
+            ramp:path ();
+            ramp:shape [ a ramp:Resource ]
         ];
-        :property [
-            :name "start";
-            :path ex:start;
-            :shape ex:Selector
+        ramp:property [
+            ramp:name "start";
+            ramp:path ex:start;
+            ramp:shape ex:Selector
         ];
-        :property [
-            :name "end";
-            :path ex:end;
-            :shape [ a :OptionalShape; :item ex:Selector ]
+        ramp:property [
+            ramp:name "end";
+            ramp:path ex:end;
+            ramp:shape [ a ramp:Optional; ramp:item ex:Selector ]
         ].
 
-    ex:Selector a :UnionShape;
-        :variant ex:Point, ex:Path.
+    ex:Selector a ramp:AnyOf;
+        ramp:variant ex:Point, ex:Path.
 
-    ex:Point a :ObjectShape;
-        :typeProperty [
-            :name "type";
-            :path rdf:type;
-            :shape [ a :ResourceShape; :termValue ex:Point ]
+    ex:Point a ramp:Record;
+        ramp:typeProperty [
+            ramp:name "type";
+            ramp:path rdf:type;
+            ramp:shape [ a ramp:Resource; ramp:termValue ex:Point ]
         ];
-        :property [
-            :name "position";
-            :path ex:position;
-            :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+        ramp:property [
+            ramp:name "position";
+            ramp:path ex:position;
+            ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
         ].
 
-    ex:Path a :ListShape;
-        :item [ a :LiteralShape; :termDatatype xsd:string ].
+    ex:Path a ramp:List;
+        ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ].
 `)));
 
 // choose entry point shape
@@ -127,8 +127,8 @@ for (const match of matches) {
   /* quads is Iterable<Rdf.Quad>, e.g.:
 
     :anno1 a ex:Annotation;
-        ex:start _:object_044916_1.
-    _:object_044916_1 a ex:Point;
+        ex:start _:record_044916_1.
+    _:record_044916_1 a ex:Point;
         ex:position "42"^^xsd:integer.
     :anno1 ex:end _:list_044916_2.
     _:list_044916_2 rdf:first "1";
@@ -157,43 +157,43 @@ const queryString = new SparqlJs.Generator().stringify(query);
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
   PREFIX ex: <http://example.com/schema/>
   CONSTRUCT {
-    ?object_1 rdf:type ex:Annotation.
-    ?object_1 ex:start ?object_4.
-    ?object_4 rdf:type ex:Point.
-    ?object_4 ex:position ?literal_5.
-    ?object_1 ex:start ?list_6.
+    ?record_1 rdf:type ex:Annotation.
+    ?record_1 ex:start ?record_4.
+    ?record_4 rdf:type ex:Point.
+    ?record_4 ex:position ?literal_5.
+    ?record_1 ex:start ?list_6.
     ?listNode_7 rdf:rest ?nextNode_8.
     ?listNode_7 rdf:first ?literal_9.
-    ?object_1 ex:end ?object_11.
-    ?object_11 rdf:type ex:Point.
-    ?object_11 ex:position ?literal_12.
-    ?object_1 ex:end ?list_13.
+    ?record_1 ex:end ?record_11.
+    ?record_11 rdf:type ex:Point.
+    ?record_11 ex:position ?literal_12.
+    ?record_1 ex:end ?list_13.
     ?listNode_14 rdf:rest ?nextNode_15.
     ?listNode_14 rdf:first ?literal_16.
   }
   WHERE {
-    ?object_1 rdf:type ex:Annotation.
+    ?record_1 rdf:type ex:Annotation.
     {
-      ?object_1 ex:start ?object_4.
-      ?object_4 rdf:type ex:Point.
-      ?object_4 ex:position ?literal_5.
+      ?record_1 ex:start ?record_4.
+      ?record_4 rdf:type ex:Point.
+      ?record_4 ex:position ?literal_5.
     }
     UNION
     {
-      ?object_1 ex:start ?list_6.
+      ?record_1 ex:start ?list_6.
       ?list_6 (rdf:rest*) ?listNode_7.
       ?listNode_7 rdf:rest ?nextNode_8.
       ?listNode_7 rdf:first ?literal_9.
     }
     OPTIONAL {
       {
-        ?object_1 ex:end ?object_11.
-        ?object_11 rdf:type ex:Point.
-        ?object_11 ex:position ?literal_12.
+        ?record_1 ex:end ?record_11.
+        ?record_11 rdf:type ex:Point.
+        ?record_11 ex:position ?literal_12.
       }
       UNION
       {
-        ?object_1 ex:end ?list_13.
+        ?record_1 ex:end ?list_13.
         ?list_13 (rdf:rest*) ?listNode_14.
         ?listNode_14 rdf:rest ?nextNode_15.
         ?listNode_14 rdf:first ?literal_16.
