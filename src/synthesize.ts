@@ -57,7 +57,7 @@ export function synthesizeShape(
 ): unknown {
   let value: unknown;
   switch (shape.type) {
-    case 'object': {
+    case 'record': {
       const result: { [propertyName: string]: unknown } = {};
       synthesizeProperties(result, shape.typeProperties, context);
       synthesizeProperties(result, shape.properties, context);

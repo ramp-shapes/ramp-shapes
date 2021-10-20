@@ -1,7 +1,7 @@
 import { HashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, ComputedProperty, PropertyPath, UnionShape, SetShape,
+  ShapeID, Shape, RecordShape, RecordProperty, ComputedProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, getNestedPropertyPath,
 } from './shapes';
 import {
@@ -146,12 +146,12 @@ function *frameShape(
   const required = strict && !shape.lenient;
   let solutions: Iterable<CandidateMatch | CyclicMatch | Mismatch>;
   switch (shape.type) {
-    case 'object': {
-      solutions = frameObject(shape, required, candidates, stack, context);
+    case 'record': {
+      solutions = frameRecord(shape, required, candidates, stack, context);
       break;
     }
-    case 'union': {
-      solutions = frameUnion(shape, required, candidates, stack, context);
+    case 'anyOf': {
+      solutions = frameAnyOf(shape, required, candidates, stack, context);
       break;
     }
     case 'set': {
@@ -201,8 +201,8 @@ function *frameShape(
   }
 }
 
-function *frameObject(
-  shape: ObjectShape,
+function *frameRecord(
+  shape: RecordShape,
   required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,
@@ -252,7 +252,7 @@ function *frameObject(
 }
 
 function frameProperties(
-  properties: ReadonlyArray<ObjectProperty>,
+  properties: ReadonlyArray<RecordProperty>,
   required: boolean,
   candidate: Rdf.NamedNode | Rdf.BlankNode,
   template: { [fieldName: string]: unknown },
@@ -351,8 +351,8 @@ function findByPropertyPath(
   return findByPath(source, path, false, context);
 }
 
-function *frameUnion(
-  shape: UnionShape,
+function *frameAnyOf(
+  shape: AnyOfShape,
   required: boolean,
   candidates: Iterable<Rdf.Term>,
   stack: StackFrame,

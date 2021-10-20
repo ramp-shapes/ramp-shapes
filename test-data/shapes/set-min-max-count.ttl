@@ -1,22 +1,22 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix ex: <http://example.com/schema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-ex:Items a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [ a :ResourceShape; :termValue ex:Items ];
-        :transient true
+ex:Items a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:Items ];
+        ramp:transient true
     ];
-    :property [
-        :name "items";
-        :path ex:hasItem;
-        :shape [
-            a :SetShape;
-            :item [ a :LiteralShape; :termDatatype xsd:integer ];
-            :minCount 2;
-            :maxCount 4
+    ramp:property [
+        ramp:name "items";
+        ramp:path ex:hasItem;
+        ramp:shape [
+            a ramp:Set;
+            ramp:item [ a ramp:Literal; ramp:termDatatype xsd:integer ];
+            ramp:minCount 2;
+            ramp:maxCount 4
         ]
     ].

@@ -1,37 +1,37 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix ex: <http://example.com/schema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-ex:Location a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [ a :ResourceShape; :termValue ex:Location ]
+ex:Location a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:Location ]
     ];
-    :property [
-        :name "center";
-        :path ex:centerPoint;
-        :shape [ a :OptionalShape; :item ex:Point ]
+    ramp:property [
+        ramp:name "center";
+        ramp:path ex:centerPoint;
+        ramp:shape [ a ramp:Optional; ramp:item ex:Point ]
     ];
-    :property [
-        :name "border";
-        :path ex:borderPoint;
-        :shape [ a :SetShape; :item _:LenientPoint ]
+    ramp:property [
+        ramp:name "border";
+        ramp:path ex:borderPoint;
+        ramp:shape [ a ramp:Set; ramp:item _:LenientPoint ]
     ].
 
-_:LenientPoint a :UnionShape;
-    :lenient true;
-    :variant ex:Point.
+_:LenientPoint a ramp:AnyOf;
+    ramp:lenient true;
+    ramp:variant ex:Point.
 
-ex:Point a :ObjectShape;
-    :property [
-        :name "x";
-        :path ex:xCoord;
-        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+ex:Point a ramp:Record;
+    ramp:property [
+        ramp:name "x";
+        ramp:path ex:xCoord;
+        ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
     ];
-    :property [
-        :name "y";
-        :path ex:yCoord;
-        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+    ramp:property [
+        ramp:name "y";
+        ramp:path ex:yCoord;
+        ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
     ].

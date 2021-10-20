@@ -1,54 +1,54 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix ex: <http://example.com/schema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-ex:Items a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [ a :ResourceShape; :termValue ex:Items ];
-        :transient true
+ex:Items a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:Items ];
+        ramp:transient true
     ];
-    :property [
-        :name "atomic";
-        :path ex:atomic;
-        :shape [ a :SetShape; :item ex:StringOrInteger ]
+    ramp:property [
+        ramp:name "atomic";
+        ramp:path ex:atomic;
+        ramp:shape [ a ramp:Set; ramp:item ex:StringOrInteger ]
     ];
-    :property [
-        :name "differentCardinality";
-        :path ex:differentCardinality;
-        :shape [ a :SetShape; :item ex:SetOrSingle ]
+    ramp:property [
+        ramp:name "differentCardinality";
+        ramp:path ex:differentCardinality;
+        ramp:shape [ a ramp:Set; ramp:item ex:SetOrSingle ]
     ];
-    :property [
-        :name "trivialUnion";
-        :path ex:trivialUnion;
-        :shape [ a :SetShape; :item ex:TrivialInteger ]
+    ramp:property [
+        ramp:name "trivialUnion";
+        ramp:path ex:trivialUnion;
+        ramp:shape [ a ramp:Set; ramp:item ex:TrivialInteger ]
     ];
-    :property [
-        :name "nestedUnion";
-        :path ex:nestedUnion;
-        :shape [ a :SetShape; :item ex:NestedUnion ]
+    ramp:property [
+        ramp:name "nestedUnion";
+        ramp:path ex:nestedUnion;
+        ramp:shape [ a ramp:Set; ramp:item ex:NestedUnion ]
     ].
 
-ex:StringOrInteger a :UnionShape;
-    :variant [ a :LiteralShape; :termDatatype xsd:string ];
-    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+ex:StringOrInteger a ramp:AnyOf;
+    ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:string ];
+    ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:integer ].
 
-ex:SetOrSingle a :UnionShape;
-    :variant [
-        a :SetShape;
-        :item  [ a :LiteralShape; :termDatatype xsd:integer ]
+ex:SetOrSingle a ramp:AnyOf;
+    ramp:variant [
+        a ramp:Set;
+        ramp:item  [ a ramp:Literal; ramp:termDatatype xsd:integer ]
     ];
-    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+    ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:integer ].
 
-ex:TrivialInteger a :UnionShape;
-    :variant [ a :LiteralShape; :termDatatype xsd:integer ].
+ex:TrivialInteger a ramp:AnyOf;
+    ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:integer ].
 
-ex:NestedUnion a :UnionShape;
-    :variant [
-        a :UnionShape;
-        :variant [ a :LiteralShape; :termDatatype xsd:integer ];
-        :variant [ a :LiteralShape; :termDatatype xsd:boolean ]
+ex:NestedUnion a ramp:AnyOf;
+    ramp:variant [
+        a ramp:AnyOf;
+        ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:integer ];
+        ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:boolean ]
     ];
-    :variant [ a :LiteralShape; :termDatatype xsd:string ].
+    ramp:variant [ a ramp:Literal; ramp:termDatatype xsd:string ].

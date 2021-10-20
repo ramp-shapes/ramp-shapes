@@ -1,71 +1,71 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix ex: <http://example.com/schema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-ex:Selector a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [
-            a :ResourceShape;
-            :termValue ex:Selector;
-            :vocabulary _:selectorTypeVocab
+ex:Selector a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ex:Selector;
+            ramp:vocabulary _:selectorTypeVocab
         ]
     ];
-    :property [
-        :name "body";
-        :path ex:body;
-        :shape [
-            a :UnionShape;
-            :variant ex:Range, ex:Point
+    ramp:property [
+        ramp:name "body";
+        ramp:path ex:body;
+        ramp:shape [
+            a ramp:AnyOf;
+            ramp:variant ex:Range, ex:Point
         ]
     ].
 
-ex:Range a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [
-            a :ResourceShape;
-            :termValue ex:Range;
-            :vocabulary _:selectorTypeVocab
+ex:Range a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ex:Range;
+            ramp:vocabulary _:selectorTypeVocab
         ]
     ];
-    :property [
-        :name "start";
-        :path ex:start;
-        :shape ex:Selector
+    ramp:property [
+        ramp:name "start";
+        ramp:path ex:start;
+        ramp:shape ex:Selector
     ];
-    :property [
-        :name "end";
-        :path ex:end;
-        :shape ex:Selector
+    ramp:property [
+        ramp:name "end";
+        ramp:path ex:end;
+        ramp:shape ex:Selector
     ].
 
-ex:Point a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path rdf:type;
-        :shape [
-            a :ResourceShape;
-            :termValue ex:Point;
-            :vocabulary _:selectorTypeVocab
+ex:Point a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ex:Point;
+            ramp:vocabulary _:selectorTypeVocab
         ]
     ];
-    :property [
-        :name "position";
-        :path ex:position;
-        :shape [ a :LiteralShape; :termDatatype xsd:integer ]
+    ramp:property [
+        ramp:name "position";
+        ramp:path ex:position;
+        ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ]
     ];
-    :property [
-        :name "plus";
-        :path ex:plus;
-        :shape [ a :OptionalShape; :item ex:Point ]
+    ramp:property [
+        ramp:name "plus";
+        ramp:path ex:plus;
+        ramp:shape [ a ramp:Optional; ramp:item ex:Point ]
     ].
 
-_:selectorTypeVocab a :Vocabulary;
-    :vocabItem
-        [ :vocabKey "selector"; :termValue ex:Selector ],
-        [ :vocabKey "range"; :termValue ex:Range ],
-        [ :vocabKey "point"; :termValue ex:Point ].
+_:selectorTypeVocab a ramp:Vocabulary;
+    ramp:vocabItem
+        [ ramp:vocabKey "selector"; ramp:termValue ex:Selector ],
+        [ ramp:vocabKey "range"; ramp:termValue ex:Range ],
+        [ ramp:vocabKey "point"; ramp:termValue ex:Point ].

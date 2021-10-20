@@ -3,7 +3,7 @@ import * as SparqlJs from 'sparqljs';
 import { HashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  ShapeID, Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape,
+  ShapeID, Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, getNestedPropertyPath,
 } from './shapes';
 import {
@@ -234,11 +234,11 @@ function generateForShape(
   context.stack.push(shape);
 
   switch (shape.type) {
-    case 'object':
-      generateForObject(shape, edge, out, context);
+    case 'record':
+      generateForRecord(shape, edge, out, context);
       break;
-    case 'union':
-      generateForUnion(shape, edge, out, context);
+    case 'anyOf':
+      generateForAnyOf(shape, edge, out, context);
       break;
     case 'set':
     case 'optional':
@@ -263,8 +263,8 @@ function generateForShape(
   context.stack.pop();
 }
 
-function generateForObject(
-  shape: ObjectShape,
+function generateForRecord(
+  shape: RecordShape,
   edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
@@ -282,7 +282,7 @@ function generateForObject(
 
 function generateForProperties(
   subject: SparqlJs.Term,
-  properties: ReadonlyArray<ObjectProperty>,
+  properties: ReadonlyArray<RecordProperty>,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ) {
@@ -352,7 +352,7 @@ function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): bool
 }
 
 function isBreakingPointShape(shape: Shape, context: GenerateQueryContext) {
-  if (shape.type === 'object') {
+  if (shape.type === 'record') {
     return true;
   } else if (shape.type === 'list') {
     const {head} = resolveListShape(shape, context.listDefaults);
@@ -361,8 +361,8 @@ function isBreakingPointShape(shape: Shape, context: GenerateQueryContext) {
   return false;
 }
 
-function generateForUnion(
-  shape: UnionShape,
+function generateForAnyOf(
+  shape: AnyOfShape,
   edge: Edge,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
@@ -482,11 +482,11 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
     }
     visiting.add(shape.id);
     switch (shape.type) {
-      case 'object':
+      case 'record':
         yield* visitProperties(shape.typeProperties);
         yield* visitProperties(shape.properties);
         break;
-      case 'union':
+      case 'anyOf':
         for (const variantShape of shape.variants) {
           yield* visit(variantShape);
         }
@@ -524,7 +524,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<ObjectProperty>
+    properties: ReadonlyArray<RecordProperty>
   ): Iterable<SparqlJsPredicate>  {
     for (const property of properties) {
       path.push(propertyPathToSparql(property.path));
@@ -543,11 +543,11 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
     if (visiting.has(shape.id)) { return; }
     visiting.add(shape.id);
     switch (shape.type) {
-      case 'object':
+      case 'record':
         yield* visitProperties(shape.typeProperties);
         yield* visitProperties(shape.properties);
         break;
-      case 'union':
+      case 'anyOf':
         for (const variantShape of shape.variants) {
           yield* visit(variantShape);
         }
@@ -573,7 +573,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<ObjectProperty>
+    properties: ReadonlyArray<RecordProperty>
   ): Iterable<Rdf.NamedNode>  {
     for (const property of properties) {
       if (isSelfPath(property.path)) {

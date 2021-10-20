@@ -4,8 +4,8 @@ export type ShapeID = Rdf.NamedNode | Rdf.BlankNode;
 export type Shape =
   | ResourceShape
   | LiteralShape
-  | ObjectShape
-  | UnionShape
+  | RecordShape
+  | AnyOfShape
   | SetShape
   | OptionalShape
   | ListShape
@@ -33,15 +33,15 @@ export interface LiteralShape extends ShapeBase {
   readonly keepAsTerm?: boolean;
 }
 
-export interface ObjectShape extends ShapeBase {
-  readonly type: 'object';
+export interface RecordShape extends ShapeBase {
+  readonly type: 'record';
   readonly id: ShapeID;
-  readonly typeProperties: ReadonlyArray<ObjectProperty>;
-  readonly properties: ReadonlyArray<ObjectProperty>;
+  readonly typeProperties: ReadonlyArray<RecordProperty>;
+  readonly properties: ReadonlyArray<RecordProperty>;
   readonly computedProperties: ReadonlyArray<ComputedProperty>;
 }
 
-export interface ObjectProperty {
+export interface RecordProperty {
   readonly name: string;
   readonly path: PropertyPath;
   readonly valueShape: Shape;
@@ -91,8 +91,8 @@ export interface OneOrMorePath {
   readonly oneOrMore: PropertyPath;
 }
 
-export interface UnionShape extends ShapeBase {
-  readonly type: 'union';
+export interface AnyOfShape extends ShapeBase {
+  readonly type: 'anyOf';
   readonly id: ShapeID;
   readonly variants: ReadonlyArray<Shape>;
 }

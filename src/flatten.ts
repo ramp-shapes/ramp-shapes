@@ -1,7 +1,7 @@
 import { HashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  Shape, ObjectShape, ObjectProperty, PropertyPath, UnionShape, SetShape,
+  Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeID, ShapeReference,
   getNestedPropertyPath,
 } from './shapes';
@@ -158,11 +158,11 @@ function flattenShape(
   const converted = context.mapper.toRdf(value, shape);
   let match: ShapeMatch | undefined;
   switch (shape.type) {
-    case 'object':
-      match = flattenObject(shape, required, converted, context);
+    case 'record':
+      match = flattenRecord(shape, required, converted, context);
       break;
-    case 'union':
-      match = flattenUnion(shape, required, converted, context);
+    case 'anyOf':
+      match = flattenAnyOf(shape, required, converted, context);
       break;
     case 'set':
       match = flattenSet(shape, required, converted, context);
@@ -197,8 +197,8 @@ function flattenShape(
   return match;
 }
 
-function flattenObject(
-  shape: ObjectShape,
+function flattenRecord(
+  shape: RecordShape,
   required: boolean,
   value: unknown,
   context: LowerContext
@@ -207,7 +207,7 @@ function flattenObject(
     return undefined;
   }
 
-  const matches: Array<{ property: ObjectProperty; match: ShapeMatch }> = [];
+  const matches: Array<{ property: RecordProperty; match: ShapeMatch }> = [];
   if (!matchProperties(shape.typeProperties, required, value, matches, context)) {
     return undefined;
   }
@@ -252,10 +252,10 @@ function isObjectWithProperties(obj: unknown): obj is { [propertyName: string]: 
 }
 
 function matchProperties(
-  properties: ReadonlyArray<ObjectProperty>,
+  properties: ReadonlyArray<RecordProperty>,
   required: boolean,
   value: { [propertyName: string]: unknown },
-  matches: Array<{ property: ObjectProperty; match: ShapeMatch }>,
+  matches: Array<{ property: RecordProperty; match: ShapeMatch }>,
   context: LowerContext
 ): boolean {
   for (const property of properties) {
@@ -355,12 +355,12 @@ function *generatePropertyPath(
   }
 }
 
-function isSelfProperty(property: ObjectProperty) {
+function isSelfProperty(property: RecordProperty) {
   return property.path.type === 'sequence' && property.path.sequence.length === 0;
 }
 
-function flattenUnion(
-  shape: UnionShape,
+function flattenAnyOf(
+  shape: AnyOfShape,
   required: boolean,
   value: unknown,
   context: LowerContext

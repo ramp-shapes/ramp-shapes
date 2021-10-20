@@ -20,7 +20,7 @@ const schema = new Ramp.ShapeBuilder();
 schema.addAll(wikidataShapes);
 
 const AlexanderTheThird = vocab.wd('Q120180');
-schema.object({
+schema.record({
   id: AlexanderTheThird,
   typeProperties: {
     target: Ramp.self(schema.constant(AlexanderTheThird))

@@ -10,7 +10,7 @@ const schema = new Ramp.ShapeBuilder();
 
 const xpathLiteral = schema.literal({datatype: xsd.string});
 
-schema.object({
+schema.record({
   id: oa.XPathSelector,
   typeProperties: {
     type: property(rdf.type, schema.constant(oa.XPathSelector)),
@@ -31,7 +31,7 @@ schema.object({
   }
 });
 
-schema.object({
+schema.record({
   id: oa.RangeSelector,
   typeProperties: {
     type: property(rdf.type, schema.constant(oa.RangeSelector)),
@@ -44,22 +44,22 @@ schema.object({
 
 const bodyLabel = schema.literal({datatype: rdf.langString});
 
-schema.object({
+schema.record({
   id: oa.Annotation,
   typeProperties: {
     type: property(rdf.type, schema.constant(oa.Annotation)),
   },
   properties: {
     iri: self(schema.resource()),
-    target: property(oa.hasTarget, schema.object({
+    target: property(oa.hasTarget, schema.record({
       properties: {
         source: property(oa.hasSource, schema.resource()),
-        selector: property(oa.hasSelector, schema.union(
+        selector: property(oa.hasSelector, schema.anyOf(
           [oa.RangeSelector, oa.XPathSelector]
         ))
       }
     })),
-    body: property(oa.hasBody, schema.object({
+    body: property(oa.hasBody, schema.record({
       properties: {
         label: property(rdfs.label, schema.map({
           key: {target: bodyLabel, part: 'language'},
@@ -72,11 +72,11 @@ schema.object({
   }
 });
 
-const backwardsShapeId = schema.object({
+const backwardsShapeId = schema.record({
   properties: {
     iri: self(schema.resource()),
     source: property(oa.hasSource, schema.resource()),
-    selector: property(oa.hasSelector, schema.union(
+    selector: property(oa.hasSelector, schema.anyOf(
       [oa.RangeSelector, oa.XPathSelector]
     )),
     annotations: inverseProperty(oa.hasTarget, schema.set(oa.Annotation)),

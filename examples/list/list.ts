@@ -11,16 +11,16 @@ const schema = new Ramp.ShapeBuilder();
 
 const list = schema.list(schema.resource());
 
-const listOwner = schema.object({
+const listOwner = schema.record({
   properties: {
     list: property(factory.namedNode('example:hasList'), list)
   }
 });
 
-const listOfUnion = schema.object({
+const listOfUnion = schema.record({
   properties: {
     list: property(factory.namedNode('example:hasList'), schema.list(
-      schema.union([
+      schema.anyOf([
         schema.constant(factory.namedNode('example:b1')),
         schema.constant(factory.namedNode('example:b2')),
       ])
@@ -28,7 +28,7 @@ const listOfUnion = schema.object({
   }
 });
 
-const listSelf = schema.object({
+const listSelf = schema.record({
   properties: {
     owner: inverseProperty(factory.namedNode('example:hasList'), schema.resource()),
     list: self(list),

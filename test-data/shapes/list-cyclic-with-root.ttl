@@ -1,22 +1,22 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix ex: <http://example.com/schema#>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
-ex:rootList a :ObjectShape;
-    :typeProperty [
-        :name "iri";
-        :path ();
-        :shape [ a :ResourceShape; :termValue ex:rootList ]
+ex:rootList a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "iri";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:rootList ]
     ];
-    :property [
-        :name "body";
-        :path ex:body;
-        :shape ex:ListOfLists
+    ramp:property [
+        ramp:name "body";
+        ramp:path ex:body;
+        ramp:shape ex:ListOfLists
     ].
 
-ex:ListOfLists a :ListShape;
-    :item [
-        a :UnionShape;
-        :variant ex:ListOfLists, [ a :LiteralShape; :termDatatype xsd:integer ]
+ex:ListOfLists a ramp:List;
+    ramp:item [
+        a ramp:AnyOf;
+        ramp:variant ex:ListOfLists, [ a ramp:Literal; ramp:termDatatype xsd:integer ]
     ].

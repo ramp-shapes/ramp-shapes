@@ -1,6 +1,6 @@
 import { HashMap, ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
-import { ObjectProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
+import { RecordProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary } from './shapes';
 
 export interface ShapeBuilderOptions {
   factory?: Rdf.DataFactory;
@@ -87,11 +87,11 @@ export class ShapeBuilder {
     }
   }
 
-  object(props: ObjectShapeProps): ShapeID {
-    const {id = this.makeShapeID('object'), typeProperties, properties, computedProperties} = props;
+  record(props: ObjectShapeProps): ShapeID {
+    const {id = this.makeShapeID('record'), typeProperties, properties, computedProperties} = props;
     const {_shapes} = this;
 
-    function toField(name: string, partial: PartialProperty): ObjectProperty {
+    function toField(name: string, partial: PartialProperty): RecordProperty {
       const {path, valueShape, transient} = partial;
       return {
         name,
@@ -120,7 +120,7 @@ export class ShapeBuilder {
     }
 
     this._shapes.set(id, {
-      type: 'object',
+      type: 'record',
       id,
       typeProperties: typeProperties ? toFields(typeProperties) : [],
       properties: properties ? toFields(properties) : [],
@@ -130,11 +130,11 @@ export class ShapeBuilder {
     return id;
   }
 
-  union(variants: ReadonlyArray<ShapeID>, props: ShapeBaseProps = {}): ShapeID {
-    const {id = this.makeShapeID('union'), lenient} = props;
+  anyOf(variants: ReadonlyArray<ShapeID>, props: ShapeBaseProps = {}): ShapeID {
+    const {id = this.makeShapeID('anyOf'), lenient} = props;
     const {_shapes} = this;
     this._shapes.set(id, {
-      type: 'union',
+      type: 'anyOf',
       id,
       lenient,
       get variants() {

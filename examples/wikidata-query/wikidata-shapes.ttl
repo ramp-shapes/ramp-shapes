@@ -1,28 +1,28 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix wd: <http://www.wikidata.org/entity/>.
 @prefix wdt: <http://www.wikidata.org/prop/direct/>.
-@prefix : <http://ramp-shapes.github.io/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
 
 # Human
-wd:Q5 a :ObjectShape;
-    :typeProperty [
-        :name "type";
-        :path wdt:P31;
-        :transient true;
-        :shape [ a :ResourceShape; :termValue wd:Q5 ]
+wd:Q5 a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path wdt:P31;
+        ramp:transient true;
+        ramp:shape [ a ramp:Resource; ramp:termValue wd:Q5 ]
     ];
-    :property [
-        :name "iri";
-        :path ();
-        :shape [ a :ResourceShape ]
+    ramp:property [
+        ramp:name "iri";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource ]
     ];
-    :property [
-        :name "label";
-        :path rdfs:label;
-        :shape [ a :LiteralShape; :termLanguage "en" ]
+    ramp:property [
+        ramp:name "label";
+        ramp:path rdfs:label;
+        ramp:shape [ a ramp:Literal; ramp:termLanguage "en" ]
     ];
-    :property [
-        :name "children";
-        :path wdt:P40;
-        :shape [ a :SetShape; :item wd:Q5 ]
+    ramp:property [
+        ramp:name "children";
+        ramp:path wdt:P40;
+        ramp:shape [ a ramp:Set; ramp:item wd:Q5 ]
     ].

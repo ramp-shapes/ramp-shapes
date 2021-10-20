@@ -1,12 +1,12 @@
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX ex: <http://example.com/schema#>
 CONSTRUCT {
-  ?object_1 rdf:type ex:Point.
-  ?object_1 ex:xCoord ?literal_2.
-  ?object_1 ex:yCoord ?literal_3.
+  ?record_1 rdf:type ex:Point.
+  ?record_1 ex:xCoord ?literal_2.
+  ?record_1 ex:yCoord ?literal_3.
 }
 WHERE {
-  ?object_1 rdf:type ex:Point.
-  ?object_1 ex:xCoord ?literal_2.
-  ?object_1 ex:yCoord ?literal_3.
+  ?record_1 rdf:type ex:Point.
+  ?record_1 ex:xCoord ?literal_2.
+  ?record_1 ex:yCoord ?literal_3.
 }

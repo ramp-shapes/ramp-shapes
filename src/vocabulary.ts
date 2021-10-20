@@ -34,14 +34,14 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     ShapeTypeVocabulary: factory.namedNode(NAMESPACE + 'ShapeTypeVocabulary'),
     lenient: factory.namedNode(NAMESPACE + 'lenient'),
 
-    // Object
-    ObjectShape: factory.namedNode(NAMESPACE + 'ObjectShape'),
+    // Record
+    Record: factory.namedNode(NAMESPACE + 'Record'),
     typeProperty: factory.namedNode(NAMESPACE + 'typeProperty'),
     property: factory.namedNode(NAMESPACE + 'property'),
     computedProperty: factory.namedNode(NAMESPACE + 'computedProperty'),
 
-    // ObjectProperty and ComputedProperty
-    ObjectProperty: factory.namedNode(NAMESPACE + 'ObjectProperty'),
+    // Property and ComputedProperty
+    Property: factory.namedNode(NAMESPACE + 'Property'),
     ComputedProperty: factory.namedNode(NAMESPACE + 'ComputedProperty'),
     PropertyPath: factory.namedNode(NAMESPACE + 'PropertyPath'),
     PropertyPathVocabulary: factory.namedNode(NAMESPACE + 'PropertyPathVocabulary'),
@@ -63,33 +63,33 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
     oneOrMorePath: factory.namedNode(NAMESPACE + 'oneOrMorePath'),
 
     // Resource and Literal
-    ResourceShape: factory.namedNode(NAMESPACE + 'ResourceShape'),
-    LiteralShape: factory.namedNode(NAMESPACE + 'LiteralShape'),
+    Resource: factory.namedNode(NAMESPACE + 'Resource'),
+    Literal: factory.namedNode(NAMESPACE + 'Literal'),
     onlyNamed: factory.namedNode(NAMESPACE + 'onlyNamed'),
     termDatatype: factory.namedNode(NAMESPACE + 'termDatatype'),
     termLanguage: factory.namedNode(NAMESPACE + 'termLanguage'),
     termValue: factory.namedNode(NAMESPACE + 'termValue'),
     keepAsTerm: factory.namedNode(NAMESPACE + 'keepAsTerm'),
 
-    // Union
-    UnionShape: factory.namedNode(NAMESPACE + 'UnionShape'),
+    // AnyOf
+    AnyOf: factory.namedNode(NAMESPACE + 'AnyOf'),
     variant: factory.namedNode(NAMESPACE + 'variant'),
 
     // Optional and Set
-    OptionalShape: factory.namedNode(NAMESPACE + 'OptionalShape'),
-    SetShape: factory.namedNode(NAMESPACE + 'SetShape'),
+    Optional: factory.namedNode(NAMESPACE + 'Optional'),
+    Set: factory.namedNode(NAMESPACE + 'Set'),
     item: factory.namedNode(NAMESPACE + 'item'),
     minCount: factory.namedNode(NAMESPACE + 'minCount'),
     maxCount: factory.namedNode(NAMESPACE + 'maxCount'),
 
     // List; also uses "item"
-    ListShape: factory.namedNode(NAMESPACE + 'ListShape'),
+    List: factory.namedNode(NAMESPACE + 'List'),
     headPath: factory.namedNode(NAMESPACE + 'headPath'),
     tailPath: factory.namedNode(NAMESPACE + 'tailPath'),
     nil: factory.namedNode(NAMESPACE + 'nil'),
 
     // Map; also uses "item"
-    MapShape: factory.namedNode(NAMESPACE + 'MapShape'),
+    Map: factory.namedNode(NAMESPACE + 'Map'),
     mapKey: factory.namedNode(NAMESPACE + 'mapKey'),
     mapValue: factory.namedNode(NAMESPACE + 'mapValue'),
 
