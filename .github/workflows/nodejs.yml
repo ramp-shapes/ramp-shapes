@@ -20,7 +20,7 @@ jobs:
     - name: npm install, lint, build, and test
       run: |
         npm ci
-        npm run lint
+        npm run lint-all
         npm run build
         npm test
       env:
