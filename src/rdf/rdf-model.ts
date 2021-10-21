@@ -1,4 +1,4 @@
-import * as RdfJs from 'rdf-js';
+import type * as RdfJs from 'rdf-js';
 
 import { escapeRdfValue } from './rdf-escape';
 

@@ -76,8 +76,9 @@ export function runTest(testCase: TestCase): TestResult {
         throw new Error(`Unknown test type: ${testCase.type}`);
     }
   } catch (error) {
-    if (error && error.testFailure) {
-      return (error as TestFailureError).testFailure;
+    const testError = error as TestFailureError;
+    if (testError && testError.testFailure) {
+      return testError.testFailure;
     } else {
       return {
         type: 'failure',

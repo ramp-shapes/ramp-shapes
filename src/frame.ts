@@ -671,7 +671,8 @@ function frameByReference(
     const compacted = compactByReference(refContext.match.value, shape, refContext.reference);
     return Rdf.looksLikeTerm(compacted) ? context.mapper.fromRdf(compacted, shape) : compacted;
   } catch (e) {
-    const message = e.message || `Error compacting value of shape ${Rdf.toString(shape.id)}`;
+    const message = (e as Error).message
+      || `Error compacting value of shape ${Rdf.toString(shape.id)}`;
     throw makeError(ErrorCode.FailedToCompactValue, message, stack);
   }
 }
