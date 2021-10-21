@@ -7,10 +7,10 @@ const factory = Ramp.Rdf.DefaultDataFactory;
 const query = Ramp.generateQuery({
   shape: AlexanderTheThirdDescendants,
   prefixes: Prefixes,
-  unstable_onEmit: (shape, subject, out) => {
+  onEmitShape: e => {
     // Add FILTER(LANG(?var) = "en") to fetch only english labels
-    if (shape.type === 'literal' && shape.language) {
-      out.push({
+    if (e.shape.type === 'literal' && e.shape.language) {
+      e.emitPatterns.push({
         type: 'filter',
         expression: {
           type: 'operation',
@@ -19,9 +19,9 @@ const query = Ramp.generateQuery({
             {
               type: 'operation',
               operator: 'lang',
-              args: [subject],
+              args: [e.subject],
             },
-            factory.literal(shape.language)
+            factory.literal(e.shape.language)
           ]
         }
       });

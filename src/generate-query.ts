@@ -16,7 +16,7 @@ export interface GenerateQueryParams {
   factory?: Rdf.DataFactory;
   base?: Rdf.NamedNode;
   prefixes?: { [prefix: string]: string };
-  unstable_onEmit?: (shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]) => void;
+  onEmitShape?: (e: Readonly<EmitShapeEvent>) => void;
 }
 
 /**
@@ -66,6 +66,8 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   const subjects = makeTermMap<SparqlJs.Triple['subject'] | null>();
   let varIndex = 1;
 
+  let emitEvent = {} as EmitShapeEvent;
+
   const context: GenerateQueryContext = {
     factory,
     listDefaults: makeListShapeDefaults(factory),
@@ -94,7 +96,15 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
       const stack = context.stack.map(shape => ({shape}));
       return makeRampError(code, message, stack);
     },
-    onEmit: params.unstable_onEmit || ((shape, subject, out) => {/* nothing by default */}),
+    onEmit: params.onEmitShape ? (
+      (shape, subject, out) => {
+        emitEvent.shape = shape;
+        emitEvent.stack = context.stack;
+        emitEvent.subject = subject;
+        emitEvent.emitPatterns = out;
+        params.onEmitShape!(emitEvent);
+      }
+    ) : ((shape, subject, out) => {/* nothing by default */})
   };
 
   const rootShape = params.shape;
@@ -120,6 +130,13 @@ interface GenerateQueryContext {
   addEdge(edge: Edge): void;
   makeError(code: ErrorCode, message: string): RampError;
   onEmit(shape: Shape, subject: SparqlJs.Term, out: SparqlJs.Pattern[]): void;
+}
+
+interface EmitShapeEvent {
+  shape: Shape;
+  stack: ReadonlyArray<Shape>;
+  subject: SparqlJs.Term;
+  emitPatterns: SparqlJs.Pattern[];
 }
 
 interface Edge {
@@ -232,32 +249,34 @@ function generateForShape(
 
   context.visitingShapes.add(shape.id);
   context.stack.push(shape);
+  const outBuffer: SparqlJs.Pattern[] = [];
 
   switch (shape.type) {
     case 'record':
-      generateForRecord(shape, edge, out, context);
+      generateForRecord(shape, edge, outBuffer, context);
       break;
     case 'anyOf':
-      generateForAnyOf(shape, edge, out, context);
+      generateForAnyOf(shape, edge, outBuffer, context);
       break;
     case 'set':
     case 'optional':
     case 'map':
-      generateForSetLikeShape(shape, edge, out, context);
+      generateForSetLikeShape(shape, edge, outBuffer, context);
       break;
     case 'resource':
     case 'literal':
-      generateForNode(shape, edge, out, context);
+      generateForNode(shape, edge, outBuffer, context);
       break;
     case 'list':
-      generateForList(shape, edge, out, context);
+      generateForList(shape, edge, outBuffer, context);
       break;
     default:
       assertUnknownShape(shape);
       break;
   }
 
-  context.onEmit(shape, edge.object, out);
+  context.onEmit(shape, edge.object, outBuffer);
+  moveFromTo(outBuffer, out);
 
   context.visitingShapes.delete(shape.id);
   context.stack.pop();
@@ -592,4 +611,11 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   }
 
   return term ? term : null;
+}
+
+function moveFromTo<T>(from: T[], to: T[]): void {
+  for (const item of from) {
+    to.push(item);
+  }
+  from.length = 0;
 }

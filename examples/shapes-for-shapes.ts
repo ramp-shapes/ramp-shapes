@@ -9,7 +9,7 @@ const factory = Rdf.DefaultDataFactory;
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
   xsd: xsd.NAMESPACE,
-  '': Ramp.vocabulary.NAMESPACE,
+  ramp: Ramp.vocabulary.NAMESPACE,
 };
 
 async function main() {
