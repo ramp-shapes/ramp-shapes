@@ -1,6 +1,3 @@
-// tslint:disable-next-line: no-reference
-/// <reference path="./json-diff.d.ts" />
-
 import chalk from 'chalk';
 import { diffLines } from 'diff';
 import { diffString } from 'json-diff';

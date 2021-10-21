@@ -34,21 +34,51 @@ export function toJson(match: unknown): string {
   }, 2);
 }
 
-function jsonQueryResultTermToRdf(value: any): Rdf.Term | null {
+type SparqlJsonTerm = SparqlJsonIri | SparqlJsonBlank | SparqlJsonLiteral;
+
+interface SparqlJsonIri {
+  readonly type: 'uri';
+  readonly value: string;
+}
+
+interface SparqlJsonBlank {
+  readonly type: 'bnode';
+  readonly value: string;
+}
+
+interface SparqlJsonLiteral {
+  readonly type: 'literal';
+  readonly value: string;
+  readonly datatype?: string;
+  readonly 'xml:lang'?: string;
+}
+
+function jsonQueryResultTermToRdf(value: SparqlJsonTerm): Rdf.Term | null {
   return (
     value.type === 'uri' ? factory.namedNode(value.value) :
-    value.type === 'literal' ? factory.literal(
-      value.value,
+    value.type === 'literal' ? factory.literal(value.value, (
       value['xml:lang'] ? value['xml:lang'] :
-      value.datatype ? jsonQueryResultTermToRdf(value.datatype) :
+      value.datatype ? factory.namedNode(value.datatype) :
       undefined
-    ) :
+    )) :
     value.type === 'bnode' ? factory.blankNode(value.value) :
     null
   );
 }
 
-export function parseJsonQueryResponse(bindings: any[]): Rdf.Quad[] {
+export interface SparqlJsonQueryResponse {
+  results: {
+    bindings: SparqlJsonQuad[];
+  };
+}
+
+interface SparqlJsonQuad {
+  readonly subject: SparqlJsonTerm;
+  readonly predicate: SparqlJsonTerm;
+  readonly object: SparqlJsonTerm;
+}
+
+export function parseJsonQueryResponse(bindings: SparqlJsonQuad[]): Rdf.Quad[] {
   const quads: Rdf.Quad[] = [];
   for (const {subject, predicate, object} of bindings) {
     const quad = factory.quad(

@@ -450,7 +450,8 @@ function flattenNode(
   if (!Rdf.looksLikeTerm(value)) { return undefined; }
   if (!matchesTerm(shape, value)) {
     if (required) {
-      throw matchesTerm(shape, value, (code, message) => context.makeError(code, message));
+      matchesTerm(shape, value, (code, message) => context.makeError(code, message));
+      throw new Error('Expected "matchesTerm" to throw');
     } else {
       return undefined;
     }

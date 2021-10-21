@@ -17,7 +17,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.module.json && tsc --project tsconfig.module-es5.json",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "eslint",
+    "lint-all": "eslint ./**/*.{ts,tsx}",
     "test": "ts-node ./test/main.ts"
   },
   "devDependencies": {
@@ -25,8 +26,12 @@
     "@types/n3": "^1.10.3",
     "@types/node": "^12.20.33",
     "@types/sparqljs": "^3.1.3",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "@typescript-eslint/typescript-estree": "^5.1.0",
     "chalk": "^4.1.2",
     "diff": "^5.0.0",
+    "eslint": "^8.0.1",
     "json-diff": "^0.5.4",
     "n3": "^1.11.1",
     "rdf-js": "^4.0.2",

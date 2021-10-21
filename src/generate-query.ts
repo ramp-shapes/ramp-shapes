@@ -66,7 +66,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
   const subjects = makeTermMap<SparqlJs.Triple['subject'] | null>();
   let varIndex = 1;
 
-  let emitEvent = {} as EmitShapeEvent;
+  const emitEvent = {} as EmitShapeEvent;
 
   const context: GenerateQueryContext = {
     factory,
@@ -544,7 +544,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
 
   function *visitProperties(
     properties: ReadonlyArray<RecordProperty>
-  ): Iterable<SparqlJsPredicate>  {
+  ): Iterable<SparqlJsPredicate> {
     for (const property of properties) {
       path.push(propertyPathToSparql(property.path));
       yield* visit(property.valueShape);
@@ -593,7 +593,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
 
   function *visitProperties(
     properties: ReadonlyArray<RecordProperty>
-  ): Iterable<Rdf.NamedNode>  {
+  ): Iterable<Rdf.NamedNode> {
     for (const property of properties) {
       if (isSelfPath(property.path)) {
         yield* visit(property.valueShape);

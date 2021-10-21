@@ -16,7 +16,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Compacting term value by reference allowed only for resource or literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${formatDisplayShape(ref.target)}`
+          `value is (${typeof value}) ${String(value)}, target is ${formatDisplayShape(ref.target)}`
         );
       }
     case 'datatype':
@@ -27,7 +27,7 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
       } else {
         throw new Error(
           `Framing term datatype or language as map key allowed only for literal shapes: ` +
-          `value is (${typeof value}) ${value}, target is ${formatDisplayShape(ref.target)}`
+          `value is (${typeof value}) ${String(value)}, target is ${formatDisplayShape(ref.target)}`
         );
       }
     default:
@@ -132,7 +132,7 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
             throw makeRampError(
               ErrorCode.CannotSynthesizeResourceFromNonString,
               `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
-              `from non-string (${typeof match.match}) ${match.match}`
+              `from non-string (${typeof match.match}) ${String(match.match)}`
             );
           }
           return context.factory.namedNode(match.match);
@@ -193,7 +193,7 @@ function checkRefPart(match: ReferenceMatch): string {
     throw makeRampError(
       ErrorCode.CannotSynthesizePartFromNonString,
       `Cannot synthesize '${match.ref.part}' part for shape ${formatDisplayShape(match.ref.target)} ` +
-      `from non-string value (${typeof match.match}) ${match.match}`
+      `from non-string value (${typeof match.match}) ${String(match.match)}`
     );
   }
   return match.match;

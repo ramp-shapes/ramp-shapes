@@ -33,7 +33,7 @@ export function readCyclicJson(path: string): unknown {
       refs.set(value, this);
       return undefined;
     }
-    if (typeof value === 'object' && value.hasOwnProperty('@use')) {
+    if (typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, '@use')) {
       const useRef = value['@use'];
       if (typeof useRef !== 'number') {
         throw new Error(`Invalid non-number object reference {"@use": ...}`);

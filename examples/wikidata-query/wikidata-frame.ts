@@ -1,18 +1,19 @@
 import * as path from 'path';
 import * as Ramp from '../../src/index';
 import {
-  writeFile, makeDirectoryIfNotExists, toJson, parseJsonQueryResponse, quadsToTurtleString
+  SparqlJsonQueryResponse, writeFile, makeDirectoryIfNotExists, toJson,
+  parseJsonQueryResponse, quadsToTurtleString,
 } from '../util';
 import { Prefixes, AlexanderTheThirdDescendants } from './wikidata-common';
 
-const queryResult = require('../../out/wikidata-query-result.json');
+const queryResult = require('../../out/wikidata-query-result.json') as SparqlJsonQueryResponse;
 
 (async function main() {
   const bindings = queryResult.results.bindings;
   const quads = parseJsonQueryResponse(bindings);
   const dataset = Ramp.Rdf.dataset(quads);
-  console.log('Total quads: ' + bindings.length);
-  console.log('Unique quads: ' + dataset.size);
+  console.log(`Total quads: ${bindings.length}`);
+  console.log(`Unique quads: ${dataset.size}`);
 
   const iterator = Ramp.frame({shape: AlexanderTheThirdDescendants, dataset});
 

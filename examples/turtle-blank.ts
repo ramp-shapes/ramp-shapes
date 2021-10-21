@@ -12,17 +12,17 @@ export function quadsToTurtleString(
 
     const makeQuad = (q: Rdf.GroupedQuad): N3.Quad => {
       return N3.DataFactory.quad(
-        makeTerm(q.subject),
+        makeTerm(q.subject) as N3.Quad_Subject,
         q.predicate,
-        makeTerm(q.object),
+        makeTerm(q.object) as N3.Quad_Object,
         q.graph
       );
     };
-    const makeTerm = (term: Rdf.BlankGroup | Rdf.BlankList | Rdf.Term): any => {
+    const makeTerm = (term: Rdf.BlankGroup | Rdf.BlankList | Rdf.Term): N3.Term | N3.Quad_Object[] => {
       return (
         term.termType === 'BlankGroup' ? writer.blank(term.content.map(makeQuad)) :
-        term.termType === 'BlankList' ? writer.list(term.items.map(makeTerm)) :
-        term
+        term.termType === 'BlankList' ? writer.list(term.items.map(makeTerm) as N3.Quad_Object[]) :
+        term as N3.Term
       );
     };
 
@@ -30,7 +30,7 @@ export function quadsToTurtleString(
       writer.addQuad(q.termType === 'GroupedQuad' ? makeQuad(q) : q);
     }
 
-    writer.end((error, result) => {
+    writer.end((error, result: string) => {
       if (error) {
         reject(error);
       } else {
@@ -49,7 +49,6 @@ function normalizeN3TurtleIndentation(turtle: string): string {
   for (const line of lines) {
     let nextLevel = level;
     const spacingLength = findLineIndentation(line);
-    // tslint:disable-next-line: prefer-for-of
     for (let j = 0; j < line.length; j++) {
       switch (line[j]) {
         case '[': {

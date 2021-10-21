@@ -89,7 +89,6 @@ interface MatchKey {
 namespace MatchKey {
   export function hash(key: MatchKey): number {
     let hash = Rdf.hashTerm(key.shape.id);
-    // tslint:disable-next-line: no-bitwise
     hash = (hash * 31 + Rdf.hashTerm(key.term)) | 0;
     return hash;
   }
@@ -468,11 +467,12 @@ function *frameNode(
     if (matchesTerm(shape, candidate)) {
       yield new CandidateMatch(candidate, candidate);
     } else if (required) {
-      throw matchesTerm(
+      matchesTerm(
         shape,
         candidate,
         (code, message) => makeError(code, message, stack.setFocus(candidate))
       );
+      throw new Error('Expected "matchesTerm" to throw');
     } else {
       yield MISMATCH;
     }
@@ -644,7 +644,7 @@ function *frameMap(
     if (key !== undefined && value !== undefined) {
       if (!(typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean')) {
         const message = `Cannot use non-primitive value as a key of map ${Rdf.toString(shape.id)}: ` +
-          `(${typeof key}) ${key}`;
+          `(${typeof key}) ${String(key)}`;
         throw makeError(ErrorCode.CompositeMapKey, message, stack);
       }
       result[key.toString()] = value;

@@ -82,7 +82,7 @@ export function matchesTerm(
     if (makeError) {
       throw makeError(
         ErrorCode.NonMatchingTermValue,
-        `Expected different term value ${shape.value} but found ${node}`
+        `Expected different term value ${Rdf.toString(shape.value)} but found ${Rdf.toString(node)}`
       );
     } else {
       return false;

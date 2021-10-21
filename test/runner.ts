@@ -73,7 +73,7 @@ export function runTest(testCase: TestCase): TestResult {
       case 'generateQuery':
         return runGenerateQueryTest(testCase);
       default:
-        throw new Error(`Unknown test type: ${testCase.type}`);
+        throw new Error(`Unknown test type: ${(testCase as TestCase).type}`);
     }
   } catch (error) {
     const testError = error as TestFailureError;

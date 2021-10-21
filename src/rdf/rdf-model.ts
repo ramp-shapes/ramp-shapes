@@ -132,27 +132,27 @@ class RdfQuad implements Quad {
 class RdfDataFactory implements RdfJs.DataFactory {
   namedNode = <Iri extends string = string>(value: Iri): RdfJs.NamedNode<Iri> => {
     return new RdfNamedNode<Iri>(value);
-  }
+  };
   blankNode = (value?: string | undefined): RdfJs.BlankNode => {
     return new RdfBlankNode(typeof value === 'string' ? value : randomString('b', 48));
-  }
+  };
   literal = (value: string, languageOrDatatype?: string | RdfJs.NamedNode | undefined): RdfJs.Literal => {
     return new RdfLiteral(value, languageOrDatatype);
-  }
+  };
   variable = (value: string): RdfJs.Variable => {
     return new RdfVariable(value);
-  }
-  defaultGraph(): RdfJs.DefaultGraph {
+  };
+  defaultGraph = (): RdfJs.DefaultGraph => {
     return RdfDefaultGraph.instance;
-  }
-  quad(
+  };
+  quad = (
     subject: RdfJs.Quad_Subject,
     predicate: RdfJs.Quad_Predicate,
     object: RdfJs.Quad_Object,
     graph?: RdfJs.BlankNode | RdfJs.Variable | RdfJs.DefaultGraph | RdfJs.NamedNode | undefined
-  ): RdfJs.Quad {
+  ): RdfJs.Quad => {
     return new RdfQuad(subject, predicate, object, graph);
-  }
+  };
 }
 
 export const DefaultDataFactory: RdfJs.DataFactory = new RdfDataFactory();
@@ -244,11 +244,9 @@ export function hashTerm(node: Term): number {
     case 'Literal':
       hash = hashFnv32a(node.value);
       if (node.datatype) {
-        // tslint:disable-next-line: no-bitwise
         hash = (Math.imul(hash, 31) + hashFnv32a(node.datatype.value)) | 0;
       }
       if (node.language) {
-        // tslint:disable-next-line: no-bitwise
         hash = (Math.imul(hash, 31) + hashFnv32a(node.language)) | 0;
       }
       break;
@@ -256,12 +254,10 @@ export function hashTerm(node: Term): number {
       hash = hashFnv32a(node.value);
       break;
     case 'Quad': {
-      /* tslint:disable: no-bitwise */
       hash = (Math.imul(hash, 31) + hashTerm(node.subject)) | 0;
       hash = (Math.imul(hash, 31) + hashTerm(node.predicate)) | 0;
       hash = (Math.imul(hash, 31) + hashTerm(node.object)) | 0;
       hash = (Math.imul(hash, 31) + hashTerm(node.graph)) | 0;
-      /* tslint:enable: no-bitwise */
       break;
     }
   }
@@ -320,8 +316,6 @@ export function hashString(str: string): number {
  * @returns {integer}
  */
 function hashFnv32a(str: string, seed = 0x811c9dc5): number {
-  /* tslint:disable: no-bitwise */
-  // tslint:disable-next-line: one-variable-per-declaration
   let i: number, l: number, hval = seed & 0x7fffffff;
 
   for (i = 0, l = str.length; i < l; i++) {
@@ -329,11 +323,9 @@ function hashFnv32a(str: string, seed = 0x811c9dc5): number {
     hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
   }
   return hval >>> 0;
-  /* tslint:enable: no-bitwise */
 }
 
 export function dropHighestNonSignBit(i32: number): number {
-  // tslint:disable-next-line: no-bitwise
   return ((i32 >>> 1) & 0x40000000) | (i32 & 0xBFFFFFFF);
 }
 
