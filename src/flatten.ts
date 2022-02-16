@@ -1,7 +1,7 @@
 import { HashMap } from './hash-map';
 import * as Rdf from './rdf';
 import {
-  Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
+  Shape, TypedShape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeID, ShapeReference,
   getNestedPropertyPath,
 } from './shapes';
@@ -13,9 +13,9 @@ import { RampError, ErrorCode, StackFrame, formatDisplayShape, makeRampError } f
 import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
-export interface FlattenParams {
-  value: unknown;
-  shape: Shape;
+export interface FlattenParams<S extends Shape> {
+  value: S extends TypedShape<infer T> ? T : unknown;
+  shape: S;
   factory?: Rdf.DataFactory;
   mapper?: ValueMapper;
   /**
@@ -28,7 +28,7 @@ export interface FlattenParams {
   unstable_generateBlankNode?: (prefix: string) => Rdf.BlankNode;
 }
 
-export function *flatten(params: FlattenParams): Iterable<Rdf.Quad> {
+export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Rdf.Quad> {
   const {
     factory = Rdf.DefaultDataFactory,
     postponeNamed = true,

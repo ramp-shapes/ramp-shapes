@@ -11,6 +11,14 @@ export type Shape =
   | ListShape
   | MapShape;
 
+export type TypedShapeID<T> = ShapeID & { readonly __type: T };
+export type TypedShape<T> = Shape & { readonly __type: T };
+
+export type UnwrapShape<T> =
+  T extends TypedShapeID<infer V> ? V :
+  T extends TypedShape<infer V> ? V :
+  never;
+
 export interface ShapeBase {
   readonly id: ShapeID;
   readonly lenient?: boolean;
@@ -140,7 +148,28 @@ export interface ShapeReference {
 
 export interface Vocabulary {
   readonly id?: Rdf.NamedNode | Rdf.BlankNode;
-  readonly terms: { [literal: string]: Rdf.NamedNode };
+  readonly terms: VocabularyTerms;
+}
+
+export interface TypedVocabulary<T extends VocabularyTerms> {
+  readonly id?: Vocabulary['id'];
+  readonly terms: T;
+}
+
+interface VocabularyTerms {
+  readonly [literal: string]: Rdf.NamedNode;
+}
+
+export function typedShape<T>(id: Shape): TypedShape<T> {
+  return id as TypedShape<T>;
+}
+
+export function typedShapeID<T>(id: ShapeID): TypedShapeID<T> {
+  return id as TypedShapeID<T>;
+}
+
+export function typedVocabulary<T extends VocabularyTerms>(v: Vocabulary): TypedVocabulary<T> {
+  return v as TypedVocabulary<T>;
 }
 
 export function getNestedPropertyPath(path: ZeroOrMorePath | ZeroOrOnePath | OneOrMorePath): PropertyPath {
