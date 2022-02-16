@@ -1,6 +1,6 @@
 import { join } from 'path';
 import * as Ramp from '../../src/index';
-import { self, property, inverseProperty, propertyPath } from '../../src/index';
+import { self, property, inverseProperty, propertyPath, definesType } from '../../src/index';
 import { rdf, rdfs, xsd, oa } from '../namespaces';
 import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
 
@@ -10,12 +10,12 @@ const schema = new Ramp.ShapeBuilder();
 
 const xpathLiteral = schema.literal({datatype: xsd.string});
 
-schema.record({
+const XPathSelectorID = schema.record({
   id: oa.XPathSelector,
-  typeProperties: {
-    type: property(rdf.type, schema.constant(oa.XPathSelector)),
-  },
   properties: {
+    type: definesType(
+      property(rdf.type, schema.constant(oa.XPathSelector))
+    ),
     xpath: property(rdf.value, xpathLiteral),
     offset: propertyPath(
       {
@@ -25,37 +25,43 @@ schema.record({
           {type: 'predicate', predicate: oa.start},
         ],
       },
-      schema.literal({datatype: xsd.nonNegativeInteger})
+      schema.literal<number>({datatype: xsd.nonNegativeInteger})
     ),
     refinedBy: property(oa.refinedBy, schema.optional(schema.resource())),
   }
 });
 
-schema.record({
+interface XPathSelector extends Ramp.UnwrapShape<typeof XPathSelectorID> {}
+const XPathSelector: Ramp.TypedShapeID<XPathSelector> = XPathSelectorID;
+
+const RangeSelectorID = schema.record({
   id: oa.RangeSelector,
-  typeProperties: {
-    type: property(rdf.type, schema.constant(oa.RangeSelector)),
-  },
   properties: {
-    start: property(oa.hasStartSelector, oa.XPathSelector),
-    end: property(oa.hasEndSelector, oa.XPathSelector),
+    type: definesType(
+      property(rdf.type, schema.constant(oa.RangeSelector))
+    ),
+    start: property(oa.hasStartSelector, XPathSelector),
+    end: property(oa.hasEndSelector, XPathSelector),
   }
 });
 
+interface RangeSelector extends Ramp.UnwrapShape<typeof RangeSelectorID> {}
+const RangeSelector: Ramp.TypedShapeID<RangeSelector> = RangeSelectorID;
+
 const bodyLabel = schema.literal({datatype: rdf.langString});
 
-schema.record({
+const AnnotationID = schema.record({
   id: oa.Annotation,
-  typeProperties: {
-    type: property(rdf.type, schema.constant(oa.Annotation)),
-  },
   properties: {
+    type: definesType(
+      property(rdf.type, schema.constant(oa.Annotation))
+    ),
     iri: self(schema.resource()),
     target: property(oa.hasTarget, schema.record({
       properties: {
         source: property(oa.hasSource, schema.resource()),
         selector: property(oa.hasSelector, schema.anyOf(
-          [oa.RangeSelector, oa.XPathSelector]
+          [RangeSelector, XPathSelector]
         ))
       }
     })),
@@ -66,20 +72,23 @@ schema.record({
           value: {target: bodyLabel, part: 'value'},
         })),
         label_en: property(rdfs.label, schema.literal({language: 'en', lenient: true})),
-        nonExistentValue: property(rdf.value, schema.optional(schema.literal())),
+        nonExistentValue: property(rdf.value, schema.optional(schema.literalTerm())),
       }
     })),
   }
 });
+
+interface Annotation extends Ramp.UnwrapShape<typeof AnnotationID> {}
+const Annotation: Ramp.TypedShapeID<Annotation> = AnnotationID;
 
 const backwardsShapeId = schema.record({
   properties: {
     iri: self(schema.resource()),
     source: property(oa.hasSource, schema.resource()),
     selector: property(oa.hasSelector, schema.anyOf(
-      [oa.RangeSelector, oa.XPathSelector]
+      [RangeSelector, XPathSelector]
     )),
-    annotations: inverseProperty(oa.hasTarget, schema.set(oa.Annotation)),
+    annotations: inverseProperty(oa.hasTarget, schema.set(Annotation)),
   }
 });
 
@@ -91,14 +100,14 @@ const PREFIXES = {
 };
 
 (async function main() {
-  const annotationShape = schema.shapes.get(oa.Annotation)!;
+  const annotationShape = schema.getShape(Annotation)!;
   for (const {value} of Ramp.frame({shape: annotationShape, dataset})) {
     console.log('FRAME oa:Annotation', toJson(value));
     const triples = Ramp.flatten({value, shape: annotationShape});
     console.log('FLATTEN:\n', await quadsToTurtleString(triples, PREFIXES));
   }
 
-  const backwardsShape = schema.shapes.get(backwardsShapeId)!;
+  const backwardsShape = schema.getShape(backwardsShapeId)!;
   for (const {value} of Ramp.frame({shape: backwardsShape, dataset})) {
     console.log('FRAME backwards shape', toJson(value));
     const triples = Ramp.flatten({value, shape: backwardsShape});

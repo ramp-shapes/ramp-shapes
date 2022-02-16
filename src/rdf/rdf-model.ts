@@ -345,3 +345,18 @@ export function looksLikeTerm(value: unknown): value is Term {
       return false;
   }
 }
+
+export function namespacedValue<Namespace extends string, LocalName extends string>(
+  namespace: Namespace,
+  localName: LocalName
+): `${Namespace}${LocalName}` {
+  return `${namespace}${localName}`;
+}
+
+export function namespacedNode<Namespace extends string, LocalName extends string>(
+  factory: DataFactory,
+  namespace: Namespace,
+  localName: LocalName
+): NamedNode<`${Namespace}${LocalName}`> {
+  return factory.namedNode(namespacedValue(namespace, localName));
+}

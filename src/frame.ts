@@ -2,7 +2,8 @@ import { HashMap, HashSet, ReadonlyHashSet } from './hash-map';
 import * as Rdf from './rdf';
 import {
   ShapeID, Shape, RecordShape, RecordProperty, ComputedProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, getNestedPropertyPath,
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, TypedShape,
+  getNestedPropertyPath,
 } from './shapes';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
@@ -12,8 +13,8 @@ import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './error
 import { SynthesizeContext, synthesizeShape, compactByReference, EMPTY_REF_MATCHES } from './synthesize';
 import { ValueMapper } from './value-mapping';
 
-export interface FrameParams {
-  shape: Shape;
+export interface FrameParams<T> {
+  shape: TypedShape<T> | Shape;
   dataset: Rdf.Dataset;
   candidates?: Iterable<Rdf.Term>;
   /** Default is `true` if there are initial candidates otherwise `false`. */
@@ -22,14 +23,14 @@ export interface FrameParams {
   mapper?: ValueMapper;
 }
 
-export interface FrameSolution {
-  readonly value: unknown;
+export interface FrameSolution<T> {
+  readonly value: T;
 }
 
 /**
  * @throws {RamError}
  */
-export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
+export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<FrameSolution<T>> {
   const factory = params.factory || Rdf.DefaultDataFactory;
   const refs = makeTermMap<unknown>() as HashMap<ShapeID, RefContext[]>;
 
@@ -52,7 +53,7 @@ export function *frame(params: FrameParams): IterableIterator<FrameSolution> {
     } else if (match instanceof CyclicMatch) {
       throw makeError(ErrorCode.CyclicMatch, `Failed to match cyclic shape`, stack);
     }
-    yield {value: match.value};
+    yield {value: match.value as T};
   }
 }
 
