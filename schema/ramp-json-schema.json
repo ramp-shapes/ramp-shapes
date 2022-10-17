@@ -1,0 +1,436 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Defines schema for RAMP JSON-based syntax",
+  "definitions": {
+    "RdfNamedNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "termType": {
+          "type": "string",
+          "const": "NamedNode"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "RdfBlankNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "termType": {
+          "type": "string",
+          "const": "BlankNode"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "ShapeOrRef": {
+      "anyOf": [
+        {"$ref": "#/definitions/ShapeRef"},
+        {"$ref": "#/definitions/Shape"}
+      ]
+    },
+    "Shape": {
+      "anyOf": [
+        {"$ref": "#/definitions/Resource"},
+        {"$ref": "#/definitions/Literal"},
+        {"$ref": "#/definitions/Record"},
+        {"$ref": "#/definitions/AnyOf"},
+        {"$ref": "#/definitions/Set"},
+        {"$ref": "#/definitions/Optional"},
+        {"$ref": "#/definitions/List"},
+        {"$ref": "#/definitions/Map"}
+      ]
+    },
+    "ShapeRef": {
+      "additionalProperties": false,
+      "properties": {
+        "$ref": {
+          "type": "string"
+        }
+      },
+      "required": ["$ref"]
+    },
+    "Resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "resource"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "onlyNamed": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "keepAsTerm": {
+          "type": "boolean"
+        },
+        "vocabulary": {
+          "$ref": "#/definitions/VocabularyOrRef"
+        }
+      },
+      "required": ["type"]
+    },
+    "Literal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "literal"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "value": {
+          "$ref": "#/definitions/ConstLiteral"
+        },
+        "keepAsTerm": {
+          "type": "boolean"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "required": ["type"]
+    },
+    "ConstLiteral": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "required": ["value"]
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "record"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "typeProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/RecordProperty"
+          }
+        },
+        "computedProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ComputedProperty"
+          }
+        }
+      },
+      "required": ["type", "properties"]
+    },
+    "RecordProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "$ref": "#/definitions/PropertyPath"
+        },
+        "shape": {
+          "$ref": "#/definitions/ShapeOrRef"
+        },
+        "transient": {
+          "type": "boolean"
+        }
+      },
+      "required": ["path", "shape"]
+    },
+    "ComputedProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "$ref": "#/definitions/ShapeOrRef"
+        }
+      },
+      "required": ["shape"]
+    },
+    "AnyOf": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anyOf": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ShapeOrRef"
+          }
+        },
+        "lenient": {
+          "type": "boolean"
+        }
+      },
+      "required": ["anyOf"]
+    },
+    "Set": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "set"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "item": {
+          "$ref": "#/definitions/ShapeOrRef"
+        },
+        "minCount": {
+          "type": "number"
+        },
+        "maxCount": {
+          "type": "number"
+        }
+      },
+      "required": ["type", "item"]
+    },
+    "Optional": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "optional"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "item": {
+          "$ref": "#/definitions/ShapeOrRef"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "emptyValue": {
+          "type": "null"
+        }
+      },
+      "required": ["type", "item"]
+    },
+    "List": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "list"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "item": {
+          "$ref": "#/definitions/ShapeOrRef"
+        },
+        "headPath": {
+          "$ref": "#/definitions/PropertyPath"
+        },
+        "tailPath": {
+          "$ref": "#/definitions/PropertyPath"
+        },
+        "nil": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "item"]
+    },
+    "Map": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "map"
+        },
+        "lenient": {
+          "type": "boolean"
+        },
+        "item": {
+          "$ref": "#/definitions/ShapeOrRef"
+        },
+        "key": {
+          "$ref": "#/definitions/ShapeReference"
+        },
+        "value": {
+          "$ref": "#/definitions/ShapeReference"
+        }
+      },
+      "required": ["type", "item", "key"]
+    },
+    "VocabularyOrRef": {
+      "anyOf": [
+        {"$ref": "#/definitions/VocabularyRef"},
+        {"$ref": "#/definitions/Vocabulary"}
+      ]
+    },
+    "VocabularyRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$ref": {
+          "type": "string"
+        }
+      },
+      "required": ["$ref"]
+    },
+    "Vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/RdfNamedNode"
+          }
+        }
+      },
+      "required": ["terms"]
+    },
+    "ShapeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "#/definitions/ShapeRef"
+        },
+        "part": {
+          "type": "string",
+          "enum": [
+            "value",
+            "datatype",
+            "language"
+          ]
+        }
+      },
+      "required": ["target"]
+    },
+    "PropertyPath": {
+      "anyOf": [
+        {"$ref": "#/definitions/PredicatePath"},
+        {"$ref": "#/definitions/SequencePath"},
+        {"$ref": "#/definitions/InversePath"},
+        {"$ref": "#/definitions/AlternativePath"},
+        {"$ref": "#/definitions/ZeroOrMorePath"},
+        {"$ref": "#/definitions/ZeroOrOnePath"},
+        {"$ref": "#/definitions/OneOrMorePath"}
+      ]
+    },
+    "PredicatePath": {
+      "type": "string"
+    },
+    "SequencePath": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PropertyPath"
+      }
+    },
+    "InversePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inverse": {
+          "$ref": "#/definitions/PropertyPath"
+        }
+      },
+      "required": ["inverse"]
+    },
+    "AlternativePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "alternative": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PropertyPath"
+          }
+        }
+      },
+      "required": ["alternative"]
+    },
+    "ZeroOrMorePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zeroOrMore": {
+          "$ref": "#/definitions/PropertyPath"
+        }
+      },
+      "required": ["zeroOrMore"]
+    },
+    "ZeroOrOnePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zeroOrOne": {
+          "$ref": "#/definitions/PropertyPath"
+        }
+      },
+      "required": ["zeroOrOne"]
+    },
+    "OneOrMorePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "oneOrMore": {
+          "$ref": "#/definitions/PropertyPath"
+        }
+      },
+      "required": ["oneOrMore"]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "prefixes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "shapes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Shape"
+      }
+    }
+  },
+  "required": ["shapes"]
+}

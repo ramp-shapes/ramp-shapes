@@ -29,6 +29,17 @@ export function makeRampVocabulary(factory: Rdf.DataFactory) {
   const NAMESPACE = ramp.NAMESPACE;
   return {
     NAMESPACE,
+
+    // JSON-based syntax
+    NamespacedName: Rdf.namespacedNode(factory, NAMESPACE, 'NamespacedName'),
+    Namespaces: Rdf.namespacedNode(factory, NAMESPACE, 'Namespaces'),
+    Module: Rdf.namespacedNode(factory, NAMESPACE, 'Module'),
+    PropertyName: Rdf.namespacedNode(factory, NAMESPACE, 'PropertyName'),
+    ShapeOrRef: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeOrRef'),
+    ShapeRef: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeRef'),
+    containsShape: Rdf.namespacedNode(factory, NAMESPACE, 'containsShape'),
+
+    // Common definitions
     Shape: Rdf.namespacedNode(factory, NAMESPACE, 'Shape'),
     ShapeID: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeID'),
     ShapeTypeVocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeTypeVocabulary'),

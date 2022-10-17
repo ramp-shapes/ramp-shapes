@@ -118,10 +118,12 @@ export namespace ValueMapper {
 
 function makeTermToKeyVocabulary(vocab: Vocabulary): ReadonlyHashMap<Rdf.Term, string> {
   const forward = makeTermMap<string>();
-  for (const key in vocab.terms) {
-    if (Object.hasOwnProperty.call(vocab.terms, key)) {
-      const term = vocab.terms[key];
-      forward.set(term, key);
+  if (vocab.terms) {
+    for (const key in vocab.terms) {
+      if (Object.hasOwnProperty.call(vocab.terms, key)) {
+        const term = vocab.terms[key];
+        forward.set(term, key);
+      }
     }
   }
   return forward;
@@ -129,10 +131,12 @@ function makeTermToKeyVocabulary(vocab: Vocabulary): ReadonlyHashMap<Rdf.Term, s
 
 function makeKeyToTermVocabulary(vocab: Vocabulary): Map<string, Rdf.Term> {
   const reversed = new Map<string, Rdf.Term>();
-  for (const key in vocab.terms) {
-    if (Object.hasOwnProperty.call(vocab.terms, key)) {
-      const term = vocab.terms[key];
-      reversed.set(key, term);
+  if (vocab.terms) {
+    for (const key in vocab.terms) {
+      if (Object.hasOwnProperty.call(vocab.terms, key)) {
+        const term = vocab.terms[key];
+        reversed.set(key, term);
+      }
     }
   }
   return reversed;

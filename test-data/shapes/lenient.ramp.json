@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/ramp-json-schema.json",
+  "prefixes": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "ex": "http://example.com/schema#"
+  },
+  "shapes": {
+    "ex:Location": {
+      "type": "record",
+      "typeProperties": ["type"],
+      "properties": {
+        "type": {
+          "path": "rdf:type",
+          "shape": {"type": "resource", "value": "ex:Location"}
+        },
+        "center": {
+          "path": "ex:centerPoint",
+          "shape": {"$ref": "ex:Point"}
+        },
+        "border": {
+          "path": "ex:borderPoint",
+          "shape": {"type": "set", "item": "_:LenientPoint"}
+        }
+      }
+    },
+    "_:LenientPoint": {
+      "anyOf": ["ex:Point"],
+      "lenient": true
+    },
+    "ex:Point": {
+      "type": "record",
+      "properties": {
+        "x": {
+          "path": "ex:xCoord",
+          "shape": {"type": "literal", "datatype": "xsd:integer"}
+        },
+        "y": {
+          "path": "ex:yCoord",
+          "shape": {"type": "literal", "datatype": "xsd:integer"}
+        }
+      }
+    }
+  }
+}
