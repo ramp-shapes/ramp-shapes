@@ -259,17 +259,18 @@ function matchProperties(
   context: LowerContext
 ): boolean {
   for (const property of properties) {
+    const frame: StackFrame = {shape: property.valueShape, edge: property.name};
     let propertyValue: unknown;
     if (property.transient) {
       propertyValue = synthesizeShape(property.valueShape, {
         factory: context.factory,
         mapper: context.mapper,
         matches: EMPTY_REF_MATCHES,
+        makeError: (code, message) => makeRampError(code, message, [...context.stack, frame]),
       });
     } else {
       propertyValue = value[property.name];
     }
-    const frame: StackFrame = {shape: property.valueShape, edge: property.name};
     const match = flattenShape(property.valueShape, required, propertyValue, frame, context);
     if (match) {
       matches.push({property, match});
@@ -537,6 +538,7 @@ function flattenMap(
         factory: context.factory,
         mapper: context.mapper,
         matches: refs,
+        makeError: (code, message) => makeRampError(code, message, [...context.stack, frame])
       });
     }
 
