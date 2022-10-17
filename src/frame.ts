@@ -243,7 +243,7 @@ function *frameRecord(
     }
 
     if (foundMatch) {
-      synthesizeComputedProperties(shape.computedProperties, template, context);
+      synthesizeComputedProperties(shape.computedProperties, template, stack, context);
       fillCyclicHoles(context, matchKey, template);
     }
     context.visiting.delete(matchKey);
@@ -308,15 +308,19 @@ function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: st
 function synthesizeComputedProperties(
   properties: ReadonlyArray<ComputedProperty>,
   template: { [fieldName: string]: unknown },
+  stack: StackFrame,
   context: FrameContext
 ) {
   if (properties.length === 0) { return; }
+  let propertyStack = stack;
   const synthesizeContext: SynthesizeContext = {
     factory: context.factory,
     mapper: context.mapper,
     matches: EMPTY_REF_MATCHES,
+    makeError: (code, message) => makeError(code, message, propertyStack),
   };
   for (const property of properties) {
+    propertyStack = new StackFrame(stack, property.valueShape, property.name);
     const value = synthesizeShape(property.valueShape, synthesizeContext);
     template[property.name] = value;
   }

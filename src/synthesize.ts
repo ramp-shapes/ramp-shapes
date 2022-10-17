@@ -1,6 +1,6 @@
 import { ReadonlyHashMap } from './hash-map';
 import * as Rdf from './rdf';
-import { ErrorCode, formatDisplayShape, makeRampError } from './errors';
+import { ErrorCode, RampError, formatDisplayShape, makeRampError } from './errors';
 import {
   SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
 } from './shapes';
@@ -39,6 +39,7 @@ export interface SynthesizeContext {
   readonly factory: Rdf.DataFactory;
   readonly mapper: ValueMapper;
   readonly matches: ReadonlyHashMap<Rdf.Term, ReadonlyArray<ReferenceMatch>>;
+  makeError(code: ErrorCode, message: string): RampError;
 }
 
 export interface ReferenceMatch {
@@ -84,7 +85,7 @@ export function synthesizeShape(
       break;
     }
     default: {
-      throw makeRampError(
+      throw context.makeError(
         ErrorCode.CannotSynthesizeShapeType,
         'Cannot synthesize value for shape ' + formatDisplayShape(shape)
       );
@@ -178,10 +179,10 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
     }
   }
 
-  assertPart(shape, 'value', value);
-  assertPart(shape, 'datatype', datatype);
+  assertPart(shape, 'value', value, context);
+  assertPart(shape, 'datatype', datatype, context);
   if (datatype && datatype.value === rdf.langString) {
-    assertPart(shape, 'language', language);
+    assertPart(shape, 'language', language, context);
     return context.factory.literal(value!, language);
   } else {
     return context.factory.literal(value!, datatype);
@@ -202,10 +203,11 @@ function checkRefPart(match: ReferenceMatch): string {
 function assertPart(
   shape: Shape,
   part: ShapeReference['part'],
-  partValue: unknown
+  partValue: unknown,
+  context: SynthesizeContext
 ) {
   if (partValue === undefined) {
-    throw makeRampError(
+    throw context.makeError(
       ErrorCode.NoPartToSynthesize,
       `Failed to find '${part}' part for shape ${formatDisplayShape(shape)}`
     );
