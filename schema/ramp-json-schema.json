@@ -13,7 +13,8 @@
         "value": {
           "type": "string"
         }
-      }
+      },
+      "required": ["termType", "value"]
     },
     "RdfBlankNode": {
       "type": "object",
@@ -26,7 +27,30 @@
         "value": {
           "type": "string"
         }
-      }
+      },
+      "required": ["termType"]
+    },
+    "Module": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "prefixes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "shapes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Shape"
+          }
+        }
+      },
+      "required": ["shapes"]
     },
     "ShapeOrRef": {
       "anyOf": [
@@ -47,19 +71,13 @@
       ]
     },
     "ShapeRef": {
-      "additionalProperties": false,
-      "properties": {
-        "$ref": {
-          "type": "string"
-        }
-      },
-      "required": ["$ref"]
+      "type": "string"
     },
     "Resource": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
+        "node": {
           "type": "string",
           "const": "resource"
         },
@@ -79,13 +97,13 @@
           "$ref": "#/definitions/VocabularyOrRef"
         }
       },
-      "required": ["type"]
+      "required": ["node"]
     },
     "Literal": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
+        "node": {
           "type": "string",
           "const": "literal"
         },
@@ -105,7 +123,7 @@
           "type": "string"
         }
       },
-      "required": ["type"]
+      "required": ["node"]
     },
     "ConstLiteral": {
       "type": "object",
@@ -127,10 +145,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
-          "type": "string",
-          "const": "record"
-        },
         "lenient": {
           "type": "boolean"
         },
@@ -153,7 +167,7 @@
           }
         }
       },
-      "required": ["type", "properties"]
+      "required": ["properties"]
     },
     "RecordProperty": {
       "type": "object",
@@ -201,15 +215,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
-          "type": "string",
-          "const": "set"
+        "setOf": {
+          "$ref": "#/definitions/ShapeOrRef"
         },
         "lenient": {
           "type": "boolean"
-        },
-        "item": {
-          "$ref": "#/definitions/ShapeOrRef"
         },
         "minCount": {
           "type": "number"
@@ -218,21 +228,17 @@
           "type": "number"
         }
       },
-      "required": ["type", "item"]
+      "required": ["setOf"]
     },
     "Optional": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
-          "type": "string",
-          "const": "optional"
+        "optional": {
+          "$ref": "#/definitions/ShapeOrRef"
         },
         "lenient": {
           "type": "boolean"
-        },
-        "item": {
-          "$ref": "#/definitions/ShapeOrRef"
         },
         "strict": {
           "type": "boolean"
@@ -241,21 +247,17 @@
           "type": "null"
         }
       },
-      "required": ["type", "item"]
+      "required": ["optional"]
     },
     "List": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
-          "type": "string",
-          "const": "list"
+        "listOf": {
+          "$ref": "#/definitions/ShapeOrRef"
         },
         "lenient": {
           "type": "boolean"
-        },
-        "item": {
-          "$ref": "#/definitions/ShapeOrRef"
         },
         "headPath": {
           "$ref": "#/definitions/PropertyPath"
@@ -267,21 +269,17 @@
           "type": "string"
         }
       },
-      "required": ["type", "item"]
+      "required": ["listOf"]
     },
     "Map": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": {
-          "type": "string",
-          "const": "map"
+        "mapOf": {
+          "$ref": "#/definitions/ShapeOrRef"
         },
         "lenient": {
           "type": "boolean"
-        },
-        "item": {
-          "$ref": "#/definitions/ShapeOrRef"
         },
         "key": {
           "$ref": "#/definitions/ShapeReference"
@@ -290,7 +288,7 @@
           "$ref": "#/definitions/ShapeReference"
         }
       },
-      "required": ["type", "item", "key"]
+      "required": ["mapOf", "key"]
     },
     "VocabularyOrRef": {
       "anyOf": [
@@ -299,14 +297,7 @@
       ]
     },
     "VocabularyRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "$ref": {
-          "type": "string"
-        }
-      },
-      "required": ["$ref"]
+      "type": "string"
     },
     "Vocabulary": {
       "type": "object",
@@ -413,24 +404,5 @@
       "required": ["oneOrMore"]
     }
   },
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "$schema": {
-      "type": "string"
-    },
-    "prefixes": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "shapes": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/Shape"
-      }
-    }
-  },
-  "required": ["shapes"]
+  "$ref": "#/definitions/Module"
 }
