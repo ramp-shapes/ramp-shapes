@@ -1,3 +1,4 @@
+import { HashSet } from '../hash-map';
 import * as Rdf from './rdf-model';
 
 export class GroupedQuad {
@@ -25,12 +26,13 @@ export class BlankList {
 }
 
 export function *groupBlanks(quads: ReadonlyArray<Rdf.Quad>): Iterable<GroupedQuad | Rdf.Quad> {
-  const {blankMinIndex, blankMaxIndex} = computeBlankRanges(quads);
-  const context: WriteContext = {
+  const blankStats = computeBlankStats(quads);
+  const context: InlineContext = {
     quads,
-    blankMinIndex,
-    blankMaxIndex,
+    blankStats,
     visitingBlanks: new Set<string>(),
+    alreadyInlined: new HashSet(Rdf.hashQuad, Rdf.equalQuads),
+
   };
 
   let i = 0;
@@ -38,9 +40,8 @@ export function *groupBlanks(quads: ReadonlyArray<Rdf.Quad>): Iterable<GroupedQu
     const q = quads[i];
     let child: BlankGroup | BlankList | undefined;
     if (q.object.termType === 'BlankNode') {
-      context.visitingBlanks.clear();
       const next = i + 1;
-      const result = tryWriteChildGroupOrList(context, q.object, next);
+      const result = tryInlineChildGroupOrList(context, q.object, next);
       if (result && result.child) {
         i = result.next;
         child = result.child;
@@ -61,36 +62,35 @@ const RDF_FIRST = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'first');
 const RDF_REST = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'rest');
 const RDF_NIL = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'nil');
 
-interface WriteContext {
+interface InlineContext {
   readonly quads: ReadonlyArray<Rdf.Quad>;
-  readonly blankMinIndex: ReadonlyMap<string, number>;
-  readonly blankMaxIndex: ReadonlyMap<string, number>;
+  readonly blankStats: ReadonlyMap<string, BlankStatEntry>;
   readonly visitingBlanks: Set<string>;
 }
 
-function tryWriteChildGroupOrList(context: WriteContext, subject: Rdf.Term, start: number) {
-  const {blankMinIndex, blankMaxIndex} = context;
+function tryInlineChildGroupOrList(context: InlineContext, subject: Rdf.Term, start: number) {
+  const {blankStats} = context;
   let next = start;
   let childList: BlankList | undefined;
   let childGroup: BlankGroup | undefined;
 
-  if (!(subject.termType === 'BlankNode' && blankMinIndex.get(subject.value)! === start - 1)) {
+  if (!(subject.termType === 'BlankNode' && canInlineBlank(blankStats.get(subject.value)))) {
     return {next, child: childList || childGroup};
   }
 
   const listOutput: Array<Rdf.Term | BlankGroup | BlankList> = [];
-  const nextList = tryWriteBlankList(context, subject, next, listOutput);
+  const nextList = tryInlineBlankList(context, subject, next, listOutput);
   if (nextList === null) { return null; }
-  if (nextList > next && nextList > blankMaxIndex.get(subject.value)!) {
+  if (nextList > next) {
     next = nextList;
     childList = new BlankList(listOutput);
   }
 
   if (!childList) {
     const childOutput: GroupedQuad[] = [];
-    const nextGroup = tryWriteBlankGroup(context, subject, next, childOutput);
+    const nextGroup = tryInlineBlankGroup(context, subject, next, childOutput);
     if (nextGroup === null) { return null; }
-    if (nextGroup > next && nextGroup > blankMaxIndex.get(subject.value)!) {
+    if (nextGroup > next) {
       next = nextGroup;
       childGroup = new BlankGroup(childOutput);
     }
@@ -99,8 +99,8 @@ function tryWriteChildGroupOrList(context: WriteContext, subject: Rdf.Term, star
   return {next, child: childList || childGroup};
 }
 
-function tryWriteBlankGroup(
-  context: WriteContext, subject: Rdf.BlankNode | undefined, start: number, output: GroupedQuad[]
+function tryInlineBlankGroup(
+  context: InlineContext, subject: Rdf.BlankNode | undefined, start: number, output: GroupedQuad[]
 ): number | null {
   const {quads, visitingBlanks} = context;
   if (subject) {
@@ -114,7 +114,7 @@ function tryWriteBlankGroup(
       return i;
     }
 
-    const result = tryWriteChildGroupOrList(context, q.object, i + 1);
+    const result = tryInlineChildGroupOrList(context, q.object, i + 1);
     if (result === null) { return null; }
 
     output.push(new GroupedQuad(
@@ -131,10 +131,10 @@ function tryWriteBlankGroup(
   return quads.length;
 }
 
-function tryWriteBlankList(
-  context: WriteContext, head: Rdf.BlankNode, start: number, output: Array<Rdf.Term | BlankGroup | BlankList>
+function tryInlineBlankList(
+  context: InlineContext, head: Rdf.BlankNode, start: number, output: Array<Rdf.Term | BlankGroup | BlankList>
 ): number | null {
-  const {quads, blankMinIndex, blankMaxIndex, visitingBlanks} = context;
+  const {quads, blankStats, visitingBlanks} = context;
   if (blankMinIndex.get(head.value)! < start - 1) {
     return start;
   }
@@ -150,7 +150,7 @@ function tryWriteBlankList(
     const qFirst = quads[i];
     if (Rdf.equalTerms(qFirst.subject, current) && Rdf.equalTerms(qFirst.predicate, RDF_FIRST)) {
       const next = i + 1;
-      const result = tryWriteChildGroupOrList(context, qFirst.object, next);
+      const result = tryInlineChildGroupOrList(context, qFirst.object, next);
       if (result === null) { return null; }
       foundFirst = true;
       i = result.next;
@@ -186,35 +186,94 @@ function tryWriteBlankList(
   return start;
 }
 
-interface BlankRanges {
-  blankMinIndex: ReadonlyMap<string, number>;
-  blankMaxIndex: ReadonlyMap<string, number>;
+interface BlankStatEntry {
+  subjects: number;
+  objects: number;
+  graphs: number;
+  rdfStarNested: boolean;
 }
 
-function computeBlankRanges(quads: ReadonlyArray<Rdf.Quad>): BlankRanges {
-  const blankMinIndex = new Map<string, number>();
-  const blankMaxIndex = new Map<string, number>();
+function computeBlankStats(quads: ReadonlyArray<Rdf.Quad>): Map<string, BlankStatEntry> {
+  const stats = new Map<string, BlankStatEntry>();
 
-  const seenAt = (term: Rdf.Term, index: number) => {
-    if (term.termType !== 'BlankNode') { return; }
-    const previousMin = blankMinIndex.get(term.value);
-    blankMinIndex.set(
-      term.value,
-      typeof previousMin === 'number' ? Math.min(previousMin, index) : index
-    );
-    const previousMax = blankMaxIndex.get(term.value);
-    blankMaxIndex.set(
-      term.value,
-      typeof previousMax === 'number' ? Math.max(previousMax, index) : index
-    );
+  const getEntry = (blank: Rdf.BlankNode) => {
+    let entry = stats.get(blank.value);
+    if (!entry) {
+      entry = {subjects: 0, objects: 0, graphs: 0, rdfStarNested: false};
+      stats.set(blank.value, entry);
+    }
+    return entry;
   };
 
-  for (let i = 0; i < quads.length; i++) {
-    const q = quads[i];
-    seenAt(q.subject, i);
-    seenAt(q.object, i);
-    seenAt(q.graph, i);
+  const visitRdfNestedQuad = (quad: Rdf.Quad) => {
+    switch (quad.subject.termType) {
+      case 'BlankNode': {
+        getEntry(quad.subject).rdfStarNested = true;
+        break;
+      }
+      case 'Quad': {
+        visitRdfNestedQuad(quad.subject);
+        break;
+      }
+    }
+    switch (quad.object.termType) {
+      case 'BlankNode': {
+        getEntry(quad.object).rdfStarNested = true;
+        break;
+      }
+      case 'Quad': {
+        visitRdfNestedQuad(quad.object);
+        break;
+      }
+    }
+    switch (quad.graph.termType) {
+      case 'BlankNode': {
+        getEntry(quad.graph).rdfStarNested = true;
+        break;
+      }
+    }
+  };
+
+  const visitQuad = (quad: Rdf.Quad) => {
+    switch (quad.subject.termType) {
+      case 'BlankNode': {
+        getEntry(quad.subject).subjects++;
+        break;
+      }
+      case 'Quad': {
+        visitRdfNestedQuad(quad.subject);
+        break;
+      }
+    }
+    switch (quad.object.termType) {
+      case 'BlankNode': {
+        getEntry(quad.object).objects++;
+        break;
+      }
+      case 'Quad': {
+        visitRdfNestedQuad(quad.object);
+        break;
+      }
+    }
+    switch (quad.graph.termType) {
+      case 'BlankNode': {
+        getEntry(quad.graph).graphs++;
+      }
+    }
+  };
+
+  for (const q of quads) {
+    visitQuad(q);
   }
 
-  return {blankMinIndex, blankMaxIndex};
+  return stats;
+}
+
+function canInlineBlank(entry: BlankStatEntry | undefined): boolean {
+  return Boolean(
+    entry &&
+    entry.objects <= 1 &&
+    entry.graphs === 0 &&
+    !entry.rdfStarNested
+  );
 }
