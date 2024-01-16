@@ -1,0 +1,12 @@
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:document a ex:Document;
+    ex:label "My document";
+    ex:hasStatement [
+        a ex:Statement;
+        ex:content "Hello"
+    ], [
+        a ex:Statement;
+        ex:content "World"
+    ].

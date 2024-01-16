@@ -43,8 +43,8 @@ export interface SynthesizeContext {
 }
 
 export interface ReferenceMatch {
-  ref: ShapeReference;
-  match: unknown;
+  readonly ref: ShapeReference;
+  readonly match: unknown;
 }
 
 export const EMPTY_REF_MATCHES: ReadonlyHashMap<Rdf.Term, ReferenceMatch[]> =
@@ -58,6 +58,14 @@ export function synthesizeShape(
 ): unknown {
   let value: unknown;
   switch (shape.type) {
+    case 'resource': {
+      value = synthesizeResource(shape, context);
+      break;
+    }
+    case 'literal': {
+      value = synthesizeLiteral(shape, context);
+      break;
+    }
     case 'record': {
       const result: { [propertyName: string]: unknown } = {};
       synthesizeProperties(result, shape.typeProperties, context);
@@ -76,12 +84,12 @@ export function synthesizeShape(
       value = shape.emptyValue;
       break;
     }
-    case 'resource': {
-      value = synthesizeResource(shape, context);
+    case 'list': {
+      value = [];
       break;
     }
-    case 'literal': {
-      value = synthesizeLiteral(shape, context);
+    case 'map': {
+      value = {};
       break;
     }
     default: {
@@ -211,5 +219,41 @@ function assertPart(
       ErrorCode.NoPartToSynthesize,
       `Failed to find '${part}' part for shape ${formatDisplayShape(shape)}`
     );
+  }
+}
+
+export function *findOpenReferencedShapes(shape: Shape): Iterable<ShapeReference> {
+  switch (shape.type) {
+    case 'resource': {
+      if (!shape.value) {
+        yield {target: shape};
+      }
+      break;
+    }
+    case 'literal': {
+      if (!shape.value) {
+        yield {target: shape, part: 'value'};
+        if (!shape.language && (!shape.datatype || shape.datatype.value === rdf.langString)) {
+          yield {target: shape, part: 'language'};
+        }
+        if (!shape.datatype && !shape.language) {
+          yield {target: shape, part: 'datatype'};
+        }
+      }
+      break;
+    }
+    case 'record': {
+      for (const property of shape.typeProperties) {
+        yield* findOpenReferencedShapes(property.valueShape);
+      }
+      for (const property of shape.properties) {
+        yield* findOpenReferencedShapes(property.valueShape);
+      }
+      break;
+    }
+    case 'set': {
+      yield* findOpenReferencedShapes(shape.itemShape);
+      break;
+    }
   }
 }
