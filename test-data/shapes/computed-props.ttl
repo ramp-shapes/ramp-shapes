@@ -1,0 +1,35 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+
+ex:Statement a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:Statement ]
+    ];
+    ramp:property [
+        ramp:name "owner";
+        ramp:path [ ramp:inversePath ex:hasStatement ];
+        ramp:shape ex:Document
+    ];
+    ramp:property [
+        ramp:name "content";
+        ramp:path ex:content;
+        ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ]
+    ];
+    ramp:computedProperty [
+        ramp:name "ownerLabel";
+        ramp:shape _:documentLabel
+    ].
+
+ex:Document a ramp:Record;
+    ramp:property [
+        ramp:name "label";
+        ramp:path ex:label;
+        ramp:shape _:documentLabel
+    ].
+
+_:documentLabel a ramp:Literal;
+    ramp:termDatatype xsd:string.

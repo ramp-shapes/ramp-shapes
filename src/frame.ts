@@ -10,7 +10,10 @@ import {
   matchesTerm,
 } from './common';
 import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors';
-import { SynthesizeContext, synthesizeShape, compactByReference, EMPTY_REF_MATCHES } from './synthesize';
+import {
+  SynthesizeContext, ReferenceMatch, synthesizeShape, findOpenReferencedShapes, compactByReference,
+  EMPTY_REF_MATCHES,
+} from './synthesize';
 import { ValueMapper } from './value-mapping';
 
 export interface FrameParams<T> {
@@ -208,6 +211,13 @@ function *frameRecord(
   stack: StackFrame,
   context: FrameContext
 ): Iterable<CandidateMatch<{ [fieldName: string]: unknown }> | CyclicMatch | Mismatch> {
+  const refContexts = findTrackedRecordRefs(shape);
+  if (refContexts) {
+    for (const ref of refContexts) {
+      pushRef(context.refs, ref);
+    }
+  }
+
   for (const candidate of candidates) {
     if (!isResource(candidate)) {
       yield required
@@ -243,11 +253,17 @@ function *frameRecord(
     }
 
     if (foundMatch) {
-      synthesizeComputedProperties(shape.computedProperties, template, stack, context);
+      synthesizeComputedProperties(shape.computedProperties, template, refContexts, stack, context);
       fillCyclicHoles(context, matchKey, template);
     }
     context.visiting.delete(matchKey);
     yield foundMatch ? new CandidateMatch(template, candidate) : MISMATCH;
+  }
+
+  if (refContexts) {
+    while (refContexts.length > 0) {
+      popRef(context.refs, refContexts.pop()!);
+    }
   }
 }
 
@@ -305,9 +321,25 @@ function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: st
   throw makeError(code, fullMessage, focusedStack);
 }
 
+function findTrackedRecordRefs(
+  shape: RecordShape
+): RefContext[] | undefined {
+  if (shape.computedProperties.length === 0) {
+    return undefined;
+  }
+  const refContexts: RefContext[] = [];
+  for (const property of shape.computedProperties) {
+    for (const reference of findOpenReferencedShapes(property.valueShape)) {
+      refContexts.push({source: shape.id, reference});
+    }
+  }
+  return refContexts;
+}
+
 function synthesizeComputedProperties(
   properties: ReadonlyArray<ComputedProperty>,
   template: { [fieldName: string]: unknown },
+  refContexts: RefContext[] | undefined,
   stack: StackFrame,
   context: FrameContext
 ) {
@@ -316,7 +348,7 @@ function synthesizeComputedProperties(
   const synthesizeContext: SynthesizeContext = {
     factory: context.factory,
     mapper: context.mapper,
-    matches: EMPTY_REF_MATCHES,
+    matches: makeReferenceMatchesFromContexts(refContexts, stack, context),
     makeError: (code, message) => makeError(code, message, propertyStack),
   };
   for (const property of properties) {
@@ -814,6 +846,31 @@ function popRef(map: HashMap<ShapeID, RefContext[]>, ref: RefContext) {
   if (removed !== ref) {
     throw makeError(ErrorCode.NonMatchingRefContext, 'Encountered non-matching ref operations');
   }
+}
+
+function makeReferenceMatchesFromContexts(
+  refs: RefContext[] | undefined,
+  stack: StackFrame,
+  context: FrameContext
+) {
+  if (!refs) {
+    return EMPTY_REF_MATCHES;
+  }
+  const result = makeTermMap<ReferenceMatch[]>();
+  for (const ref of refs) {
+    if (ref.match) {
+      let matches = result.get(ref.reference.target.id);
+      if (!matches) {
+        matches = [];
+        result.set(ref.reference.target.id, matches);
+      }
+      matches.push({
+        ref: ref.reference,
+        match: frameByReference(ref, stack, context),
+      });
+    }
+  }
+  return result;
 }
 
 function makeError(code: ErrorCode, message: string, stack?: StackFrame): RampError {

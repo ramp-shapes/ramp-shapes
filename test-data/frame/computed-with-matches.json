@@ -1,0 +1,21 @@
+{
+  "shapes": "computed-props",
+  "matches": [
+    {
+      "type": "http://example.com/schema#Statement",
+      "owner": {
+        "label": "My document"
+      },
+      "content": "Hello",
+      "ownerLabel": "My document"
+    },
+    {
+      "type": "http://example.com/schema#Statement",
+      "owner": {
+        "label": "My document"
+      },
+      "content": "World",
+      "ownerLabel": "My document"
+    }
+  ]
+}
