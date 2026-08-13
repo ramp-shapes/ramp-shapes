@@ -41,7 +41,7 @@ import * as N3 from 'n3';
 import * as SparqlJs from 'sparqljs';
 
 // get graph triples (source data)
-const dataset = Ramp.Rdf.dataset(new N3.Parser().parse(`
+const dataset = Ramp.dataset(new N3.Parser().parse(`
     @prefix ex: <http://example.com/schema/>.
     @prefix : <http://example.com/data/>.
 
@@ -54,7 +54,7 @@ const dataset = Ramp.Rdf.dataset(new N3.Parser().parse(`
 `));
 
 // define custom shapes using Turtle syntax
-const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(new N3.Parser().parse(`
+const shapes = Ramp.frameShapes(Ramp.dataset(new N3.Parser().parse(`
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.

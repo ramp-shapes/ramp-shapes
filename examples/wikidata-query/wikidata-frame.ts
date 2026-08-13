@@ -1,24 +1,29 @@
-import * as path from 'path';
-import * as Ramp from '../../src/index';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import * as Ramp from '../../src/index.js';
 import {
   SparqlJsonQueryResponse, writeFile, makeDirectoryIfNotExists, toJson,
   parseJsonQueryResponse, quadsToTurtleString,
-} from '../util';
-import { Prefixes, AlexanderTheThirdDescendants } from './wikidata-common';
+} from '../util.js';
+import { Prefixes, AlexanderTheThirdDescendants } from './wikidata-common.js';
 
-const queryResult = require('../../out/wikidata-query-result.json') as SparqlJsonQueryResponse;
+const queryResult = JSON.parse(fs.readFileSync(
+  path.join(import.meta.dirname, '../../out/wikidata-query-result.json'),
+  {encoding: 'utf-8'}
+)) as SparqlJsonQueryResponse;
 
-(async function main() {
+void (async function main() {
   const bindings = queryResult.results.bindings;
   const quads = parseJsonQueryResponse(bindings);
-  const dataset = Ramp.Rdf.dataset(quads);
+  const dataset = Ramp.dataset(quads);
   console.log(`Total quads: ${bindings.length}`);
   console.log(`Unique quads: ${dataset.size}`);
 
   const iterator = Ramp.frame({shape: AlexanderTheThirdDescendants, dataset});
 
-  const outDir = path.join(__dirname, '../../out');
-  makeDirectoryIfNotExists(outDir);
+  const outDir = path.join(import.meta.dirname, '../../out');
+  await makeDirectoryIfNotExists(outDir);
 
   await writeFile(
     path.join(outDir, 'wikidata-query-result.ttl'),

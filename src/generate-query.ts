@@ -1,20 +1,24 @@
+import type { DataFactory, NamedNode } from '@rdfjs/types';
+import { HashSet } from '@reactodia/hashmap';
 import * as SparqlJs from 'sparqljs';
 
-import { HashSet } from './hash-map';
-import * as Rdf from './rdf';
+import {
+  DefaultDataFactory, equalTerms, termToString, looksLikeTerm,
+} from './rdf/rdf-model.js';
 import {
   ShapeID, Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, getNestedPropertyPath,
-} from './shapes';
+  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+} from './shapes.js';
 import {
-  ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
-} from './common';
-import { ErrorCode, RampError, makeRampError } from './errors';
+  ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults,
+  resolveListShape,
+} from './common.js';
+import { ErrorCode, RampError, makeRampError } from './errors.js';
 
 export interface GenerateQueryParams {
   shape: Shape;
-  factory?: Rdf.DataFactory;
-  base?: Rdf.NamedNode;
+  factory?: DataFactory;
+  base?: NamedNode;
   prefixes?: { [prefix: string]: string };
   onEmitShape?: (e: Readonly<EmitShapeEvent>) => void;
 }
@@ -23,7 +27,7 @@ export interface GenerateQueryParams {
  * @throws {RamError}
  */
 export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQuery {
-  const factory = params.factory || Rdf.DefaultDataFactory;
+  const factory = params.factory || DefaultDataFactory;
 
   const templateTriples: SparqlJs.Triple[] = [];
   const wherePatterns: SparqlJs.Pattern[] = [];
@@ -42,7 +46,7 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
     predicate: SparqlJs.PropertyPath | SparqlJs.IriTerm,
     object: SparqlJs.Term,
   ): Iterable<SparqlJs.Triple> {
-    if (Rdf.looksLikeTerm(predicate)) {
+    if (looksLikeTerm(predicate)) {
       assertValidSubject(subject);
       yield {subject, predicate, object};
       return;
@@ -114,14 +118,14 @@ export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQu
 }
 
 function isEmptyPath(predicate: SparqlJs.PropertyPath | SparqlJs.Term) {
-  if (Rdf.looksLikeTerm(predicate)) {
+  if (looksLikeTerm(predicate)) {
     return false;
   }
   return predicate.pathType === '/' && predicate.items.length === 0;
 }
 
 interface GenerateQueryContext {
-  readonly factory: Rdf.DataFactory;
+  readonly factory: DataFactory;
   readonly listDefaults: ResolvedListShape;
   readonly visitingShapes: HashSet<ShapeID>;
   readonly stack: Shape[];
@@ -167,7 +171,7 @@ function assertValidSubject(term: SparqlJs.Term): asserts term is SparqlJs.Tripl
       /* allowed */
       break;
     default:
-      throw new Error('Cannot generate triple with given subject: ' + Rdf.toString(term));
+      throw new Error('Cannot generate triple with given subject: ' + termToString(term));
   }
 }
 
@@ -194,8 +198,7 @@ function propertyPathToSparql(path: PropertyPath): SparqlJsPredicate {
     case 'zeroOrMore':
       return {type: 'path', pathType: '*', items: [propertyPathToSparql(path.zeroOrMore)]};
     case 'zeroOrOne':
-      // TODO: fix Sparql.js typings for property path operator '?'
-      return {type: 'path', pathType: '?' as any, items: [propertyPathToSparql(path.zeroOrOne)]};
+      return {type: 'path', pathType: '?', items: [propertyPathToSparql(path.zeroOrOne)]};
     case 'oneOrMore':
       return {type: 'path', pathType: '+', items: [propertyPathToSparql(path.oneOrMore)]};
     default:
@@ -361,7 +364,7 @@ function shouldBreakRecursion(shape: Shape, context: GenerateQueryContext): bool
         // and the previous instance of it then we should wait
         // for second instance of that shape, and only then break
         return false;
-      } else if (Rdf.equalTerms(frame.id, shape.id)) {
+      } else if (equalTerms(frame.id, shape.id)) {
         // break on recursive shapes without an object shape in-between
         return true;
       }
@@ -488,12 +491,12 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
 
   function *visit(shape: Shape): Iterable<SparqlJsPredicate> {
     if (visiting.has(shape.id)) {
-      if (Rdf.equalTerms(shape.id, origin.id)) {
+      if (equalTerms(shape.id, origin.id)) {
         yield concatSparqlPaths('/', path);
       }
       return;
     }
-    if (!Rdf.equalTerms(shape.id, origin.id)
+    if (!equalTerms(shape.id, origin.id)
       && context.visitingShapes.has(shape.id)
       && isBreakingPointShape(shape, context)
     ) {
@@ -558,7 +561,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
 function findSubject(shape: Shape, context: GenerateQueryContext) {
   const visiting = makeTermSet();
 
-  function *visit(shape: Shape): Iterable<Rdf.NamedNode> {
+  function *visit(shape: Shape): Iterable<NamedNode> {
     if (visiting.has(shape.id)) { return; }
     visiting.add(shape.id);
     switch (shape.type) {
@@ -593,7 +596,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
 
   function *visitProperties(
     properties: ReadonlyArray<RecordProperty>
-  ): Iterable<Rdf.NamedNode> {
+  ): Iterable<NamedNode> {
     for (const property of properties) {
       if (isSelfPath(property.path)) {
         yield* visit(property.valueShape);
@@ -601,7 +604,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
     }
   }
 
-  let term: Rdf.NamedNode | undefined;
+  let term: NamedNode | undefined;
   for (const subject of visit(shape)) {
     if (term) {
       term = undefined;

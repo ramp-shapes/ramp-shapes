@@ -1,6 +1,8 @@
-import * as Rdf from './rdf';
+import type { BlankNode, Literal, NamedNode } from '@rdfjs/types';
 
-export type ShapeID = Rdf.NamedNode | Rdf.BlankNode;
+import {} from './rdf/rdf-model.js';
+
+export type ShapeID = NamedNode | BlankNode;
 export type Shape =
   | ResourceShape
   | LiteralShape
@@ -27,7 +29,7 @@ export interface ShapeBase {
 export interface ResourceShape extends ShapeBase {
   readonly type: 'resource';
   readonly onlyNamed?: boolean;
-  readonly value?: Rdf.NamedNode | Rdf.BlankNode;
+  readonly value?: NamedNode | BlankNode;
   readonly keepAsTerm?: boolean;
   readonly vocabulary?: Vocabulary;
 }
@@ -35,9 +37,9 @@ export interface ResourceShape extends ShapeBase {
 export interface LiteralShape extends ShapeBase {
   readonly type: 'literal';
   readonly id: ShapeID;
-  readonly datatype?: Rdf.NamedNode;
+  readonly datatype?: NamedNode;
   readonly language?: string;
-  readonly value?: Rdf.Literal;
+  readonly value?: Literal;
   readonly keepAsTerm?: boolean;
 }
 
@@ -72,7 +74,7 @@ export type PropertyPath =
 
 export interface PredicatePath {
   readonly type: 'predicate';
-  readonly predicate: Rdf.NamedNode;
+  readonly predicate: NamedNode;
 }
 export interface SequencePath {
   readonly type: 'sequence';
@@ -130,7 +132,7 @@ export interface ListShape extends ShapeBase {
   /** @default rdf:rest */
   readonly tailPath?: PropertyPath;
   /** @default rdf:nil */
-  readonly nil?: Rdf.NamedNode;
+  readonly nil?: NamedNode;
 }
 
 export interface MapShape extends ShapeBase {
@@ -147,7 +149,7 @@ export interface ShapeReference {
 }
 
 export interface Vocabulary {
-  readonly id?: Rdf.NamedNode | Rdf.BlankNode;
+  readonly id?: NamedNode | BlankNode;
   readonly terms: VocabularyTerms;
 }
 
@@ -157,7 +159,7 @@ export interface TypedVocabulary<T extends VocabularyTerms> {
 }
 
 interface VocabularyTerms {
-  readonly [literal: string]: Rdf.NamedNode;
+  readonly [literal: string]: NamedNode;
 }
 
 export function typedShape<T>(id: Shape): TypedShape<T> {

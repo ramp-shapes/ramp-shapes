@@ -1,8 +1,10 @@
-import { makeTermMap } from './common';
-import { ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf';
-import { Shape, ResourceShape, LiteralShape, Vocabulary } from './shapes';
-import { rdf, xsd } from './vocabulary';
+import type { DataFactory, Term } from '@rdfjs/types';
+import { ReadonlyHashMap } from '@reactodia/hashmap';
+
+import { termToString, looksLikeTerm } from './rdf/rdf-model.js';
+import { makeTermMap } from './common.js';
+import { Shape, ResourceShape, LiteralShape, Vocabulary } from './shapes.js';
+import { rdf, xsd } from './vocabulary.js';
 
 export interface ValueMapper {
   fromRdf(value: unknown, shape: Shape): unknown;
@@ -19,7 +21,7 @@ export namespace ValueMapper {
     return IDENTITY_HANDLER;
   }
 
-  export function convertToNativeTypes(factory: Rdf.DataFactory): ValueMapper {
+  export function convertToNativeTypes(factory: DataFactory): ValueMapper {
     return {
       fromRdf: (value, shape) => {
         if (shape.type === 'resource' && !shape.keepAsTerm && !shape.vocabulary) {
@@ -42,8 +44,8 @@ export namespace ValueMapper {
 
   export function resolveVocabularies(): ValueMapper {
     interface CachedVocabulary {
-      termToKey: ReadonlyHashMap<Rdf.Term, string>;
-      keyToTerm: ReadonlyMap<string, Rdf.Term>;
+      termToKey: ReadonlyHashMap<Term, string>;
+      keyToTerm: ReadonlyMap<string, Term>;
     }
 
     const cache = makeTermMap<CachedVocabulary>();
@@ -66,10 +68,10 @@ export namespace ValueMapper {
     return {
       fromRdf: (value, shape) => {
         const vocab = getVocab(shape);
-        if (vocab && Rdf.looksLikeTerm(value)) {
+        if (vocab && looksLikeTerm(value)) {
           if (!vocab.termToKey.has(value)) {
             throw new Error(
-              `Cannot find RDF term ${Rdf.toString(value)} in vocabulary for shape ${Rdf.toString(shape.id)}`
+              `Cannot find RDF term ${termToString(value)} in vocabulary for shape ${termToString(shape.id)}`
             );
           }
           return vocab.termToKey.get(value);
@@ -81,7 +83,7 @@ export namespace ValueMapper {
         if (vocab && typeof value === 'string') {
           if (!vocab.keyToTerm.has(value)) {
             throw new Error(
-              `Cannot find string "${value}" in vocabulary for shape ${Rdf.toString(shape.id)}`
+              `Cannot find string "${value}" in vocabulary for shape ${termToString(shape.id)}`
             );
           }
           return vocab.keyToTerm.get(value);
@@ -108,7 +110,7 @@ export namespace ValueMapper {
     };
   }
 
-  export function mapByDefault(factory: Rdf.DataFactory): ValueMapper {
+  export function mapByDefault(factory: DataFactory): ValueMapper {
     return chainAsMappingFromRdf(
       resolveVocabularies(),
       convertToNativeTypes(factory)
@@ -116,7 +118,7 @@ export namespace ValueMapper {
   }
 }
 
-function makeTermToKeyVocabulary(vocab: Vocabulary): ReadonlyHashMap<Rdf.Term, string> {
+function makeTermToKeyVocabulary(vocab: Vocabulary): ReadonlyHashMap<Term, string> {
   const forward = makeTermMap<string>();
   for (const key in vocab.terms) {
     if (Object.hasOwnProperty.call(vocab.terms, key)) {
@@ -127,8 +129,8 @@ function makeTermToKeyVocabulary(vocab: Vocabulary): ReadonlyHashMap<Rdf.Term, s
   return forward;
 }
 
-function makeKeyToTermVocabulary(vocab: Vocabulary): Map<string, Rdf.Term> {
-  const reversed = new Map<string, Rdf.Term>();
+function makeKeyToTermVocabulary(vocab: Vocabulary): Map<string, Term> {
+  const reversed = new Map<string, Term>();
   for (const key in vocab.terms) {
     if (Object.hasOwnProperty.call(vocab.terms, key)) {
       const term = vocab.terms[key];
@@ -139,7 +141,7 @@ function makeKeyToTermVocabulary(vocab: Vocabulary): Map<string, Rdf.Term> {
 }
 
 export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, value: unknown): unknown {
-  if (!Rdf.looksLikeTerm(value)) {
+  if (!looksLikeTerm(value)) {
     return value;
   }
 
@@ -147,7 +149,7 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
     if (value.termType === 'NamedNode') {
       return value.value;
     } else if (value.termType === 'BlankNode') {
-      return Rdf.toString(value);
+      return termToString(value);
     }
   }
 
@@ -172,7 +174,7 @@ export function tryConvertToNativeType(shape: ResourceShape | LiteralShape, valu
 export function tryConvertFromNativeType(
   shape: ResourceShape | LiteralShape,
   value: unknown,
-  factory: Rdf.DataFactory
+  factory: DataFactory
 ): unknown {
   if (shape.type === 'resource' && typeof value === 'string') {
     return value.startsWith('_:')

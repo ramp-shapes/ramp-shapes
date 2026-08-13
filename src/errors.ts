@@ -1,6 +1,8 @@
-import * as Rdf from './rdf';
-import { Shape } from './shapes';
-import { rdf, xsd } from './vocabulary';
+import type { Term, NamedNode } from '@rdfjs/types';
+
+import { termToString } from './rdf/rdf-model.js';
+import { Shape } from './shapes.js';
+import { rdf, xsd } from './vocabulary.js';
 
 export type RampError = Error & {
   rampErrorCode: ErrorCode;
@@ -10,7 +12,7 @@ export type RampError = Error & {
 export interface StackFrame {
   edge?: string | number;
   shape: Shape;
-  focus?: Rdf.Term;
+  focus?: Term;
 }
 
 export const enum ErrorCode {
@@ -77,16 +79,16 @@ export function makeRampError(
   return error;
 }
 
-export function formatDisplayShape(shape: Shape, focus?: Rdf.Term): string {
+export function formatDisplayShape(shape: Shape, focus?: Term): string {
   const formattedShape = shape.id.termType === 'BlankNode'
     ? formatBlankShape(shape)
-    : Rdf.toString(shape.id);
-  return focus ? `(${Rdf.toString(focus)} @ ${formattedShape})` : formattedShape;
+    : termToString(shape.id);
+  return focus ? `(${termToString(focus)} @ ${formattedShape})` : formattedShape;
 }
 
 function formatBlankShape(shape: Shape) {
   if ((shape.type === 'resource' || shape.type === 'literal') && shape.value) {
-    return `(equals ${Rdf.toString(shape.value)})`;
+    return `(equals ${termToString(shape.value)})`;
   } else if (shape.type === 'literal' && typeof shape.language === 'string') {
     return `(literal with language "${shape.language}")`;
   } else if (shape.type === 'literal' && shape.datatype) {
@@ -95,17 +97,17 @@ function formatBlankShape(shape: Shape) {
   return `(${shape.type})`;
 }
 
-function formatCommonPrefixedIri(term: Rdf.NamedNode) {
+function formatCommonPrefixedIri(term: NamedNode) {
   if (term.value.startsWith(rdf.NAMESPACE)) {
-    return `rdf:` + term.value.substring(rdf.NAMESPACE.length);
+    return 'rdf:' + term.value.substring(rdf.NAMESPACE.length);
   } else if (term.value.startsWith(xsd.NAMESPACE)) {
-    return `xsd:` + term.value.substring(xsd.NAMESPACE.length);
+    return 'xsd:' + term.value.substring(xsd.NAMESPACE.length);
   } else {
-    return Rdf.toString(term);
+    return termToString(term);
   }
 }
 
-const STACK_FRAME_SEPARATOR = `\n  >> `;
+const STACK_FRAME_SEPARATOR = '\n  >> ';
 
 export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
   let result = '';

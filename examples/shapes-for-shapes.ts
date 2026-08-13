@@ -1,10 +1,12 @@
-import * as path from 'path';
-import * as Ramp from '../src/index';
-import { Rdf, vocabulary as ramp } from '../src/index';
-import { rdf, xsd } from './namespaces';
-import { makeDirectoryIfNotExists, writeFile, quadsToTurtleString } from './util';
+import path from 'node:path';
+import type { Quad } from '@rdfjs/types';
 
-const factory = Rdf.DefaultDataFactory;
+import * as Ramp from '../src/index.js';
+import { rdf, xsd } from './namespaces.js';
+import { makeDirectoryIfNotExists, writeFile, quadsToTurtleString } from './util.js';
+
+const factory = Ramp.DefaultDataFactory;
+const ramp = Ramp.vocabulary;
 
 const PREFIXES = {
   rdf: rdf.NAMESPACE,
@@ -13,8 +15,8 @@ const PREFIXES = {
 };
 
 async function main() {
-  const quads: Rdf.Quad[] = [];
-  const quadSet = Rdf.dataset();
+  const quads: Quad[] = [];
+  const quadSet = Ramp.dataset();
 
   let blankIndex = 0;
   const generateBlankNode = (prefix: string) => {
@@ -39,8 +41,8 @@ async function main() {
   const allShapesTurtle = await quadsToTurtleString(quads, PREFIXES);
   console.log(allShapesTurtle);
 
-  const outDir = path.join(__dirname, '../out');
-  makeDirectoryIfNotExists(outDir);
+  const outDir = path.join(import.meta.dirname, '../out');
+  await makeDirectoryIfNotExists(outDir);
 
   await writeFile(
     path.join(outDir, 'ramp-shapes.ttl'),
@@ -52,4 +54,4 @@ async function main() {
   console.log(`Source shape count = ${shapesForShapes.size}; framed shape count = ${shapes.length}`);
 }
 
-main();
+void main();

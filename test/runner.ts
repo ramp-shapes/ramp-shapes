@@ -1,7 +1,8 @@
-import path from 'path';
+import path from 'node:path';
+import { Quad } from '@rdfjs/types';
 
-import * as Ramp from '../src/index';
-import { readQuadsFromTurtle, findFirstShape } from './util';
+import * as Ramp from '../src/index.js';
+import { readQuadsFromTurtle, findFirstShape } from './util.js';
 
 export type TestResult = TestSuccess | TestFailure;
 
@@ -41,13 +42,13 @@ export function makeFailureError(failure: TestFailure): TestFailureError {
 }
 
 export function readTestShapes(name: string, root?: Ramp.ShapeID): Ramp.Shape {
-  let shapeQuads: Ramp.Rdf.Quad[];
+  let shapeQuads: Quad[];
   let shapes: Ramp.Shape[];
   try {
     shapeQuads = readQuadsFromTurtle(
       path.join('test-data', 'shapes', `${name}.ttl`)
     );
-    shapes = Ramp.frameShapes(Ramp.Rdf.dataset(shapeQuads));
+    shapes = Ramp.frameShapes(Ramp.dataset(shapeQuads));
   } catch (error) {
     throw makeFailureError({
       type: 'failure',
@@ -57,24 +58,24 @@ export function readTestShapes(name: string, root?: Ramp.ShapeID): Ramp.Shape {
   }
 
   const rootShape = root
-    ? shapes.find(shape => Ramp.Rdf.equalTerms(shape.id, root))
+    ? shapes.find(shape => Ramp.equalTerms(shape.id, root))
     : findFirstShape(shapeQuads, shapes);
 
   if (!rootShape) {
     throw makeFailureError({
       type: 'failure',
       message: root
-        ? `Failed to find root shape ${Ramp.Rdf.toString(root)}`
-        : `Failed to find root shape (should be the first one)`,
+        ? `Failed to find root shape ${Ramp.termToString(root)}`
+        : 'Failed to find root shape (should be the first one)',
     });
   }
 
   return rootShape;
 }
 
-export function readTestGraph(relativePath: string): Ramp.Rdf.Dataset {
+export function readTestGraph(relativePath: string): Ramp.Dataset {
   try {
-    return Ramp.Rdf.dataset(readQuadsFromTurtle(
+    return Ramp.dataset(readQuadsFromTurtle(
       path.join('test-data', relativePath)
     ));
   } catch (error) {
@@ -93,7 +94,7 @@ export function rampStackToTestStack(stack: ReadonlyArray<Ramp.StackFrame>) {
       ? frame.shape.id.value
       : {type: frame.shape.type},
     focus: frame.focus
-      ? (frame.focus.termType === 'BlankNode' ? '_:blank' : Ramp.Rdf.toString(frame.focus))
+      ? (frame.focus.termType === 'BlankNode' ? '_:blank' : Ramp.termToString(frame.focus))
       : undefined,
   }));
 }

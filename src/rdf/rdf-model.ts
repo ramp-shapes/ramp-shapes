@@ -1,17 +1,10 @@
-import type * as RdfJs from 'rdf-js';
+import { dropHighestNonSignBit, hashString } from '@reactodia/hashmap';
+import type {
+  DataFactory, Term, NamedNode, BlankNode, Literal, Variable, DefaultGraph,
+  BaseQuad, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject,
+} from '@rdfjs/types';
 
-import { escapeRdfValue } from './rdf-escape';
-
-export type Term = NamedNode | BlankNode | Literal | Variable | DefaultGraph | Quad;
-
-export type NamedNode<Iri extends string = string> = RdfJs.NamedNode<Iri>;
-export type BlankNode = RdfJs.BlankNode;
-export type Literal = RdfJs.Literal;
-export type Variable = RdfJs.Variable;
-export type DefaultGraph = RdfJs.DefaultGraph;
-export type Quad = RdfJs.Quad;
-
-export type DataFactory = RdfJs.DataFactory;
+import { escapeRdfValue } from './rdf-escape.js';
 
 class RdfNamedNode<Iri extends string> implements NamedNode<Iri> {
   get termType() { return 'NamedNode' as const; }
@@ -25,7 +18,7 @@ class RdfNamedNode<Iri extends string> implements NamedNode<Iri> {
     return hashTerm(this);
   }
   toString(): string {
-    return toString(this);
+    return termToString(this);
   }
 }
 
@@ -41,7 +34,7 @@ class RdfBlankNode implements BlankNode {
     return hashTerm(this);
   }
   toString(): string {
-    return toString(this);
+    return termToString(this);
   }
 }
 
@@ -70,7 +63,7 @@ class RdfLiteral implements Literal {
     return hashTerm(this);
   }
   toString(): string {
-    return toString(this);
+    return termToString(this);
   }
 }
 
@@ -86,7 +79,7 @@ class RdfVariable implements Variable {
     return hashTerm(this);
   }
   toString(): string {
-    return toString(this);
+    return termToString(this);
   }
 }
 
@@ -101,7 +94,7 @@ class RdfDefaultGraph implements DefaultGraph {
     return hashTerm(this);
   }
   toString(): string {
-    return toString(this);
+    return termToString(this);
   }
 }
 
@@ -121,45 +114,62 @@ class RdfQuad implements Quad {
     return other && equalQuads(this, other) || false;
   }
   toString() {
-    let text = `${toString(this.subject)} ${toString(this.predicate)} ${toString(this.object)}`;
+    let text = `${termToString(this.subject)} ${termToString(this.predicate)} ${termToString(this.object)}`;
     if (this.graph.termType !== 'DefaultGraph') {
-      text += ` ${toString(this.graph)}`;
+      text += ` ${termToString(this.graph)}`;
     }
     return text;
   }
 }
 
-class RdfDataFactory implements RdfJs.DataFactory {
-  namedNode = <Iri extends string = string>(value: Iri): RdfJs.NamedNode<Iri> => {
+class RdfDataFactory implements DataFactory {
+  namedNode = <Iri extends string = string>(value: Iri): NamedNode<Iri> => {
     return new RdfNamedNode<Iri>(value);
   };
-  blankNode = (value?: string | undefined): RdfJs.BlankNode => {
+  blankNode = (value?: string): BlankNode => {
     return new RdfBlankNode(typeof value === 'string' ? value : randomString('b', 48));
   };
-  literal = (value: string, languageOrDatatype?: string | RdfJs.NamedNode | undefined): RdfJs.Literal => {
+  literal = (value: string, languageOrDatatype?: string | NamedNode<string>): Literal => {
     return new RdfLiteral(value, languageOrDatatype);
   };
-  variable = (value: string): RdfJs.Variable => {
+  variable = (value: string): Variable => {
     return new RdfVariable(value);
   };
-  defaultGraph = (): RdfJs.DefaultGraph => {
+  defaultGraph = (): DefaultGraph => {
     return RdfDefaultGraph.instance;
   };
   quad = (
-    subject: RdfJs.Quad_Subject,
-    predicate: RdfJs.Quad_Predicate,
-    object: RdfJs.Quad_Object,
-    graph?: RdfJs.BlankNode | RdfJs.Variable | RdfJs.DefaultGraph | RdfJs.NamedNode | undefined
-  ): RdfJs.Quad => {
+    subject: Quad_Subject,
+    predicate: Quad_Predicate,
+    object: Quad_Object,
+    graph?: Quad_Graph
+  ): Quad => {
     return new RdfQuad(subject, predicate, object, graph);
+  };
+  fromTerm(original: NamedNode): NamedNode;
+  fromTerm(original: BlankNode): BlankNode;
+  fromTerm(original: Literal): Literal;
+  fromTerm(original: Variable): Variable;
+  fromTerm(original: DefaultGraph): DefaultGraph;
+  fromTerm(original: BaseQuad): Quad;
+  fromTerm(original: unknown): BlankNode | Literal | Variable | DefaultGraph | Quad | NamedNode {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const wrapped = wrapTerm(original as any, this);
+    if (!wrapped) {
+      throw new Error('Invalid term value to wrap');
+    }
+    return wrapped;
+  };
+  fromQuad(original: Quad): Quad {
+    throw new Error('Method not implemented.');
   };
 }
 
-export const DefaultDataFactory: RdfJs.DataFactory = new RdfDataFactory();
+export const DefaultDataFactory: DataFactory = new RdfDataFactory();
 
 export function randomString(prefix: string, randomBitCount: number): string {
   if (randomBitCount > 48) {
-    throw new Error(`Cannot generate random blank node with > 48 bits of randomness`);
+    throw new Error('Cannot generate random blank node with > 48 bits of randomness');
   }
   const hexDigitCount = Math.ceil(randomBitCount / 4);
   const num = Math.floor(Math.random() * Math.pow(2, randomBitCount));
@@ -167,7 +177,7 @@ export function randomString(prefix: string, randomBitCount: number): string {
   return value;
 }
 
-export function wrap(
+export function wrapTerm(
   v:
     Pick<NamedNode, 'termType' | 'value'> |
     Pick<BlankNode, 'termType' | 'value'> |
@@ -176,30 +186,30 @@ export function wrap(
     Pick<Variable, 'termType' | 'value'> |
     Pick<DefaultGraph, 'termType'> |
     Pick<Quad, 'termType' | 'subject' | 'predicate' | 'object' | 'graph'>,
-  factory: RdfJs.DataFactory
-): Term | undefined {
+  factory: DataFactory
+): BlankNode | Literal | Variable | DefaultGraph | Quad | NamedNode | undefined {
   switch (v.termType) {
     case 'NamedNode':
       return factory.namedNode(v.value);
     case 'BlankNode':
       return factory.blankNode(v.value);
     case 'Literal':
-      return factory.literal(v.value, v.language || wrap(v.datatype, factory) as NamedNode);
+      return factory.literal(v.value, v.language || wrapTerm(v.datatype, factory) as NamedNode);
     case 'Variable':
       return factory.variable!(v.value);
     case 'DefaultGraph':
       return factory.defaultGraph();
     case 'Quad':
       return factory.quad(
-        wrap(v.subject, factory) as Quad['subject'],
-        wrap(v.predicate, factory) as Quad['predicate'],
-        wrap(v.object, factory) as Quad['object'],
-        v.graph ? wrap(v.graph, factory) as Quad['graph'] : undefined
+        wrapTerm(v.subject, factory) as Quad['subject'],
+        wrapTerm(v.predicate, factory) as Quad['predicate'],
+        wrapTerm(v.object, factory) as Quad['object'],
+        v.graph ? wrapTerm(v.graph, factory) as Quad['graph'] : undefined
       );
   }
 }
 
-export function toString(node: Term): string {
+export function termToString(node: Term): string {
   switch (node.termType) {
     case 'NamedNode':
       return `<${escapeRdfValue(node.value)}>`;
@@ -211,7 +221,7 @@ export function toString(node: Term): string {
       if (language) {
         return stringLiteral + `@${language}`;
       } else if (datatype) {
-        return stringLiteral + '^^' + toString(datatype);
+        return stringLiteral + '^^' + termToString(datatype);
       } else {
         return stringLiteral;
       }
@@ -221,12 +231,12 @@ export function toString(node: Term): string {
     case 'Variable':
       return `?${node.value}`;
     case 'Quad': {
-      let str = `<< `;
-      str += toString(node.subject) + ' ';
-      str += toString(node.predicate) + ' ';
-      str += toString(node.object) + ' ';
+      let str = '<< ';
+      str += termToString(node.subject) + ' ';
+      str += termToString(node.predicate) + ' ';
+      str += termToString(node.object) + ' ';
       if (node.graph.termType !== 'DefaultGraph') {
-        str += toString(node.graph) + ' ';
+        str += termToString(node.graph) + ' ';
       }
       str += '>>';
       return str;
@@ -239,19 +249,19 @@ export function hashTerm(node: Term): number {
   switch (node.termType) {
     case 'NamedNode':
     case 'BlankNode':
-      hash = hashFnv32a(node.value);
+      hash = hashString(node.value);
       break;
     case 'Literal':
-      hash = hashFnv32a(node.value);
+      hash = hashString(node.value);
       if (node.datatype) {
-        hash = (Math.imul(hash, 31) + hashFnv32a(node.datatype.value)) | 0;
+        hash = (Math.imul(hash, 31) + hashString(node.datatype.value)) | 0;
       }
       if (node.language) {
-        hash = (Math.imul(hash, 31) + hashFnv32a(node.language)) | 0;
+        hash = (Math.imul(hash, 31) + hashString(node.language)) | 0;
       }
       break;
     case 'Variable':
-      hash = hashFnv32a(node.value);
+      hash = hashString(node.value);
       break;
     case 'Quad': {
       hash = (Math.imul(hash, 31) + hashTerm(node.subject)) | 0;
@@ -302,33 +312,6 @@ export function equalQuads(a: Quad, b: Quad): boolean {
   return equalTerms(a, b);
 }
 
-export function hashString(str: string): number {
-  return dropHighestNonSignBit(hashFnv32a(str));
-}
-
-/**
- * Calculate a 32 bit FNV-1a hash
- * Found here: https://gist.github.com/vaiorabbit/5657561
- * Ref.: http://isthe.com/chongo/tech/comp/fnv/
- *
- * @param str the input value
- * @param [seed] optionally pass the hash of the previous chunk
- * @returns {integer}
- */
-function hashFnv32a(str: string, seed = 0x811c9dc5): number {
-  let i: number, l: number, hval = seed & 0x7fffffff;
-
-  for (i = 0, l = str.length; i < l; i++) {
-    hval ^= str.charCodeAt(i);
-    hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
-  }
-  return hval >>> 0;
-}
-
-export function dropHighestNonSignBit(i32: number): number {
-  return ((i32 >>> 1) & 0x40000000) | (i32 & 0xBFFFFFFF);
-}
-
 export function looksLikeTerm(value: unknown): value is Term {
   if (!(typeof value === 'object' && value && 'termType' in value)) {
     return false;
@@ -346,14 +329,14 @@ export function looksLikeTerm(value: unknown): value is Term {
   }
 }
 
-export function namespacedValue<Namespace extends string, LocalName extends string>(
+export function namespacedValue<const Namespace extends string, const LocalName extends string>(
   namespace: Namespace,
   localName: LocalName
 ): `${Namespace}${LocalName}` {
   return `${namespace}${localName}`;
 }
 
-export function namespacedNode<Namespace extends string, LocalName extends string>(
+export function namespacedNode<const Namespace extends string, const LocalName extends string>(
   factory: DataFactory,
   namespace: Namespace,
   localName: LocalName

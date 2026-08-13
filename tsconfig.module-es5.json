@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "target": "ES5",
-    "module": "ES2015",
-    "outDir": "./dist/module-es5",
-    "downlevelIteration": true
-  }
-}

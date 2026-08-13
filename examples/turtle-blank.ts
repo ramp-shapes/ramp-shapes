@@ -1,8 +1,10 @@
+import type { Term, Quad } from '@rdfjs/types';
 import * as N3 from 'n3';
-import { Rdf } from '../src/index';
+
+import * as Ramp from '../src/index.js';
 
 export function quadsToTurtleString(
-  triples: Iterable<Rdf.Quad>,
+  triples: Iterable<Quad>,
   prefixes: { [prefix: string]: string }
 ): Promise<string> {
   const quads = Array.from(triples);
@@ -10,7 +12,7 @@ export function quadsToTurtleString(
   return new Promise<string>((resolve, reject) => {
     const writer = new N3.Writer({prefixes});
 
-    const makeQuad = (q: Rdf.GroupedQuad): N3.Quad => {
+    const makeQuad = (q: Ramp.GroupedQuad): N3.Quad => {
       return N3.DataFactory.quad(
         makeTerm(q.subject) as N3.Quad_Subject,
         q.predicate,
@@ -18,7 +20,7 @@ export function quadsToTurtleString(
         q.graph
       );
     };
-    const makeTerm = (term: Rdf.BlankGroup | Rdf.BlankList | Rdf.Term): N3.Term | N3.Quad_Object[] => {
+    const makeTerm = (term: Ramp.BlankGroup | Ramp.BlankList | Term): N3.Term | N3.Quad_Object[] => {
       return (
         term.termType === 'BlankGroup' ? writer.blank(term.content.map(makeQuad)) :
         term.termType === 'BlankList' ? writer.list(term.items.map(makeTerm) as N3.Quad_Object[]) :
@@ -26,7 +28,7 @@ export function quadsToTurtleString(
       );
     };
 
-    for (const q of Rdf.groupBlanks(quads)) {
+    for (const q of Ramp.groupBlanks(quads)) {
       writer.addQuad(q.termType === 'GroupedQuad' ? makeQuad(q) : q);
     }
 

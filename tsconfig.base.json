@@ -1,16 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "module": "commonjs",
-    "outDir": "./dist/cjs",
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "isolatedModules": true,
     "strict": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
-    "importHelpers": true,
-    "sourceMap": true,
     "noFallthroughCasesInSwitch": true
-  },
-  "include": [
-    "src/**/*"
-  ]
+  }
 }

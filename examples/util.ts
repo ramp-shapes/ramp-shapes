@@ -1,11 +1,13 @@
-import * as fs from 'fs';
-import { promisify } from 'util';
+import * as fs from 'node:fs';
+import { promisify } from 'node:util';
+import type { Term, Quad } from '@rdfjs/types';
 import * as N3 from 'n3';
-import { Rdf } from '../src/index';
 
-const factory = Rdf.DefaultDataFactory;
+import * as Ramp from '../src/index.js';
 
-export { quadsToTurtleString } from './turtle-blank';
+export { quadsToTurtleString } from './turtle-blank.js';
+
+const factory = Ramp.DefaultDataFactory;
 
 export const exists = promisify(fs.exists);
 export const mkdir = promisify(fs.mkdir);
@@ -19,16 +21,16 @@ export async function makeDirectoryIfNotExists(path: string) {
   }
 }
 
-export function readQuadsFromTurtle(path: string): Rdf.Quad[] {
+export function readQuadsFromTurtle(path: string): Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
   const parser = new N3.Parser({factory, blankNodePrefix: ''});
-  return parser.parse(ttl) as Rdf.Quad[];
+  return parser.parse(ttl) as Quad[];
 }
 
 export function toJson(match: unknown): string {
-  return JSON.stringify(match, (key, value) => {
+  return JSON.stringify(match, (key, value: unknown) => {
     if (typeof value === 'object' && value !== null && 'termType' in value) {
-      return Rdf.toString(value as Rdf.Term);
+      return Ramp.termToString(value as Term);
     }
     return value;
   }, 2);
@@ -53,7 +55,7 @@ interface SparqlJsonLiteral {
   readonly 'xml:lang'?: string;
 }
 
-function jsonQueryResultTermToRdf(value: SparqlJsonTerm): Rdf.Term | null {
+function jsonQueryResultTermToRdf(value: SparqlJsonTerm): Term | null {
   return (
     value.type === 'uri' ? factory.namedNode(value.value) :
     value.type === 'literal' ? factory.literal(value.value, (
@@ -78,13 +80,13 @@ interface SparqlJsonQuad {
   readonly object: SparqlJsonTerm;
 }
 
-export function parseJsonQueryResponse(bindings: SparqlJsonQuad[]): Rdf.Quad[] {
-  const quads: Rdf.Quad[] = [];
+export function parseJsonQueryResponse(bindings: SparqlJsonQuad[]): Quad[] {
+  const quads: Quad[] = [];
   for (const {subject, predicate, object} of bindings) {
     const quad = factory.quad(
-      jsonQueryResultTermToRdf(subject) as Rdf.Quad['subject'],
-      jsonQueryResultTermToRdf(predicate) as Rdf.Quad['predicate'],
-      jsonQueryResultTermToRdf(object) as Rdf.Quad['object'],
+      jsonQueryResultTermToRdf(subject) as Quad['subject'],
+      jsonQueryResultTermToRdf(predicate) as Quad['predicate'],
+      jsonQueryResultTermToRdf(object) as Quad['object'],
     );
     quads.push(quad);
   }

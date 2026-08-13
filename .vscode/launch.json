@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Launch Current File",
         "type": "node",
         "request": "launch",
-        "name": "Launch Current File",
-        "args": ["${relativeFile}"],
-        "runtimeArgs": ["--nolazy", "-r", "ts-node/register"]
+        "runtimeExecutable": "tsx",
+        "program": "${relativeFile}",
       },
       {
+        "name": "Launch Tests",
         "type": "node",
         "request": "launch",
-        "name": "Launch Test",
-        "args": ["${workspaceFolder}/test/main.ts"],
-        "runtimeArgs": ["--nolazy", "-r", "ts-node/register"]
+        "runtimeExecutable": "tsx",
+        "program": "${workspaceFolder}/test/main.ts",
       }
     ]
 }

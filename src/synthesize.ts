@@ -1,32 +1,34 @@
-import { ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf';
-import { ErrorCode, RampError, formatDisplayShape, makeRampError } from './errors';
+import type { DataFactory, Term, BlankNode, Literal, NamedNode } from '@rdfjs/types';
+import { ReadonlyHashMap } from '@reactodia/hashmap';
+
+import { equalTerms } from './rdf/rdf-model.js';
+import { ErrorCode, RampError, formatDisplayShape, makeRampError } from './errors.js';
 import {
   SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
-} from './shapes';
-import { makeTermMap } from './common';
-import { ValueMapper } from './value-mapping';
-import { rdf } from './vocabulary';
+} from './shapes.js';
+import { makeTermMap } from './common.js';
+import { ValueMapper } from './value-mapping.js';
+import { rdf } from './vocabulary.js';
 
 export function compactByReference(value: unknown, shape: Shape, ref: ShapeReference): unknown {
   switch (ref.part) {
     case 'value':
       if (shape.type === 'resource' || shape.type === 'literal') {
-        return (value as Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal).value;
+        return (value as NamedNode | BlankNode | Literal).value;
       } else {
         throw new Error(
-          `Compacting term value by reference allowed only for resource or literal shapes: ` +
+          'Compacting term value by reference allowed only for resource or literal shapes: ' +
           `value is (${typeof value}) ${String(value)}, target is ${formatDisplayShape(ref.target)}`
         );
       }
     case 'datatype':
     case 'language':
       if (shape.type === 'literal') {
-        const literal = value as Rdf.Literal;
+        const literal = value as Literal;
         return ref.part === 'datatype' ? literal.datatype : literal.language;
       } else {
         throw new Error(
-          `Framing term datatype or language as map key allowed only for literal shapes: ` +
+          'Framing term datatype or language as map key allowed only for literal shapes: ' +
           `value is (${typeof value}) ${String(value)}, target is ${formatDisplayShape(ref.target)}`
         );
       }
@@ -36,9 +38,9 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 }
 
 export interface SynthesizeContext {
-  readonly factory: Rdf.DataFactory;
+  readonly factory: DataFactory;
   readonly mapper: ValueMapper;
-  readonly matches: ReadonlyHashMap<Rdf.Term, ReadonlyArray<ReferenceMatch>>;
+  readonly matches: ReadonlyHashMap<Term, ReadonlyArray<ReferenceMatch>>;
   makeError(code: ErrorCode, message: string): RampError;
 }
 
@@ -47,7 +49,7 @@ export interface ReferenceMatch {
   readonly match: unknown;
 }
 
-export const EMPTY_REF_MATCHES: ReadonlyHashMap<Rdf.Term, ReferenceMatch[]> =
+export const EMPTY_REF_MATCHES: ReadonlyHashMap<Term, ReferenceMatch[]> =
   makeTermMap<ReferenceMatch[]>();
 
 const EMPTY_MATCHES: ReadonlyArray<ReferenceMatch> = [];
@@ -132,7 +134,7 @@ function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
     return shape.value;
   }
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equalTerms(match.ref.target.id, shape.id)) {
+    if (equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;
@@ -170,7 +172,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
   let language = shape.language;
 
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
-    if (Rdf.equalTerms(match.ref.target.id, shape.id)) {
+    if (equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
           return match.match;

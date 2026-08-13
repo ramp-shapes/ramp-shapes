@@ -1,5 +1,7 @@
-import { HashMap } from '../hash-map';
-import { Quad, Term, DefaultDataFactory, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model';
+import type { Term, Quad } from '@rdfjs/types';
+import { HashMap } from '@reactodia/hashmap';
+
+import { DefaultDataFactory, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model.js';
 
 export interface Dataset extends Iterable<Quad> {
   readonly size: number;

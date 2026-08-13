@@ -1,10 +1,11 @@
-import { join } from 'path';
-import * as Ramp from '../../src/index';
-import { self, property, inverseProperty, propertyPath, definesType } from '../../src/index';
-import { rdf, rdfs, xsd, oa } from '../namespaces';
-import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
+import path from 'path';
+import * as Ramp from '../../src/index.js';
+import { rdf, rdfs, xsd, oa } from '../namespaces.js';
+import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util.js';
 
-const dataset = Ramp.Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'annotation.ttl')));
+const dataset = Ramp.dataset(readQuadsFromTurtle(
+  path.join(import.meta.dirname, 'annotation.ttl')
+));
 
 const schema = new Ramp.ShapeBuilder();
 
@@ -13,11 +14,11 @@ const xpathLiteral = schema.literal({datatype: xsd.string});
 const XPathSelectorID = schema.record({
   id: oa.XPathSelector,
   properties: {
-    type: definesType(
-      property(rdf.type, schema.constant(oa.XPathSelector))
+    type: Ramp.definesType(
+      Ramp.property(rdf.type, schema.constant(oa.XPathSelector))
     ),
-    xpath: property(rdf.value, xpathLiteral),
-    offset: propertyPath(
+    xpath: Ramp.property(rdf.value, xpathLiteral),
+    offset: Ramp.propertyPath(
       {
         type: 'sequence',
         sequence: [
@@ -27,7 +28,7 @@ const XPathSelectorID = schema.record({
       },
       schema.literal<number>({datatype: xsd.nonNegativeInteger})
     ),
-    refinedBy: property(oa.refinedBy, schema.optional(schema.resource())),
+    refinedBy: Ramp.property(oa.refinedBy, schema.optional(schema.resource())),
   }
 });
 
@@ -37,11 +38,11 @@ const XPathSelector: Ramp.TypedShapeID<XPathSelector> = XPathSelectorID;
 const RangeSelectorID = schema.record({
   id: oa.RangeSelector,
   properties: {
-    type: definesType(
-      property(rdf.type, schema.constant(oa.RangeSelector))
+    type: Ramp.definesType(
+      Ramp.property(rdf.type, schema.constant(oa.RangeSelector))
     ),
-    start: property(oa.hasStartSelector, XPathSelector),
-    end: property(oa.hasEndSelector, XPathSelector),
+    start: Ramp.property(oa.hasStartSelector, XPathSelector),
+    end: Ramp.property(oa.hasEndSelector, XPathSelector),
   }
 });
 
@@ -53,26 +54,26 @@ const bodyLabel = schema.literal({datatype: rdf.langString});
 const AnnotationID = schema.record({
   id: oa.Annotation,
   properties: {
-    type: definesType(
-      property(rdf.type, schema.constant(oa.Annotation))
+    type: Ramp.definesType(
+      Ramp.property(rdf.type, schema.constant(oa.Annotation))
     ),
-    iri: self(schema.resource()),
-    target: property(oa.hasTarget, schema.record({
+    iri: Ramp.self(schema.resource()),
+    target: Ramp.property(oa.hasTarget, schema.record({
       properties: {
-        source: property(oa.hasSource, schema.resource()),
-        selector: property(oa.hasSelector, schema.anyOf(
+        source: Ramp.property(oa.hasSource, schema.resource()),
+        selector: Ramp.property(oa.hasSelector, schema.anyOf(
           [RangeSelector, XPathSelector]
         ))
       }
     })),
-    body: property(oa.hasBody, schema.record({
+    body: Ramp.property(oa.hasBody, schema.record({
       properties: {
-        label: property(rdfs.label, schema.map({
+        label: Ramp.property(rdfs.label, schema.map({
           key: {target: bodyLabel, part: 'language'},
           value: {target: bodyLabel, part: 'value'},
         })),
-        label_en: property(rdfs.label, schema.literal({language: 'en', lenient: true})),
-        nonExistentValue: property(rdf.value, schema.optional(schema.literalTerm())),
+        label_en: Ramp.property(rdfs.label, schema.literal({language: 'en', lenient: true})),
+        nonExistentValue: Ramp.property(rdf.value, schema.optional(schema.literalTerm())),
       }
     })),
   }
@@ -83,12 +84,12 @@ const Annotation: Ramp.TypedShapeID<Annotation> = AnnotationID;
 
 const backwardsShapeId = schema.record({
   properties: {
-    iri: self(schema.resource()),
-    source: property(oa.hasSource, schema.resource()),
-    selector: property(oa.hasSelector, schema.anyOf(
+    iri: Ramp.self(schema.resource()),
+    source: Ramp.property(oa.hasSource, schema.resource()),
+    selector: Ramp.property(oa.hasSelector, schema.anyOf(
       [RangeSelector, XPathSelector]
     )),
-    annotations: inverseProperty(oa.hasTarget, schema.set(Annotation)),
+    annotations: Ramp.inverseProperty(oa.hasTarget, schema.set(Annotation)),
   }
 });
 
@@ -99,7 +100,7 @@ const PREFIXES = {
   oa: oa.NAMESPACE,
 };
 
-(async function main() {
+void (async function main() {
   const annotationShape = schema.getShape(Annotation)!;
   for (const {value} of Ramp.frame({shape: annotationShape, dataset})) {
     console.log('FRAME oa:Annotation', toJson(value));

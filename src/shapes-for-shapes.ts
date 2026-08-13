@@ -1,15 +1,16 @@
-import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder';
-import * as Rdf from './rdf';
+import { Dataset } from './rdf/rdf-dataset.js';
+import { DefaultDataFactory } from './rdf/rdf-model.js';
+import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder.js';
 import {
   Shape, TypedShapeID, RecordShape, RecordProperty, ComputedProperty, PropertyPath, Vocabulary,
   PredicatePath, SequencePath, InversePath, AlternativePath, ZeroOrMorePath, ZeroOrOnePath, OneOrMorePath,
   AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
   typedShapeID,
-} from './shapes';
-import { frame } from './frame';
-import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary';
+} from './shapes.js';
+import { frame } from './frame.js';
+import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary.js';
 
-export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
+export function makeShapesForShapes(factory = DefaultDataFactory) {
   const RDF_TYPE = factory.namedNode(rdf.type);
   const XSD_BOOLEAN = factory.namedNode(xsd.boolean);
   const XSD_STRING = factory.namedNode(xsd.string);
@@ -348,7 +349,7 @@ export function makeShapesForShapes(factory = Rdf.DefaultDataFactory) {
   return schema.shapes;
 }
 
-export function frameShapes(dataset: Rdf.Dataset, factory = Rdf.DefaultDataFactory): Shape[] {
+export function frameShapes(dataset: Dataset, factory = DefaultDataFactory): Shape[] {
   const shapesForShapes = makeShapesForShapes(factory);
   const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!;
   const framingResults = frame({shape: rootShape, dataset});
