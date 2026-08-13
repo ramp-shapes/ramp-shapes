@@ -1,15 +1,16 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Quad } from '@rdfjs/types';
 import * as SparqlJs from 'sparqljs';
 
-import * as Ramp from '../src/index';
+import * as Ramp from '../src/index.js';
 
-import { structurallySame } from './compare';
+import { structurallySame } from './compare.js';
 import {
   TestResult, TestFailure, TestFailureError, ExpectedError,
   makeFailureError, readTestShapes, readTestGraph, rampStackToTestStack,
-} from './runner';
-import { readCyclicJson, readQuery } from './util';
+} from './runner.js';
+import { readCyclicJson, readQuery } from './util.js';
 
 export interface OperationTestCase {
   readonly type: 'frame' | 'flatten' | 'generateQuery';
@@ -166,14 +167,14 @@ function runFlattenTest(testCase: OperationTestCase): TestResult {
   const flattenTest = readTestDefinition(testCase) as FlattenTest;
   const shape = readTestShapes(flattenTest.shapes);
 
-  let quads: Ramp.Rdf.Quad[] | undefined;
+  let quads: Quad[] | undefined;
   try {
     let blankIndex = 1;
     quads = [...Ramp.flatten({
       shape,
       value: flattenTest.value,
       unstable_generateBlankNode: () => {
-        const blankNode = Ramp.Rdf.DefaultDataFactory.blankNode(`b${blankIndex}`);
+        const blankNode = Ramp.DefaultDataFactory.blankNode(`b${blankIndex}`);
         blankIndex++;
         return blankNode;
       }

@@ -1,4 +1,4 @@
-import * as Ramp from '../src/index';
+import * as Ramp from '../src/index.js';
 
 export function structurallySame(a: unknown, b: unknown): boolean {
   return cyclicSame(a, b, new Set(), new Set());
@@ -26,28 +26,28 @@ export function cyclicSame(a: unknown, b: unknown, visitLeft: Set<unknown>, visi
           if (!cyclicSame(a[i], b[i], visitLeft, visitRight)) { return false; }
         }
         return true;
-      } else if (Ramp.Rdf.looksLikeTerm(a) && Ramp.Rdf.looksLikeTerm(b)) {
-        return Ramp.Rdf.equalTerms(a, b);
+      } else if (Ramp.looksLikeTerm(a) && Ramp.looksLikeTerm(b)) {
+        return Ramp.equalTerms(a, b);
       } else {
-        const aPrototype = Object.getPrototypeOf(a);
-        const bPrototype = Object.getPrototypeOf(b);
+        const aPrototype: unknown = Object.getPrototypeOf(a);
+        const bPrototype: unknown = Object.getPrototypeOf(b);
         if (aPrototype !== bPrototype) {
           return false;
         }
         for (const key in a) {
           if (Object.hasOwnProperty.call(a, key)) {
-            const aValue = (a as any)[key];
+            const aValue = (a as Record<string, unknown>)[key];
             if (aValue !== undefined && !Object.hasOwnProperty.call(b, key)) {
               return false;
             }
-            if (!cyclicSame(aValue, (b as any)[key], visitLeft, visitRight)) {
+            if (!cyclicSame(aValue, (b as Record<string, unknown>)[key], visitLeft, visitRight)) {
               return false;
             }
           }
         }
         for (const key in b as object) {
           if (Object.hasOwnProperty.call(b, key)) {
-            const bValue = (b as any)[key];
+            const bValue = (b as Record<string, unknown>)[key];
             if (bValue !== undefined && !Object.hasOwnProperty.call(a, key)) {
               return false;
             }

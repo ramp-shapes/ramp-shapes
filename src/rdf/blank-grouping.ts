@@ -1,11 +1,13 @@
-import * as Rdf from './rdf-model';
+import type { Term, BlankNode, Quad } from '@rdfjs/types';
+
+import { DefaultDataFactory, equalTerms, namespacedNode } from './rdf-model.js';
 
 export class GroupedQuad {
   constructor(
-    readonly subject: Rdf.Quad['subject'] | BlankGroup | BlankList,
-    readonly predicate: Rdf.Quad['predicate'],
-    readonly object: Rdf.Quad['object'] | BlankGroup | BlankList,
-    readonly graph: Rdf.Quad['graph']
+    readonly subject: Quad['subject'] | BlankGroup | BlankList,
+    readonly predicate: Quad['predicate'],
+    readonly object: Quad['object'] | BlankGroup | BlankList,
+    readonly graph: Quad['graph']
   ) {}
   get termType() { return 'GroupedQuad' as const; }
 }
@@ -19,12 +21,12 @@ export class BlankGroup {
 
 export class BlankList {
   constructor(
-    readonly items: ReadonlyArray<Rdf.Term | BlankGroup | BlankList>
+    readonly items: ReadonlyArray<Term | BlankGroup | BlankList>
   ) {}
   get termType() { return 'BlankList' as const; }
 }
 
-export function *groupBlanks(quads: ReadonlyArray<Rdf.Quad>): Iterable<GroupedQuad | Rdf.Quad> {
+export function *groupBlanks(quads: ReadonlyArray<Quad>): Iterable<GroupedQuad | Quad> {
   const {blankMinIndex, blankMaxIndex} = computeBlankRanges(quads);
   const context: WriteContext = {
     quads,
@@ -57,18 +59,18 @@ export function *groupBlanks(quads: ReadonlyArray<Rdf.Quad>): Iterable<GroupedQu
 }
 
 const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDF_FIRST = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'first');
-const RDF_REST = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'rest');
-const RDF_NIL = Rdf.DefaultDataFactory.namedNode(RDF_NAMESPACE + 'nil');
+const RDF_FIRST = namespacedNode(DefaultDataFactory, RDF_NAMESPACE, 'first');
+const RDF_REST = namespacedNode(DefaultDataFactory, RDF_NAMESPACE, 'rest');
+const RDF_NIL = namespacedNode(DefaultDataFactory, RDF_NAMESPACE, 'nil');
 
 interface WriteContext {
-  readonly quads: ReadonlyArray<Rdf.Quad>;
+  readonly quads: ReadonlyArray<Quad>;
   readonly blankMinIndex: ReadonlyMap<string, number>;
   readonly blankMaxIndex: ReadonlyMap<string, number>;
   readonly visitingBlanks: Set<string>;
 }
 
-function tryWriteChildGroupOrList(context: WriteContext, subject: Rdf.Term, start: number) {
+function tryWriteChildGroupOrList(context: WriteContext, subject: Term, start: number) {
   const {blankMinIndex, blankMaxIndex} = context;
   let next = start;
   let childList: BlankList | undefined;
@@ -78,7 +80,7 @@ function tryWriteChildGroupOrList(context: WriteContext, subject: Rdf.Term, star
     return {next, child: childList || childGroup};
   }
 
-  const listOutput: Array<Rdf.Term | BlankGroup | BlankList> = [];
+  const listOutput: Array<Term | BlankGroup | BlankList> = [];
   const nextList = tryWriteBlankList(context, subject, next, listOutput);
   if (nextList === null) { return null; }
   if (nextList > next && nextList > blankMaxIndex.get(subject.value)!) {
@@ -100,7 +102,7 @@ function tryWriteChildGroupOrList(context: WriteContext, subject: Rdf.Term, star
 }
 
 function tryWriteBlankGroup(
-  context: WriteContext, subject: Rdf.BlankNode | undefined, start: number, output: GroupedQuad[]
+  context: WriteContext, subject: BlankNode | undefined, start: number, output: GroupedQuad[]
 ): number | null {
   const {quads, visitingBlanks} = context;
   if (subject) {
@@ -110,7 +112,7 @@ function tryWriteBlankGroup(
   let i = start;
   while (i < quads.length) {
     const q = quads[i];
-    if (subject && !Rdf.equalTerms(subject, q.subject)) {
+    if (subject && !equalTerms(subject, q.subject)) {
       return i;
     }
 
@@ -120,7 +122,7 @@ function tryWriteBlankGroup(
     output.push(new GroupedQuad(
       q.subject,
       q.predicate,
-      result.child || (Rdf.equalTerms(q.object, RDF_NIL) ? new BlankList([]) : q.object),
+      result.child || (equalTerms(q.object, RDF_NIL) ? new BlankList([]) : q.object),
       q.graph
     ));
     i = result.next;
@@ -132,7 +134,7 @@ function tryWriteBlankGroup(
 }
 
 function tryWriteBlankList(
-  context: WriteContext, head: Rdf.BlankNode, start: number, output: Array<Rdf.Term | BlankGroup | BlankList>
+  context: WriteContext, head: BlankNode, start: number, output: Array<Term | BlankGroup | BlankList>
 ): number | null {
   const {quads, blankMinIndex, blankMaxIndex, visitingBlanks} = context;
   if (blankMinIndex.get(head.value)! < start - 1) {
@@ -148,7 +150,7 @@ function tryWriteBlankList(
     let foundFirst = false;
 
     const qFirst = quads[i];
-    if (Rdf.equalTerms(qFirst.subject, current) && Rdf.equalTerms(qFirst.predicate, RDF_FIRST)) {
+    if (equalTerms(qFirst.subject, current) && equalTerms(qFirst.predicate, RDF_FIRST)) {
       const next = i + 1;
       const result = tryWriteChildGroupOrList(context, qFirst.object, next);
       if (result === null) { return null; }
@@ -158,12 +160,12 @@ function tryWriteBlankList(
     }
 
     let foundNil = false;
-    let nextItem: Rdf.BlankNode | undefined;
+    let nextItem: BlankNode | undefined;
 
     if (foundFirst && i < quads.length && blankMaxIndex.get(current.value)! <= i) {
       const qRest = quads[i];
-      if (Rdf.equalTerms(qRest.subject, current) && Rdf.equalTerms(qRest.predicate, RDF_REST)) {
-        if (Rdf.equalTerms(qRest.object, RDF_NIL)) {
+      if (equalTerms(qRest.subject, current) && equalTerms(qRest.predicate, RDF_REST)) {
+        if (equalTerms(qRest.object, RDF_NIL)) {
           foundNil = true;
           i++;
         } else if (qRest.object.termType === 'BlankNode' && blankMinIndex.get(qRest.object.value)! === i) {
@@ -191,11 +193,11 @@ interface BlankRanges {
   blankMaxIndex: ReadonlyMap<string, number>;
 }
 
-function computeBlankRanges(quads: ReadonlyArray<Rdf.Quad>): BlankRanges {
+function computeBlankRanges(quads: ReadonlyArray<Quad>): BlankRanges {
   const blankMinIndex = new Map<string, number>();
   const blankMaxIndex = new Map<string, number>();
 
-  const seenAt = (term: Rdf.Term, index: number) => {
+  const seenAt = (term: Term, index: number) => {
     if (term.termType !== 'BlankNode') { return; }
     const previousMin = blankMinIndex.get(term.value);
     blankMinIndex.set(

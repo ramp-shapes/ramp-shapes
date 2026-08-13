@@ -1,27 +1,50 @@
 name: Node CI
 
-on: [push]
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
-  build:
-
+  typecheck:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js v24
+      uses: actions/setup-node@v3
+      with:
+        node-version: 24.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Type-check sources
+      run: npm run typecheck
+
+  lint:
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+    - uses: actions/checkout@v3
+    - name: Use Node.js v24
+      uses: actions/setup-node@v3
       with:
-        node-version: ${{ matrix.node-version }}
-    - name: npm install, lint, build, and test
-      run: |
-        npm ci
-        npm run lint-all
-        npm run build
-        npm test
-      env:
-        CI: true
+        node-version: 24.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Lint sources
+      run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js v24
+      uses: actions/setup-node@v3
+      with:
+        node-version: 24.x
+    - name: Install dependencies
+      run: npm ci
+    - name: Run unit tests
+      run: npm run test

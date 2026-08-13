@@ -1,12 +1,16 @@
-import { HashMap, ReadonlyHashMap } from './hash-map';
-import * as Rdf from './rdf';
+import type { DataFactory, BlankNode, Literal, NamedNode } from '@rdfjs/types';
+import { HashMap, ReadonlyHashMap } from '@reactodia/hashmap';
+
+import {
+  DefaultDataFactory, hashTerm, equalTerms, looksLikeTerm, randomString,
+} from './rdf/rdf-model.js';
 import {
   RecordProperty, ComputedProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary,
   TypedShape, TypedShapeID, TypedVocabulary,
-} from './shapes';
+} from './shapes.js';
 
 export interface ShapeBuilderOptions {
-  factory?: Rdf.DataFactory;
+  factory?: DataFactory;
   blankUniqueKey?: string;
 }
 
@@ -40,12 +44,12 @@ interface ResourceShapeProps extends ShapeBaseProps {
 }
 
 interface LiteralShapeProps extends ShapeBaseProps {
-  datatype?: Rdf.NamedNode;
+  datatype?: NamedNode;
   language?: string;
 }
 
 interface LiteralShapeWithDatatypeProps extends ShapeBaseProps {
-  datatype: Rdf.NamedNode;
+  datatype: NamedNode;
 }
 
 interface LiteralShapeWithLanguageProps extends ShapeBaseProps {
@@ -77,16 +81,16 @@ type NullableKeys<T> =
 type NullableAsOptional<T> = Omit<T, NullableKeys<T>> & Partial<Pick<T, NullableKeys<T>>>;
 
 export class ShapeBuilder {
-  private readonly _shapes = new HashMap<ShapeID, Shape>(Rdf.hashTerm, Rdf.equalTerms);
+  private readonly _shapes = new HashMap<ShapeID, Shape>(hashTerm, equalTerms);
 
-  private readonly factory: Rdf.DataFactory;
+  private readonly factory: DataFactory;
   private readonly blankUniqueKey: string | undefined;
   private blankSequence = 1;
 
   constructor(options: ShapeBuilderOptions = {}) {
     const {
-      factory = Rdf.DefaultDataFactory,
-      blankUniqueKey = Rdf.randomString('', 24),
+      factory = DefaultDataFactory,
+      blankUniqueKey = randomString('', 24),
     } = options;
     this.factory = factory;
     this.blankUniqueKey = blankUniqueKey;
@@ -226,7 +230,7 @@ export class ShapeBuilder {
   }
 
   constant<T extends string>(
-    value: Rdf.NamedNode<T> | Rdf.BlankNode | Rdf.Literal,
+    value: NamedNode<T> | BlankNode | Literal,
     props: ShapeBaseProps = {}
   ): TypedShapeID<T> {
     return this.constantShape(value, props) as TypedShapeID<any>;
@@ -244,7 +248,7 @@ export class ShapeBuilder {
     return this.constantShape(node, {...props, vocabulary}) as TypedShapeID<any>;
   }
 
-  constantTerm<Term extends Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal>(
+  constantTerm<Term extends NamedNode | BlankNode | Literal>(
     value: Term,
     props: ShapeBaseProps = {}
   ): TypedShapeID<Term> {
@@ -252,7 +256,7 @@ export class ShapeBuilder {
   }
 
   private constantShape(
-    value: Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal,
+    value: NamedNode | BlankNode | Literal,
     props: ShapeBaseProps & {
       vocabulary?: Vocabulary;
       keepAsTerm?: boolean;
@@ -275,7 +279,7 @@ export class ShapeBuilder {
       default: {
         throw new Error(
           'Unexpected term type for constant shape: ' +
-          (value as Rdf.NamedNode).termType
+          (value as NamedNode).termType
         );
       }
     }
@@ -289,13 +293,13 @@ export class ShapeBuilder {
     return id as TypedShapeID<any>;
   }
 
-  resourceTerm(props: ShapeBaseProps = {}): TypedShapeID<Rdf.NamedNode | Rdf.BlankNode> {
+  resourceTerm(props: ShapeBaseProps = {}): TypedShapeID<NamedNode | BlankNode> {
     const {id = this.makeShapeID('resource'), lenient} = props;
     this._shapes.set(id, {type: 'resource', id, lenient, keepAsTerm: true});
     return id as TypedShapeID<any>;
   }
 
-  namedNodeTerm(props: ShapeBaseProps = {}): TypedShapeID<Rdf.NamedNode> {
+  namedNodeTerm(props: ShapeBaseProps = {}): TypedShapeID<NamedNode> {
     const {id = this.makeShapeID('resource'), lenient} = props;
     this._shapes.set(id, {type: 'resource', id, lenient, onlyNamed: true, keepAsTerm: true});
     return id as TypedShapeID<any>;
@@ -309,7 +313,7 @@ export class ShapeBuilder {
     return id as TypedShapeID<any>;
   }
 
-  literalTerm(props: LiteralShapeProps = {}): TypedShapeID<Rdf.Literal> {
+  literalTerm(props: LiteralShapeProps = {}): TypedShapeID<Literal> {
     const {id = this.makeShapeID('literal'), datatype, language, lenient} = props as LiteralShapeProps;
     this._shapes.set(id, {type: 'literal', id, datatype, language, lenient, keepAsTerm: true});
     return id as TypedShapeID<any>;
@@ -345,7 +349,7 @@ export class ShapeBuilder {
       itemShape = value.target,
     } = props;
     const {_shapes} = this;
-    const keyRef: PartialShapeReference<any> = Rdf.looksLikeTerm(key) ? {target: key} : key;
+    const keyRef: PartialShapeReference<any> = looksLikeTerm(key) ? {target: key} : key;
     this._shapes.set(id, {
       type: 'map',
       id,
@@ -373,7 +377,7 @@ export class ShapeBuilder {
     return vocabulary;
   }
 
-  makeShapeID(prefix: string): Rdf.BlankNode {
+  makeShapeID(prefix: string): BlankNode {
     const index = this.blankSequence++;
     return this.factory.blankNode(`${prefix}_${this.blankUniqueKey}_${index}`);
   }
@@ -384,14 +388,14 @@ export function self<T>(valueShape: TypedShapeID<T>): PartialProperty<T> {
 }
 
 export function property<T>(
-  predicate: Rdf.NamedNode,
+  predicate: NamedNode,
   valueShape: TypedShapeID<T>
 ): PartialProperty<T> {
   return {path: {type: 'predicate', predicate}, valueShape};
 }
 
 export function inverseProperty<T>(
-  predicate: Rdf.NamedNode,
+  predicate: NamedNode,
   valueShape: TypedShapeID<T>
 ): PartialProperty<T> {
   return {

@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import { diffLines } from 'diff';
 import { diffString } from 'json-diff';
 
-import { TestResult } from './runner';
-import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations';
+import { TestResult } from './runner.js';
+import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations.js';
 
-import { TestScriptContext } from './test-scripts/test-script-context';
-import { registerAllTests } from './test-scripts/test-index';
+import { TestScriptContext } from './test-scripts/test-script-context.js';
+import { registerAllTests } from './test-scripts/test-index.js';
 
 interface TestCase {
   readonly name: string;
@@ -89,12 +89,12 @@ function main() {
       if (result.expected || result.given) {
         if (typeof result.expected === 'string' && typeof result.given === 'string') {
           for (const change of diffLines(result.expected, result.given)) {
-            const color = (
-              change.added ? 'green' :
-              change.removed ? 'red' :
-              'grey'
+            const colored = (
+              change.added ? chalk.green :
+              change.removed ? chalk.red :
+              chalk.grey
             );
-            process.stderr.write(chalk.keyword(color)(change.value));
+            process.stderr.write(colored(change.value));
           }
           process.stderr.write('\n');
         } else {
@@ -148,7 +148,7 @@ function addOperationTests(testCases: Map<string, TestCase>): void {
   try {
     operationTests = readOperationTestIndex();
   } catch (err) {
-    console.error(`Error reading operation test index`, err);
+    console.error('Error reading operation test index', err);
     process.exit(ExitCode.OperationTestIndexReadFailed);
   }
 

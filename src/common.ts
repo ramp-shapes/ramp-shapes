@@ -1,17 +1,19 @@
-import { HashMap, HashSet } from './hash-map';
-import * as Rdf from './rdf';
+import type { DataFactory, Term, BlankNode, NamedNode } from '@rdfjs/types';
+import { HashMap, HashSet } from '@reactodia/hashmap';
+
+import { hashTerm, equalTerms, termToString } from './rdf/rdf-model.js';
 import {
   ListShape, LiteralShape, PropertyPath, ResourceShape, Shape,
-} from './shapes';
-import { ErrorCode, RampError } from './errors';
-import { rdf } from './vocabulary';
+} from './shapes.js';
+import { ErrorCode, RampError } from './errors.js';
+import { rdf } from './vocabulary.js';
 
 export function makeTermSet() {
-  return new HashSet<Rdf.Term>(Rdf.hashTerm, Rdf.equalTerms);
+  return new HashSet<Term>(hashTerm, equalTerms);
 }
 
 export function makeTermMap<V>() {
-  return new HashMap<Rdf.Term, V>(Rdf.hashTerm, Rdf.equalTerms);
+  return new HashMap<Term, V>(hashTerm, equalTerms);
 }
 
 export function assertUnknownShape(shape: never): never {
@@ -20,7 +22,7 @@ export function assertUnknownShape(shape: never): never {
 
 export function matchesTerm(
   shape: ResourceShape | LiteralShape,
-  node: Rdf.Term,
+  node: Term,
   makeError?: (code: ErrorCode, message: string) => RampError
 ): boolean {
   if (shape.type === 'resource') {
@@ -57,8 +59,8 @@ export function matchesTerm(
     }
     if (shape.datatype && shape.datatype.value !== node.datatype.value) {
       if (makeError) {
-        const expectedDatatype = Rdf.toString(shape.datatype);
-        const foundDatatype = Rdf.toString(node.datatype);
+        const expectedDatatype = termToString(shape.datatype);
+        const foundDatatype = termToString(node.datatype);
         throw makeError(
           ErrorCode.NonMatchingLiteralDatatype,
           `Expected literal datatype ${expectedDatatype} but found ${foundDatatype}`
@@ -78,11 +80,11 @@ export function matchesTerm(
       }
     }
   }
-  if (shape.value && !Rdf.equalTerms(shape.value, node)) {
+  if (shape.value && !equalTerms(shape.value, node)) {
     if (makeError) {
       throw makeError(
         ErrorCode.NonMatchingTermValue,
-        `Expected different term value ${Rdf.toString(shape.value)} but found ${Rdf.toString(node)}`
+        `Expected different term value ${termToString(shape.value)} but found ${termToString(node)}`
       );
     } else {
       return false;
@@ -94,10 +96,10 @@ export function matchesTerm(
 export interface ResolvedListShape {
   head: PropertyPath;
   tail: PropertyPath;
-  nil: Rdf.NamedNode;
+  nil: NamedNode;
 }
 
-export function makeListShapeDefaults(factory: Rdf.DataFactory): ResolvedListShape {
+export function makeListShapeDefaults(factory: DataFactory): ResolvedListShape {
   return {
     head: {type: 'predicate', predicate: factory.namedNode(rdf.first)},
     tail: {type: 'predicate', predicate: factory.namedNode(rdf.rest)},
@@ -114,16 +116,16 @@ export function resolveListShape(shape: ListShape, defaults: ResolvedListShape):
 }
 
 export class SubjectMemo {
-  private iri: Rdf.NamedNode | undefined;
-  private lastBlank: Rdf.BlankNode | undefined;
+  private iri: NamedNode | undefined;
+  private lastBlank: BlankNode | undefined;
 
   constructor(private shape: Shape) {}
 
-  set(node: Rdf.Term) {
+  set(node: Term) {
     if (node.termType === 'NamedNode') {
-      if (this.iri && !Rdf.equalTerms(node, this.iri)) {
+      if (this.iri && !equalTerms(node, this.iri)) {
         throw new Error(
-          `Inconsistent self reference for object shape ${Rdf.toString(this.shape.id)}`
+          `Inconsistent self reference for object shape ${termToString(this.shape.id)}`
         );
       }
       this.iri = node;

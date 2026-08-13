@@ -1,15 +1,16 @@
 import * as SparqlJs from 'sparqljs';
-import * as Ramp from '../../src/index';
-import { AlexanderTheThirdDescendants, Prefixes } from './wikidata-common';
 
-const factory = Ramp.Rdf.DefaultDataFactory;
+import * as Ramp from '../../src/index.js';
+import { AlexanderTheThirdDescendants, Prefixes } from './wikidata-common.js';
+
+const factory = Ramp.DefaultDataFactory;
 
 const query = Ramp.generateQuery({
   shape: AlexanderTheThirdDescendants,
   prefixes: Prefixes,
   onEmitShape: e => {
     // Add FILTER(LANG(?var) = "en") to fetch only english labels
-    if (e.shape.type === 'literal' && e.shape.language) {
+    if (e.subject.termType === 'Variable' && e.shape.type === 'literal' && e.shape.language) {
       e.emitPatterns.push({
         type: 'filter',
         expression: {

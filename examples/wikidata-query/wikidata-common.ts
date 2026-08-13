@@ -1,10 +1,11 @@
-import { join } from 'path';
-import * as Ramp from '../../src/index';
-import { readQuadsFromTurtle } from '../util';
+import path from 'node:path';
 
-const factory = Ramp.Rdf.DefaultDataFactory;
-const wikidataShapes = Ramp.frameShapes(Ramp.Rdf.dataset(
-  readQuadsFromTurtle(join(__dirname, 'wikidata-shapes.ttl'))
+import * as Ramp from '../../src/index.js';
+import { readQuadsFromTurtle } from '../util.js';
+
+const factory = Ramp.DefaultDataFactory;
+const wikidataShapes = Ramp.frameShapes(Ramp.dataset(
+  readQuadsFromTurtle(path.join(import.meta.dirname, 'wikidata-shapes.ttl'))
 ));
 
 export const Prefixes = {
@@ -16,8 +17,8 @@ export const Prefixes = {
 const schema = new Ramp.ShapeBuilder();
 schema.addAll(wikidataShapes);
 
-const WdAlexanderTheThird = Ramp.Rdf.namespacedNode(factory, Prefixes.wd, 'Q120180');
-const WdPerson = Ramp.Rdf.namespacedNode(factory, Prefixes.wd, 'Q5');
+const WdAlexanderTheThird = Ramp.namespacedNode(factory, Prefixes.wd, 'Q120180');
+const WdPerson = Ramp.namespacedNode(factory, Prefixes.wd, 'Q5');
 
 const AlexanderTheThird = schema.record({
   id: WdAlexanderTheThird,

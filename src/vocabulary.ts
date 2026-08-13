@@ -1,111 +1,112 @@
-import * as Rdf from './rdf';
+import type { DataFactory } from '@rdfjs/types';
+import { namespacedNode, namespacedValue } from './rdf/rdf-model.js';
 
 export namespace rdf {
   export const NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-  export const first = Rdf.namespacedValue(NAMESPACE, 'first');
-  export const langString = Rdf.namespacedValue(NAMESPACE, 'langString');
-  export const nil = Rdf.namespacedValue(NAMESPACE, 'nil');
-  export const rest = Rdf.namespacedValue(NAMESPACE, 'rest');
-  export const type = Rdf.namespacedValue(NAMESPACE, 'type');
+  export const first = namespacedValue(NAMESPACE, 'first');
+  export const langString = namespacedValue(NAMESPACE, 'langString');
+  export const nil = namespacedValue(NAMESPACE, 'nil');
+  export const rest = namespacedValue(NAMESPACE, 'rest');
+  export const type = namespacedValue(NAMESPACE, 'type');
 }
 
 export namespace xsd {
   export const NAMESPACE = 'http://www.w3.org/2001/XMLSchema#';
-  export const string = Rdf.namespacedValue(NAMESPACE, 'string');
-  export const boolean = Rdf.namespacedValue(NAMESPACE, 'boolean');
-  export const integer = Rdf.namespacedValue(NAMESPACE, 'integer');
-  export const double = Rdf.namespacedValue(NAMESPACE, 'double');
-  export const decimal = Rdf.namespacedValue(NAMESPACE, 'decimal');
-  export const nonNegativeInteger = Rdf.namespacedValue(NAMESPACE, 'nonNegativeInteger');
-  export const dateTime = Rdf.namespacedValue(NAMESPACE, 'dateTime');
+  export const string = namespacedValue(NAMESPACE, 'string');
+  export const boolean = namespacedValue(NAMESPACE, 'boolean');
+  export const integer = namespacedValue(NAMESPACE, 'integer');
+  export const double = namespacedValue(NAMESPACE, 'double');
+  export const decimal = namespacedValue(NAMESPACE, 'decimal');
+  export const nonNegativeInteger = namespacedValue(NAMESPACE, 'nonNegativeInteger');
+  export const dateTime = namespacedValue(NAMESPACE, 'dateTime');
 }
 
 export namespace ramp {
   export const NAMESPACE = 'http://ramp-shapes.github.io/schema#';
-  export const Shape = Rdf.namespacedValue(NAMESPACE, 'Shape');
+  export const Shape = namespacedValue(NAMESPACE, 'Shape');
 }
 
-export function makeRampVocabulary(factory: Rdf.DataFactory) {
+export function makeRampVocabulary(factory: DataFactory) {
   const NAMESPACE = ramp.NAMESPACE;
   return {
     NAMESPACE,
-    Shape: Rdf.namespacedNode(factory, NAMESPACE, 'Shape'),
-    ShapeID: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeID'),
-    ShapeTypeVocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeTypeVocabulary'),
-    lenient: Rdf.namespacedNode(factory, NAMESPACE, 'lenient'),
+    Shape: namespacedNode(factory, NAMESPACE, 'Shape'),
+    ShapeID: namespacedNode(factory, NAMESPACE, 'ShapeID'),
+    ShapeTypeVocabulary: namespacedNode(factory, NAMESPACE, 'ShapeTypeVocabulary'),
+    lenient: namespacedNode(factory, NAMESPACE, 'lenient'),
 
     // Record
-    Record: Rdf.namespacedNode(factory, NAMESPACE, 'Record'),
-    typeProperty: Rdf.namespacedNode(factory, NAMESPACE, 'typeProperty'),
-    property: Rdf.namespacedNode(factory, NAMESPACE, 'property'),
-    computedProperty: Rdf.namespacedNode(factory, NAMESPACE, 'computedProperty'),
+    Record: namespacedNode(factory, NAMESPACE, 'Record'),
+    typeProperty: namespacedNode(factory, NAMESPACE, 'typeProperty'),
+    property: namespacedNode(factory, NAMESPACE, 'property'),
+    computedProperty: namespacedNode(factory, NAMESPACE, 'computedProperty'),
 
     // Property and ComputedProperty
-    Property: Rdf.namespacedNode(factory, NAMESPACE, 'Property'),
-    ComputedProperty: Rdf.namespacedNode(factory, NAMESPACE, 'ComputedProperty'),
-    PropertyPath: Rdf.namespacedNode(factory, NAMESPACE, 'PropertyPath'),
-    PropertyPathVocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'PropertyPathVocabulary'),
-    PredicatePath: Rdf.namespacedNode(factory, NAMESPACE, 'PredicatePath'),
-    SequencePath: Rdf.namespacedNode(factory, NAMESPACE, 'SequencePath'),
-    InversePath: Rdf.namespacedNode(factory, NAMESPACE, 'InversePath'),
-    AlternativePath: Rdf.namespacedNode(factory, NAMESPACE, 'AlternativePath'),
-    ZeroOrMorePath: Rdf.namespacedNode(factory, NAMESPACE, 'ZeroOrMorePath'),
-    ZeroOrOnePath: Rdf.namespacedNode(factory, NAMESPACE, 'ZeroOrOnePath'),
-    OneOrMorePath: Rdf.namespacedNode(factory, NAMESPACE, 'OneOrMorePath'),
-    name: Rdf.namespacedNode(factory, NAMESPACE, 'name'),
-    shape: Rdf.namespacedNode(factory, NAMESPACE, 'shape'),
-    path: Rdf.namespacedNode(factory, NAMESPACE, 'path'),
-    transient: Rdf.namespacedNode(factory, NAMESPACE, 'transient'),
-    inversePath: Rdf.namespacedNode(factory, NAMESPACE, 'inversePath'),
-    alternativePath: Rdf.namespacedNode(factory, NAMESPACE, 'alternativePath'),
-    zeroOrMorePath: Rdf.namespacedNode(factory, NAMESPACE, 'zeroOrMorePath'),
-    zeroOrOnePath: Rdf.namespacedNode(factory, NAMESPACE, 'zeroOrOnePath'),
-    oneOrMorePath: Rdf.namespacedNode(factory, NAMESPACE, 'oneOrMorePath'),
+    Property: namespacedNode(factory, NAMESPACE, 'Property'),
+    ComputedProperty: namespacedNode(factory, NAMESPACE, 'ComputedProperty'),
+    PropertyPath: namespacedNode(factory, NAMESPACE, 'PropertyPath'),
+    PropertyPathVocabulary: namespacedNode(factory, NAMESPACE, 'PropertyPathVocabulary'),
+    PredicatePath: namespacedNode(factory, NAMESPACE, 'PredicatePath'),
+    SequencePath: namespacedNode(factory, NAMESPACE, 'SequencePath'),
+    InversePath: namespacedNode(factory, NAMESPACE, 'InversePath'),
+    AlternativePath: namespacedNode(factory, NAMESPACE, 'AlternativePath'),
+    ZeroOrMorePath: namespacedNode(factory, NAMESPACE, 'ZeroOrMorePath'),
+    ZeroOrOnePath: namespacedNode(factory, NAMESPACE, 'ZeroOrOnePath'),
+    OneOrMorePath: namespacedNode(factory, NAMESPACE, 'OneOrMorePath'),
+    name: namespacedNode(factory, NAMESPACE, 'name'),
+    shape: namespacedNode(factory, NAMESPACE, 'shape'),
+    path: namespacedNode(factory, NAMESPACE, 'path'),
+    transient: namespacedNode(factory, NAMESPACE, 'transient'),
+    inversePath: namespacedNode(factory, NAMESPACE, 'inversePath'),
+    alternativePath: namespacedNode(factory, NAMESPACE, 'alternativePath'),
+    zeroOrMorePath: namespacedNode(factory, NAMESPACE, 'zeroOrMorePath'),
+    zeroOrOnePath: namespacedNode(factory, NAMESPACE, 'zeroOrOnePath'),
+    oneOrMorePath: namespacedNode(factory, NAMESPACE, 'oneOrMorePath'),
 
     // Resource and Literal
-    Resource: Rdf.namespacedNode(factory, NAMESPACE, 'Resource'),
-    Literal: Rdf.namespacedNode(factory, NAMESPACE, 'Literal'),
-    onlyNamed: Rdf.namespacedNode(factory, NAMESPACE, 'onlyNamed'),
-    termDatatype: Rdf.namespacedNode(factory, NAMESPACE, 'termDatatype'),
-    termLanguage: Rdf.namespacedNode(factory, NAMESPACE, 'termLanguage'),
-    termValue: Rdf.namespacedNode(factory, NAMESPACE, 'termValue'),
-    keepAsTerm: Rdf.namespacedNode(factory, NAMESPACE, 'keepAsTerm'),
+    Resource: namespacedNode(factory, NAMESPACE, 'Resource'),
+    Literal: namespacedNode(factory, NAMESPACE, 'Literal'),
+    onlyNamed: namespacedNode(factory, NAMESPACE, 'onlyNamed'),
+    termDatatype: namespacedNode(factory, NAMESPACE, 'termDatatype'),
+    termLanguage: namespacedNode(factory, NAMESPACE, 'termLanguage'),
+    termValue: namespacedNode(factory, NAMESPACE, 'termValue'),
+    keepAsTerm: namespacedNode(factory, NAMESPACE, 'keepAsTerm'),
 
     // AnyOf
-    AnyOf: Rdf.namespacedNode(factory, NAMESPACE, 'AnyOf'),
-    variant: Rdf.namespacedNode(factory, NAMESPACE, 'variant'),
+    AnyOf: namespacedNode(factory, NAMESPACE, 'AnyOf'),
+    variant: namespacedNode(factory, NAMESPACE, 'variant'),
 
     // Optional and Set
-    Optional: Rdf.namespacedNode(factory, NAMESPACE, 'Optional'),
-    Set: Rdf.namespacedNode(factory, NAMESPACE, 'Set'),
-    item: Rdf.namespacedNode(factory, NAMESPACE, 'item'),
-    minCount: Rdf.namespacedNode(factory, NAMESPACE, 'minCount'),
-    maxCount: Rdf.namespacedNode(factory, NAMESPACE, 'maxCount'),
+    Optional: namespacedNode(factory, NAMESPACE, 'Optional'),
+    Set: namespacedNode(factory, NAMESPACE, 'Set'),
+    item: namespacedNode(factory, NAMESPACE, 'item'),
+    minCount: namespacedNode(factory, NAMESPACE, 'minCount'),
+    maxCount: namespacedNode(factory, NAMESPACE, 'maxCount'),
 
     // List; also uses "item"
-    List: Rdf.namespacedNode(factory, NAMESPACE, 'List'),
-    headPath: Rdf.namespacedNode(factory, NAMESPACE, 'headPath'),
-    tailPath: Rdf.namespacedNode(factory, NAMESPACE, 'tailPath'),
-    nil: Rdf.namespacedNode(factory, NAMESPACE, 'nil'),
+    List: namespacedNode(factory, NAMESPACE, 'List'),
+    headPath: namespacedNode(factory, NAMESPACE, 'headPath'),
+    tailPath: namespacedNode(factory, NAMESPACE, 'tailPath'),
+    nil: namespacedNode(factory, NAMESPACE, 'nil'),
 
     // Map; also uses "item"
-    Map: Rdf.namespacedNode(factory, NAMESPACE, 'Map'),
-    mapKey: Rdf.namespacedNode(factory, NAMESPACE, 'mapKey'),
-    mapValue: Rdf.namespacedNode(factory, NAMESPACE, 'mapValue'),
+    Map: namespacedNode(factory, NAMESPACE, 'Map'),
+    mapKey: namespacedNode(factory, NAMESPACE, 'mapKey'),
+    mapValue: namespacedNode(factory, NAMESPACE, 'mapValue'),
 
     // ShapeReference
-    ShapeReference: Rdf.namespacedNode(factory, NAMESPACE, 'ShapeReference'),
-    TermPartVocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'TermPartVocabulary'),
-    TermDatatype: Rdf.namespacedNode(factory, NAMESPACE, 'TermDatatype'),
-    TermLanguage: Rdf.namespacedNode(factory, NAMESPACE, 'TermLanguage'),
-    TermValue: Rdf.namespacedNode(factory, NAMESPACE, 'TermValue'),
-    termPart: Rdf.namespacedNode(factory, NAMESPACE, 'termPart'),
+    ShapeReference: namespacedNode(factory, NAMESPACE, 'ShapeReference'),
+    TermPartVocabulary: namespacedNode(factory, NAMESPACE, 'TermPartVocabulary'),
+    TermDatatype: namespacedNode(factory, NAMESPACE, 'TermDatatype'),
+    TermLanguage: namespacedNode(factory, NAMESPACE, 'TermLanguage'),
+    TermValue: namespacedNode(factory, NAMESPACE, 'TermValue'),
+    termPart: namespacedNode(factory, NAMESPACE, 'termPart'),
 
     // Vocabulary; also uses "termValue"
-    Vocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'Vocabulary'),
-    vocabulary: Rdf.namespacedNode(factory, NAMESPACE, 'vocabulary'),
-    vocabItem: Rdf.namespacedNode(factory, NAMESPACE, 'vocabItem'),
-    vocabKey: Rdf.namespacedNode(factory, NAMESPACE, 'vocabKey'),
+    Vocabulary: namespacedNode(factory, NAMESPACE, 'Vocabulary'),
+    vocabulary: namespacedNode(factory, NAMESPACE, 'vocabulary'),
+    vocabItem: namespacedNode(factory, NAMESPACE, 'vocabItem'),
+    vocabKey: namespacedNode(factory, NAMESPACE, 'vocabKey'),
   };
 }
 

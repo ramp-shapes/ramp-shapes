@@ -1,11 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "typeRoots": ["types"]
-  },
-  "include": [
-    "src/**/*",
-    "examples/**/*",
-    "test/**/*"
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.devDeps.json" }
   ]
 }

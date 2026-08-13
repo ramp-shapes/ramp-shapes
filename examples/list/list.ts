@@ -1,11 +1,13 @@
-import { join } from 'path';
-import * as Ramp from '../../src/index';
-import { Rdf, property, inverseProperty, self } from '../../src/index';
-import { rdf } from '../namespaces';
-import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util';
+import path from 'node:path';
 
-const factory = Rdf.DefaultDataFactory;
-const dataset = Rdf.dataset(readQuadsFromTurtle(join(__dirname, 'list.ttl')));
+import * as Ramp from '../../src/index.js';
+import { rdf } from '../namespaces.js';
+import { toJson, readQuadsFromTurtle, quadsToTurtleString } from '../util.js';
+
+const factory = Ramp.DefaultDataFactory;
+const dataset = Ramp.dataset(readQuadsFromTurtle(
+  path.join(import.meta.dirname, 'list.ttl')
+));
 
 const schema = new Ramp.ShapeBuilder();
 
@@ -13,13 +15,13 @@ const list = schema.list(schema.resource());
 
 const listOwner = schema.record({
   properties: {
-    list: property(factory.namedNode('example:hasList'), list)
+    list: Ramp.property(factory.namedNode('example:hasList'), list)
   }
 });
 
 const listOfUnion = schema.record({
   properties: {
-    list: property(factory.namedNode('example:hasList'), schema.list(
+    list: Ramp.property(factory.namedNode('example:hasList'), schema.list(
       schema.anyOf([
         schema.constant(factory.namedNode('example:b1')),
         schema.constant(factory.namedNode('example:b2')),
@@ -30,10 +32,10 @@ const listOfUnion = schema.record({
 
 const listSelf = schema.record({
   properties: {
-    owner: inverseProperty(factory.namedNode('example:hasList'), schema.resource()),
-    list: self(list),
-    rest: property(rdf.rest, list),
-    restAsIri: property(rdf.rest, schema.resource()),
+    owner: Ramp.inverseProperty(factory.namedNode('example:hasList'), schema.resource()),
+    list: Ramp.self(list),
+    rest: Ramp.property(rdf.rest, list),
+    restAsIri: Ramp.property(rdf.rest, schema.resource()),
   }
 });
 
@@ -41,7 +43,7 @@ const PREFIXES = {
   rdf: rdf.NAMESPACE,
 };
 
-(async function main() {
+void (async function main() {
   const listShape = schema.getShape(list)!;
   for (const {value} of Ramp.frame({shape: listShape, dataset})) {
     console.log('FRAME list', toJson(value));

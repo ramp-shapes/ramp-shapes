@@ -1,14 +1,17 @@
-import { join } from 'path';
-import * as Ramp from '../../src/index';
-import { toJson, readQuadsFromTurtle } from '../util';
+import path from 'node:path';
 
-const factory = Ramp.Rdf.DefaultDataFactory;
-const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(
-  readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
+import * as Ramp from '../../src/index.js';
+import { toJson, readQuadsFromTurtle } from '../util.js';
+
+const factory = Ramp.DefaultDataFactory;
+const shapes = Ramp.frameShapes(Ramp.dataset(
+  readQuadsFromTurtle(path.join(import.meta.dirname, 'iiif-shapes.ttl'))
 ));
 
-const quads = readQuadsFromTurtle(join(__dirname, '../../out/iiif-query-result.ttl'));
-const dataset = Ramp.Rdf.dataset(quads);
+const quads = readQuadsFromTurtle(
+  path.join(import.meta.dirname, '../../out/iiif-query-result.ttl')
+);
+const dataset = Ramp.dataset(quads);
 console.log(`Total quads: ${quads.length}; Unique quads: ${dataset.size}`);
 
 const PREFIXES: { [prefix: string]: string } = {
@@ -31,7 +34,7 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 
 const manifestShapeId = factory.namedNode(PREFIXES.sc + 'Manifest');
-const manifestShape = shapes.find(shape => Ramp.Rdf.equalTerms(shape.id, manifestShapeId))!;
+const manifestShape = shapes.find(shape => Ramp.equalTerms(shape.id, manifestShapeId))!;
 const iterator = Ramp.frame({shape: manifestShape, dataset});
 
 for (const {value} of iterator) {

@@ -1,22 +1,26 @@
-import { HashMap } from './hash-map';
-import * as Rdf from './rdf';
+import type { DataFactory, Term, BlankNode, Literal, NamedNode, Quad } from '@rdfjs/types';
+import { HashMap } from '@reactodia/hashmap';
+
+import {
+  DefaultDataFactory, hashTerm, equalTerms, termToString, looksLikeTerm, randomString,
+} from './rdf/rdf-model.js';
 import {
   Shape, TypedShape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeID, ShapeReference,
   getNestedPropertyPath,
-} from './shapes';
+} from './shapes.js';
 import {
   ResolvedListShape, SubjectMemo, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm, makeTermMap,
-} from './common';
-import { RampError, ErrorCode, StackFrame, formatDisplayShape, makeRampError } from './errors';
-import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize';
-import { ValueMapper } from './value-mapping';
+} from './common.js';
+import { RampError, ErrorCode, StackFrame, formatDisplayShape, makeRampError } from './errors.js';
+import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize.js';
+import { ValueMapper } from './value-mapping.js';
 
 export interface FlattenParams<S extends Shape> {
   value: S extends TypedShape<infer T> ? T : unknown;
   shape: S;
-  factory?: Rdf.DataFactory;
+  factory?: DataFactory;
   mapper?: ValueMapper;
   /**
    * Causes quads for entities with non-blank subject to appear only after current stack of
@@ -25,17 +29,17 @@ export interface FlattenParams<S extends Shape> {
    * @default true
    */
   postponeNamed?: boolean;
-  unstable_generateBlankNode?: (prefix: string) => Rdf.BlankNode;
+  unstable_generateBlankNode?: (prefix: string) => BlankNode;
 }
 
-export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Rdf.Quad> {
+export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Quad> {
   const {
-    factory = Rdf.DefaultDataFactory,
+    factory = DefaultDataFactory,
     postponeNamed = true,
   } = params;
   const generateBlankNode = params.unstable_generateBlankNode || makeDefaultBlankNodeGenerator(factory);
 
-  const matches = new HashMap<ShapeID, Map<unknown, ShapeMatch | null>>(Rdf.hashTerm, Rdf.equalTerms);
+  const matches = new HashMap<ShapeID, Map<unknown, ShapeMatch | null>>(hashTerm, equalTerms);
   const queuedGenerations: Array<{ match: ShapeMatch; edge?: Edge }> = [];
 
   const context: LowerContext = {
@@ -90,24 +94,24 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Rd
   }
 }
 
-type RdfNode = Rdf.NamedNode | Rdf.BlankNode | Rdf.Literal;
+type RdfNode = NamedNode | BlankNode | Literal;
 
 interface LowerContext {
   readonly stack: StackFrame[];
-  readonly factory: Rdf.DataFactory;
+  readonly factory: DataFactory;
   readonly mapper: ValueMapper;
   readonly listDefaults: ResolvedListShape;
   getMatch(shape: Shape, value: unknown): ShapeMatch | null | undefined;
   setMatch(shape: Shape, value: unknown, match: ShapeMatch | null | undefined): void;
-  generateSubject: (shape: Shape) => Rdf.NamedNode | Rdf.BlankNode;
-  generateBlankNode: (prefix: string) => Rdf.BlankNode;
+  generateSubject: (shape: Shape) => NamedNode | BlankNode;
+  generateBlankNode: (prefix: string) => BlankNode;
   makeError(code: ErrorCode, message: string): RampError;
-  pushMatchGeneration(edge: Edge | undefined, match: ShapeMatch): Iterable<Rdf.Quad>;
+  pushMatchGeneration(edge: Edge | undefined, match: ShapeMatch): Iterable<Quad>;
 }
 
 interface ShapeMatch {
   nodes: () => Iterable<RdfNode>;
-  generate: (edge: Edge | undefined) => Iterable<Rdf.Quad>;
+  generate: (edge: Edge | undefined) => Iterable<Quad>;
 }
 
 class PlaceholderMatch implements ShapeMatch {
@@ -121,7 +125,7 @@ class PlaceholderMatch implements ShapeMatch {
     return [];
   }
 
-  *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  *generate(edge: Edge | undefined): Iterable<Quad> {
     const match = this.context.getMatch(this.shape, this.value);
     if (!match) {
       const displayedShape = formatDisplayShape(this.shape);
@@ -237,7 +241,7 @@ function flattenRecord(
     return [subject];
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function *generate(edge: Edge | undefined): Iterable<Quad> {
     yield* generateEdge(edge, subject, context);
     for (const {property, match} of matches) {
       yield* context.pushMatchGeneration({subject, path: property.path}, match);
@@ -287,7 +291,7 @@ function matchProperties(
 }
 
 interface Edge {
-  subject: Rdf.NamedNode | Rdf.BlankNode;
+  subject: NamedNode | BlankNode;
   path: PropertyPath;
 }
 
@@ -295,7 +299,7 @@ function generateEdge(
   edge: Edge | undefined,
   object: RdfNode,
   context: LowerContext
-): Iterable<Rdf.Quad> {
+): Iterable<Quad> {
   return edge ? generatePropertyPath(edge.subject, edge.path, object, context) : [];
 }
 
@@ -304,14 +308,14 @@ function *generatePropertyPath(
   path: PropertyPath,
   object: RdfNode,
   context: LowerContext
-): Iterable<Rdf.Quad> {
+): Iterable<Quad> {
   switch (path.type) {
     case 'predicate': {
       if (subject.termType === 'Literal') {
         throw context.makeError(
           ErrorCode.CannotUseLiteralAsSubject,
-          `Cannot put literal ${Rdf.toString(subject)} as subject with ` +
-          `predicate ${Rdf.toString(path.predicate)}`
+          `Cannot put literal ${termToString(subject)} as subject with ` +
+          `predicate ${termToString(path.predicate)}`
         );
       }
       yield context.factory.quad(subject, path.predicate, object);
@@ -408,7 +412,7 @@ function flattenSet(
     }
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function *generate(edge: Edge | undefined): Iterable<Quad> {
     for (const match of matches) {
       yield* match.generate(edge);
     }
@@ -435,7 +439,7 @@ function flattenOptional(
     return match ? match.nodes() : [];
   }
 
-  function generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function generate(edge: Edge | undefined): Iterable<Quad> {
     return match ? match.generate(edge) : [];
   }
 
@@ -448,7 +452,7 @@ function flattenNode(
   value: unknown,
   context: LowerContext
 ): ShapeMatch | undefined {
-  if (!Rdf.looksLikeTerm(value)) { return undefined; }
+  if (!looksLikeTerm(value)) { return undefined; }
   if (!matchesTerm(shape, value)) {
     if (required) {
       matchesTerm(shape, value, (code, message) => context.makeError(code, message));
@@ -461,7 +465,7 @@ function flattenNode(
   function nodes(): Iterable<RdfNode> {
     return [node];
   }
-  function generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function generate(edge: Edge | undefined): Iterable<Quad> {
     return generateEdge(edge, node, context);
   }
   return {nodes, generate};
@@ -495,7 +499,7 @@ function flattenList(
     yield list;
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function *generate(edge: Edge | undefined): Iterable<Quad> {
     yield* generateEdge(edge, list, context);
     let current = list;
     for (let i = 0; i < matches.length; i++) {
@@ -555,7 +559,7 @@ function flattenMap(
     }
   }
 
-  function *generate(edge: Edge | undefined): Iterable<Rdf.Quad> {
+  function *generate(edge: Edge | undefined): Iterable<Quad> {
     for (const match of matches) {
       yield* match.generate(edge);
     }
@@ -565,7 +569,7 @@ function flattenMap(
 }
 
 function addRefMatch(
-  refs: HashMap<Rdf.Term, ReferenceMatch[]>,
+  refs: HashMap<Term, ReferenceMatch[]>,
   ref: ShapeReference,
   match: unknown
 ) {
@@ -577,8 +581,8 @@ function addRefMatch(
   array.push({ref, match});
 }
 
-function makeDefaultBlankNodeGenerator(factory: Rdf.DataFactory) {
-  const blankUniqueKey = Rdf.randomString('', 24);
+function makeDefaultBlankNodeGenerator(factory: DataFactory) {
+  const blankUniqueKey = randomString('', 24);
   let blankIndex = 1;
   return (prefix: string) => {
     const index = blankIndex++;

@@ -1,11 +1,12 @@
-import { join } from 'path';
+import path from 'node:path';
 import * as SparqlJs from 'sparqljs';
-import * as Ramp from '../../src/index';
-import { readQuadsFromTurtle } from '../util';
 
-const factory = Ramp.Rdf.DefaultDataFactory;
-const shapes = Ramp.frameShapes(Ramp.Rdf.dataset(
-  readQuadsFromTurtle(join(__dirname, 'iiif-shapes.ttl'))
+import * as Ramp from '../../src/index.js';
+import { readQuadsFromTurtle } from '../util.js';
+
+const factory = Ramp.DefaultDataFactory;
+const shapes = Ramp.frameShapes(Ramp.dataset(
+  readQuadsFromTurtle(path.join(import.meta.dirname, 'iiif-shapes.ttl'))
 ));
 
 const PREFIXES: { [prefix: string]: string } = {
@@ -28,7 +29,7 @@ const PREFIXES: { [prefix: string]: string } = {
 };
 
 const manifestShapeId = factory.namedNode(PREFIXES.sc + 'Manifest');
-const manifestShape = shapes.find(shape => Ramp.Rdf.equalTerms(shape.id, manifestShapeId))!;
+const manifestShape = shapes.find(shape => Ramp.equalTerms(shape.id, manifestShapeId))!;
 const query = Ramp.generateQuery({shape: manifestShape, prefixes: PREFIXES});
 
 const generator = new SparqlJs.Generator();
