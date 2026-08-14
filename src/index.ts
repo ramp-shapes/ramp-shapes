@@ -1,5 +1,7 @@
 export { BlankGroup, BlankList, GroupedQuad, groupBlanks } from './rdf/blank-grouping.js';
-export { type Dataset, IndexQuadBy, dataset, makeIndexedDataset } from './rdf/rdf-dataset.js';
+export {
+  IndexedDataset, IndexQuadBy, type LazyDatasetCore, dataset,
+} from './rdf/rdf-dataset.js';
 export { escapeRdfValue } from './rdf/rdf-escape.js';
 export {
   DefaultDataFactory, equalQuads, equalTerms, hashQuad, hashTerm, wrapTerm,

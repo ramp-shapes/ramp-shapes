@@ -1,7 +1,6 @@
-import type { DataFactory, Term, BlankNode, NamedNode } from '@rdfjs/types';
+import type { DataFactory, DatasetCore, Term, BlankNode, NamedNode } from '@rdfjs/types';
 import { HashMap, HashSet, ReadonlyHashSet } from '@reactodia/hashmap';
 
-import { Dataset } from './rdf/rdf-dataset.js';
 import {
   DefaultDataFactory, hashTerm, equalTerms, termToString, looksLikeTerm,
 } from './rdf/rdf-model.js';
@@ -23,7 +22,7 @@ import { ValueMapper } from './value-mapping.js';
 
 export interface FrameParams<T> {
   shape: TypedShape<T> | Shape;
-  dataset: Dataset;
+  dataset: DatasetCore;
   candidates?: Iterable<Term>;
   /** Default is `true` if there are initial candidates otherwise `false`. */
   strict?: boolean;
@@ -69,7 +68,7 @@ interface FrameContext {
   readonly factory: DataFactory;
   readonly mapper: ValueMapper;
   readonly listDefaults: ResolvedListShape;
-  readonly dataset: Dataset;
+  readonly dataset: DatasetCore;
   readonly visiting: HashMap<MatchKey, CyclicMatch | null>;
   readonly matches: HashMap<MatchKey, unknown>;
   readonly refs: HashMap<ShapeID, RefContext[]>;
@@ -371,14 +370,14 @@ function findByPropertyPath(
   if (path.type === 'predicate') {
     // optimize for single forward predicate
     const objects: Term[] = [];
-    for (const q of context.dataset.iterateMatches(candidate, path.predicate, null)) {
+    for (const q of context.dataset.match(candidate, path.predicate, null)) {
       objects.push(q.object);
     }
     return objects;
   } else if (path.type === 'inverse' && path.inverse.type === 'predicate') {
     // optimize for single backwards predicate
     const subjects: Term[] = [];
-    for (const q of context.dataset.iterateMatches(null, path.inverse.predicate, candidate)) {
+    for (const q of context.dataset.match(null, path.inverse.predicate, candidate)) {
       subjects.push(q.subject);
     }
     return subjects;
@@ -723,7 +722,7 @@ function isResource(term: Term): term is NamedNode | BlankNode {
   return term.termType === 'NamedNode' || term.termType === 'BlankNode';
 }
 
-function findAllCandidates(dataset: Dataset) {
+function findAllCandidates(dataset: DatasetCore) {
   const candidates = makeTermSet();
   for (const {subject, object} of dataset) {
     candidates.add(subject);
@@ -743,8 +742,8 @@ function findByPath(
       const next = makeTermSet();
       for (const source of sources) {
         const matches = reverse
-          ? context.dataset.iterateMatches(null, path.predicate, source)
-          : context.dataset.iterateMatches(source, path.predicate, null);
+          ? context.dataset.match(null, path.predicate, source)
+          : context.dataset.match(source, path.predicate, null);
         for (const q of matches) {
           next.add(q.object);
         }
