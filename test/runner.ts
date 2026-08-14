@@ -73,7 +73,7 @@ export function readTestShapes(name: string, root?: Ramp.ShapeID): Ramp.Shape {
   return rootShape;
 }
 
-export function readTestGraph(relativePath: string): Ramp.Dataset {
+export function readTestGraph(relativePath: string): Ramp.IndexedDataset {
   try {
     return Ramp.dataset(readQuadsFromTurtle(
       path.join('test-data', relativePath)

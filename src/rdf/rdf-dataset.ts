@@ -1,28 +1,13 @@
-import type { Term, Quad } from '@rdfjs/types';
+import type { DatasetCore, Term, BaseQuad, Quad } from '@rdfjs/types';
 import { HashMap } from '@reactodia/hashmap';
 
-import { DefaultDataFactory, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model.js';
+import { BaseRdfQuad, hashTerm, equalTerms, hashQuad, equalQuads } from './rdf-model.js';
 
-export interface Dataset extends Iterable<Quad> {
-  readonly size: number;
-  add(quad: Quad): this;
-  addAll(quads: Iterable<Quad>): this;
-  delete(quad: Quad): this;
-  clear(): void;
-  has(quad: Quad): boolean;
-  hasMatches(
-    subject: Term | undefined | null,
-    predicate: Term | undefined | null,
-    object: Term | undefined | null,
-    graph?: Term | null
-  ): boolean;
-  iterateMatches(
-    subject: Term | undefined | null,
-    predicate: Term | undefined | null,
-    object: Term | undefined | null,
-    graph?: Term | null
-  ): Iterable<Quad>;
-  forEach(callback: (quad: Quad) => void): void;
+export interface LazyDatasetCore<
+  OutQuad extends BaseQuad = Quad,
+  InQuad extends BaseQuad = OutQuad
+> extends DatasetCore<OutQuad, InQuad> {
+  materialize(): DatasetCore<OutQuad, InQuad>;
 }
 
 export enum IndexQuadBy {
@@ -43,22 +28,19 @@ export enum IndexQuadBy {
   G = 64,
 }
 
-export function dataset(quads?: Iterable<Quad>): Dataset {
-  const dataset = makeIndexedDataset(IndexQuadBy.SP | IndexQuadBy.OP);
+export function dataset(quads?: Iterable<Quad>): IndexedDataset {
+  const dataset = IndexedDataset.create({ indexBy: IndexQuadBy.SP | IndexQuadBy.OP });
   if (quads) {
     dataset.addAll(quads);
   }
   return dataset;
 }
 
-export function makeIndexedDataset(indexBy: IndexQuadBy): Dataset {
-  return new IndexedDataset(indexBy);
-}
-
-class IndexedDataset implements Dataset {
+export class IndexedDataset implements DatasetCore<Quad> {
+  private readonly indexBy: IndexQuadBy;
   private _size = 0;
 
-  private readonly byQuad: HashMap<Quad, Quad>;
+  private readonly byQuad: HashMap<BaseQuad, Quad>;
   private readonly bySubject: HashMap<Term, SmallQuadSet> | undefined;
   private readonly byPredicate: HashMap<Term, SmallQuadSet> | undefined;
   private readonly byObject: HashMap<Term, SmallQuadSet> | undefined;
@@ -66,7 +48,8 @@ class IndexedDataset implements Dataset {
   private readonly byObjectPredicate: HashMap<SourcePredicateKey, SmallQuadSet> | undefined;
   private readonly byGraph: HashMap<Term, SmallQuadSet> | undefined;
 
-  constructor(indexBy: IndexQuadBy) {
+  private constructor(indexBy: IndexQuadBy) {
+    this.indexBy = indexBy;
     this.byQuad = new HashMap<Quad, Quad>(hashQuad, equalQuads);
     if (indexBy & IndexQuadBy.S) {
       this.bySubject = new HashMap<Term, SmallQuadSet>(hashTerm, equalTerms);
@@ -90,6 +73,11 @@ class IndexedDataset implements Dataset {
         SourcePredicateKey.hashCode, SourcePredicateKey.equals
       );
     }
+  }
+
+  static create(options: { indexBy: IndexQuadBy }): IndexedDataset {
+    const {indexBy} = options;
+    return new IndexedDataset(indexBy);
   }
 
   get size(): number {
@@ -200,10 +188,10 @@ class IndexedDataset implements Dataset {
   }
 
   hasMatches(
-    subject: Quad['subject'] | undefined | null,
-    predicate: Quad['predicate'] | undefined | null,
-    object: Quad['object'] | undefined | null,
-    graph?: Quad['graph'] | null
+    subject: Term | undefined | null,
+    predicate: Term | undefined | null,
+    object: Term | undefined | null,
+    graph?: Term | null
   ): boolean {
     for (const q of this.iterateMatches(subject, predicate, object, graph)) {
       return true;
@@ -212,14 +200,14 @@ class IndexedDataset implements Dataset {
   }
 
   iterateMatches(
-    subject: Quad['subject'] | undefined | null,
-    predicate: Quad['predicate'] | undefined | null,
-    object: Quad['object'] | undefined | null,
-    graph?: Quad['graph'] | null
+    subject: Term | undefined | null,
+    predicate: Term | undefined | null,
+    object: Term | undefined | null,
+    graph?: Term | null
   ): Iterable<Quad> {
     let result: Iterable<Quad>;
     if (subject && predicate && object && graph) {
-      const found = this.byQuad.get(DefaultDataFactory.quad(subject, predicate, object, graph));
+      const found = this.byQuad.get(new BaseRdfQuad(subject, predicate, object, graph));
       result = found ? [found] : [];
     } else if (this.bySubjectPredicate && subject && predicate) {
       const indexed = this.bySubjectPredicate.get({ source: subject, predicate });
@@ -247,12 +235,26 @@ class IndexedDataset implements Dataset {
     return graph ? filterByGraph(result, graph) : result;
   }
 
-  [Symbol.iterator](): Iterator<Quad> {
-    return this.byQuad.values();
+  match(
+    subject?: Term | null,
+    predicate?: Term | null,
+    object?: Term | null,
+    graph?: Term | null
+  ): LazyDatasetCore<Quad, Quad> {
+    return new LazyDataset(
+      () => this.iterateMatches(subject, predicate, object, graph),
+      this._createDataset
+    );
   }
 
-  forEach(callback: (t: Quad) => void): void {
-    this.byQuad.forEach(callback);
+  private _createDataset = (quads: Iterable<Quad>) => {
+    const matchSet = new IndexedDataset(this.indexBy);
+    matchSet.addAll(quads);
+    return matchSet;
+  };
+
+  [Symbol.iterator](): Iterator<Quad> {
+    return this.byQuad.values();
   }
 }
 
@@ -321,5 +323,53 @@ function* filterByGraph(quads: Iterable<Quad>, graph: Term): Iterable<Quad> {
     if (equalTerms(quad.graph, graph)) {
       yield quad;
     }
+  }
+}
+
+class LazyDataset implements LazyDatasetCore<Quad> {
+  private _materialized: DatasetCore<Quad> | undefined;
+
+  constructor(
+    private readonly _iterate: () => Iterable<Quad>,
+    private readonly _create: (quads: Iterable<Quad>) => DatasetCore<Quad>
+  ) {}
+
+  materialize(): DatasetCore<Quad> {
+    if (!this._materialized) {
+      this._materialized = this._create(this._iterate());
+    }
+    return this._materialized;
+  }
+
+  get size(): number {
+    return this.materialize().size;
+  }
+
+  add(quad: Quad): this {
+    this.materialize().add(quad);
+    return this;
+  }
+
+  delete(quad: Quad): this {
+    this.materialize().delete(quad);
+    return this;
+  }
+
+  has(quad: Quad): boolean {
+    return this.materialize().has(quad);
+  }
+
+  match(
+    subject?: Term | null,
+    predicate?: Term | null,
+    object?: Term | null,
+    graph?: Term | null
+  ): DatasetCore<Quad, Quad> {
+    return this.materialize().match(subject, predicate, object, graph);
+  }
+
+  [Symbol.iterator](): Iterator<Quad> {
+    const iterable = this._iterate();
+    return iterable[Symbol.iterator]();
   }
 }

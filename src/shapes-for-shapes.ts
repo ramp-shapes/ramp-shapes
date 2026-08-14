@@ -1,4 +1,5 @@
-import { Dataset } from './rdf/rdf-dataset.js';
+import { DatasetCore } from '@rdfjs/types';
+
 import { DefaultDataFactory } from './rdf/rdf-model.js';
 import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder.js';
 import {
@@ -349,7 +350,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   return schema.shapes;
 }
 
-export function frameShapes(dataset: Dataset, factory = DefaultDataFactory): Shape[] {
+export function frameShapes(dataset: DatasetCore, factory = DefaultDataFactory): Shape[] {
   const shapesForShapes = makeShapesForShapes(factory);
   const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!;
   const framingResults = frame({shape: rootShape, dataset});

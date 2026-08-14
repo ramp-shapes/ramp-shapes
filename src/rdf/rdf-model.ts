@@ -110,10 +110,36 @@ class RdfQuad implements Quad {
   hashCode(): number {
     return hashQuad(this);
   }
-  equals(other: Quad | undefined | null): boolean {
-    return other && equalQuads(this, other) || false;
+  equals(other: Term | undefined | null): boolean {
+    return other && equalTerms(this, other) || false;
   }
   toString() {
+    let text = `${termToString(this.subject)} ${termToString(this.predicate)} ${termToString(this.object)}`;
+    if (this.graph.termType !== 'DefaultGraph') {
+      text += ` ${termToString(this.graph)}`;
+    }
+    return text;
+  }
+}
+
+export class BaseRdfQuad implements BaseQuad {
+  constructor(
+    readonly subject: Term,
+    readonly predicate: Term,
+    readonly object: Term,
+    readonly graph: Term
+  ) {}
+  get termType(): 'Quad' {
+    return 'Quad';
+  }
+  readonly value = '';
+  hashCode(): number {
+    return hashQuad(this);
+  }
+  equals(other: Term | undefined | null): boolean {
+    return other && equalTerms(this, other) || false;
+  }
+  toString(): string {
     let text = `${termToString(this.subject)} ${termToString(this.predicate)} ${termToString(this.object)}`;
     if (this.graph.termType !== 'DefaultGraph') {
       text += ` ${termToString(this.graph)}`;
@@ -304,11 +330,11 @@ export function equalTerms(a: Term, b: Term): boolean {
   }
 }
 
-export function hashQuad(quad: Quad): number {
+export function hashQuad(quad: BaseQuad): number {
   return hashTerm(quad);
 }
 
-export function equalQuads(a: Quad, b: Quad): boolean {
+export function equalQuads(a: BaseQuad, b: BaseQuad): boolean {
   return equalTerms(a, b);
 }
 
