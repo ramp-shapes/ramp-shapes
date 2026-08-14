@@ -30,6 +30,17 @@ export function makeRampVocabulary(factory: DataFactory) {
   const NAMESPACE = ramp.NAMESPACE;
   return {
     NAMESPACE,
+
+    // JSON-based syntax
+    NamespacedName: namespacedNode(factory, NAMESPACE, 'NamespacedName'),
+    Namespaces: namespacedNode(factory, NAMESPACE, 'Namespaces'),
+    Module: namespacedNode(factory, NAMESPACE, 'Module'),
+    PropertyName: namespacedNode(factory, NAMESPACE, 'PropertyName'),
+    ShapeOrRef: namespacedNode(factory, NAMESPACE, 'ShapeOrRef'),
+    ShapeRef: namespacedNode(factory, NAMESPACE, 'ShapeRef'),
+    containsShape: namespacedNode(factory, NAMESPACE, 'containsShape'),
+
+    // Common definitions
     Shape: namespacedNode(factory, NAMESPACE, 'Shape'),
     ShapeID: namespacedNode(factory, NAMESPACE, 'ShapeID'),
     ShapeTypeVocabulary: namespacedNode(factory, NAMESPACE, 'ShapeTypeVocabulary'),

@@ -21,7 +21,7 @@ interface ShapeBaseProps {
 
 interface RecordShapeProps<Props extends object> extends ShapeBaseProps {
   properties: {
-    [Name in keyof Props]: PartialProperty<Props[Name]>;
+    [Name in keyof Props]-?: PartialProperty<Props[Name]>;
   };
 }
 

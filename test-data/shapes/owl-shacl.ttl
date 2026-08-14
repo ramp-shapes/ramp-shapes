@@ -1,0 +1,33 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+@prefix ex: <http://example.com/schema/>.
+@prefix test: <http://test.metaphacts.com/resource/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix sp: <http://spinrdf.org/sp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+ex:Root a ramp:Set;
+    ramp:item owl:Class.
+
+owl:Class a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue owl:Class ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource ]
+    ];
+    ramp:property [
+        ramp:name "label";
+        ramp:path rdfs:label;
+        ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ]
+    ].

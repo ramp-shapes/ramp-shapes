@@ -150,11 +150,13 @@ export interface ShapeReference {
 
 export interface Vocabulary {
   readonly id?: NamedNode | BlankNode;
+  readonly namespaces?: { [prefix: string]: string };
   readonly terms: VocabularyTerms;
 }
 
 export interface TypedVocabulary<T extends VocabularyTerms> {
   readonly id?: Vocabulary['id'];
+  readonly namespaces?: { [prefix: string]: string };
   readonly terms: T;
 }
 

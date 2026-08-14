@@ -49,6 +49,7 @@
   "types": "dist/types/index.d.ts",
   "files": [
     "/dist",
+    "/schema",
     "/src",
     "/LICENSE",
     "/README.md",
