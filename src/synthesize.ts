@@ -7,7 +7,6 @@ import {
   SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
 } from './shapes.js';
 import { makeTermMap } from './common.js';
-import { ValueMapper } from './value-mapping.js';
 import { rdf } from './vocabulary.js';
 
 export function compactByReference(value: unknown, shape: Shape, ref: ShapeReference): unknown {
@@ -39,7 +38,6 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 
 export interface SynthesizeContext {
   readonly factory: DataFactory;
-  readonly mapper: ValueMapper;
   readonly matches: ReadonlyHashMap<Term, ReadonlyArray<ReferenceMatch>>;
   makeError(code: ErrorCode, message: string): RampError;
 }

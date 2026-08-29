@@ -70,7 +70,6 @@ export function makeRampVocabulary(factory: DataFactory) {
     termDatatype: namespacedNode(factory, NAMESPACE, 'termDatatype'),
     termLanguage: namespacedNode(factory, NAMESPACE, 'termLanguage'),
     termValue: namespacedNode(factory, NAMESPACE, 'termValue'),
-    keepAsTerm: namespacedNode(factory, NAMESPACE, 'keepAsTerm'),
 
     // AnyOf
     AnyOf: namespacedNode(factory, NAMESPACE, 'AnyOf'),

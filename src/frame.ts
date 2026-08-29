@@ -7,7 +7,7 @@ import {
 import {
   ShapeID, Shape, RecordShape, RecordProperty, ComputedProperty, PropertyPath, AnyOfShape, SetShape,
   OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, TypedShape,
-  getNestedPropertyPath,
+  ValueMapper, getNestedPropertyPath,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
@@ -18,7 +18,6 @@ import {
   SynthesizeContext, ReferenceMatch, synthesizeShape, findOpenReferencedShapes, compactByReference,
   EMPTY_REF_MATCHES,
 } from './synthesize.js';
-import { ValueMapper } from './value-mapping.js';
 
 export interface FrameParams<T> {
   shape: TypedShape<T> | Shape;
@@ -27,7 +26,6 @@ export interface FrameParams<T> {
   /** Default is `true` if there are initial candidates otherwise `false`. */
   strict?: boolean;
   factory?: DataFactory;
-  mapper?: ValueMapper;
 }
 
 export interface FrameSolution<T> {
@@ -43,7 +41,6 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
 
   const context: FrameContext = {
     factory,
-    mapper: params.mapper || ValueMapper.mapByDefault(factory),
     listDefaults: makeListShapeDefaults(factory),
     dataset: params.dataset,
     visiting: new HashMap(MatchKey.hash, MatchKey.equals),
@@ -66,7 +63,6 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
 
 interface FrameContext {
   readonly factory: DataFactory;
-  readonly mapper: ValueMapper;
   readonly listDefaults: ResolvedListShape;
   readonly dataset: DatasetCore;
   readonly visiting: HashMap<MatchKey, CyclicMatch | null>;
@@ -351,7 +347,6 @@ function synthesizeComputedProperties(
   let propertyStack = stack;
   const synthesizeContext: SynthesizeContext = {
     factory: context.factory,
-    mapper: context.mapper,
     matches: makeReferenceMatchesFromContexts(refContexts, stack, context),
     makeError: (code, message) => makeError(code, message, propertyStack),
   };

@@ -1,6 +1,4 @@
-import type { BlankNode, Literal, NamedNode } from '@rdfjs/types';
-
-import {} from './rdf/rdf-model.js';
+import type { Term, BlankNode, Literal, NamedNode, BaseQuad } from '@rdfjs/types';
 
 export type ShapeID = NamedNode | BlankNode;
 export type Shape =
@@ -24,13 +22,35 @@ export type UnwrapShape<T> =
 export interface ShapeBase {
   readonly id: ShapeID;
   readonly lenient?: boolean;
+  readonly mapper?: ValueMapper<unknown, unknown>;
+}
+
+export interface ValueMapper<In, Out> {
+  map(value: In, shape: Shape): Out;
+  unmap(value: unknown, shape: Shape): { value: In } | undefined;
+}
+
+export class ValueHole {
+  private _resolver: ((mapped: unknown) => void) | undefined;
+
+  constructor(
+    readonly value: unknown,
+    readonly shape: Shape
+  ) {}
+
+  setResolver(resolver: (mapped: unknown) => void): void {
+    this._resolver = resolver;
+  }
+
+  resolve(mapped: unknown): void {
+    this._resolver?.(mapped);
+  }
 }
 
 export interface ResourceShape extends ShapeBase {
   readonly type: 'resource';
   readonly onlyNamed?: boolean;
   readonly value?: NamedNode | BlankNode;
-  readonly keepAsTerm?: boolean;
   readonly vocabulary?: Vocabulary;
 }
 
@@ -40,7 +60,6 @@ export interface LiteralShape extends ShapeBase {
   readonly datatype?: NamedNode;
   readonly language?: string;
   readonly value?: Literal;
-  readonly keepAsTerm?: boolean;
 }
 
 export interface RecordShape extends ShapeBase {

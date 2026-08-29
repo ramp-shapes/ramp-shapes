@@ -9,6 +9,7 @@ import {
   typedShapeID,
 } from './shapes.js';
 import { frame } from './frame.js';
+import { mapAsBoolean } from './value-mapping.js';
 import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary.js';
 
 export function makeShapesForShapes(factory = DefaultDataFactory) {
@@ -52,7 +53,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   const makeBaseProperties = () => ({
     id: self(ShapeID),
     lenient: property(ramp.lenient, schema.optional(
-      schema.literal<boolean>({datatype: XSD_BOOLEAN})
+      schema.literal({datatype: XSD_BOOLEAN, mapper: mapAsBoolean(factory)})
     )),
   });
 
@@ -250,9 +251,6 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
         schema.literal({datatype: XSD_BOOLEAN})
       )),
       value: property(ramp.termValue, schema.optional(schema.resourceTerm())),
-      keepAsTerm: property(ramp.keepAsTerm, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
       vocabulary: property(ramp.vocabulary, schema.optional(
         typedShapeID(ramp.Vocabulary)
       )),
@@ -293,9 +291,6 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
       datatype: property(ramp.termDatatype, schema.optional(schema.namedNodeTerm())),
       language: property(ramp.termLanguage, schema.optional(schema.literal({datatype: XSD_STRING}))),
       value: property(ramp.termValue, schema.optional(schema.literalTerm())),
-      keepAsTerm: property(ramp.keepAsTerm, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
     }
   });
 
