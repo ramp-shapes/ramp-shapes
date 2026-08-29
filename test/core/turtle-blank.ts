@@ -1,11 +1,11 @@
-import type { Term, Quad } from '@rdfjs/types';
+import type { Term, Quad, NamedNode } from '@rdfjs/types';
 import * as N3 from 'n3';
 
-import * as Ramp from '../src/index.js';
+import * as Ramp from '../../src/index.js';
 
 export function quadsToTurtleString(
   triples: Iterable<Quad>,
-  prefixes: { [prefix: string]: string }
+  prefixes: { [prefix: string]: string | NamedNode }
 ): Promise<string> {
   const quads = Array.from(triples);
 

@@ -1,0 +1,116 @@
+{
+  "shapes": "iiif-presentation-v2",
+  "rootShape": "http://iiif.io/api/presentation/2#Manifest",
+  "value": {
+    "@type": "http://iiif.io/api/presentation/2#Manifest",
+    "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/manifest.json",
+    "label": "大正新脩大藏經図像部第12b02巻",
+    "metadata": [
+      {
+        "label": "Author",
+        "value": [
+          {
+            "termType": "Literal",
+            "value": "高楠順次郎",
+            "language": "",
+            "datatype": {
+              "termType": "NamedNode",
+              "value": "http://www.w3.org/2001/XMLSchema#string"
+            }
+          }
+        ]
+      },
+      {
+        "label": "published",
+        "value": [
+          {
+            "termType": "Literal",
+            "value": "大蔵出版",
+            "language": "ja",
+            "datatype": {
+              "termType": "NamedNode",
+              "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+            }
+          }
+        ]
+      },
+      {
+        "label": "Source",
+        "value": [
+          {
+            "termType": "Literal",
+            "value": "大正新脩大藏經　図像部",
+            "language": "",
+            "datatype": {
+              "termType": "NamedNode",
+              "value": "http://www.w3.org/2001/XMLSchema#string"
+            }
+          }
+        ]
+      },
+      {
+        "label": "manifest URI",
+        "value": [
+          {
+            "termType": "Literal",
+            "value": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/manifest.json",
+            "language": "",
+            "datatype": {
+              "termType": "NamedNode",
+              "value": "http://www.w3.org/2001/XMLSchema#string"
+            }
+          }
+        ]
+      }
+    ],
+    "viewingDirection": "http://iiif.io/api/presentation/2#rightToLeftDirection",
+    "viewingHint": "http://iiif.io/api/presentation/2#pagedHint",
+    "attribution": "大蔵出版(Daizo shuppan) and SAT大蔵経テキストデータベース研究会(SAT Daizōkyō Text Database Committee) ",
+    "description": "大正新脩大藏經図像部",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "sequences": [
+      {
+        "@type": "http://iiif.io/api/presentation/2#Sequence",
+        "@id": "https://dzkimgs.l.u-tokyo.ac.jp/zuzoubu/12b02/sequence.json",
+        "label": "Current Page Order",
+        "canvases": [
+          {
+            "@type": "http://iiif.io/api/presentation/2#Canvas",
+            "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/p0001-0025",
+            "label": "",
+            "width": 22779,
+            "height": 30000,
+            "images": [
+              {
+                "@type": "http://www.w3.org/ns/oa#Annotation",
+                "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/ano0001-0025",
+                "motivation": "http://iiif.io/api/presentation/2#painting",
+                "on": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/p0001-0025",
+                "resource": {
+                  "@type": "http://purl.org/dc/dcmitype/Image",
+                  "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiifimgs/zuzoubu/12b02/0001-0025.tif/full/full/0/default.jpg",
+                  "service": {
+                    "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiifimgs/zuzoubu/12b02/0001-0025.tif",
+                    "profile": "http://iiif.io/api/image/2/level1.json"
+                  },
+                  "format": "image/jpeg",
+                  "width": 22779,
+                  "height": 30000
+                }
+              }
+            ],
+            "otherContent": [
+              {
+                "@type": "http://iiif.io/api/presentation/2#AnnotationList",
+                "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/12b02/list/p0001-0025.json"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "logo": {
+      "@id": "https://dzkimgs.l.u-tokyo.ac.jp/iiif/zuzoubu/satlogo80.png"
+    }
+  }
+}

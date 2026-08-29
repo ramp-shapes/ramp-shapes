@@ -12,9 +12,12 @@ export { ErrorCode, type RampError, type StackFrame, isRampError } from './error
 export { makeShapesForShapes, frameShapes } from './shapes-for-shapes.js';
 export {
   ShapeBuilder, type ShapeBuilderOptions,
-  computedProperty, definesType, inverseProperty, property, propertyPath, self, transient
+  computedProperty, definesType, inverseProperty, property, propertyPath, self,
 } from './builder.js';
-export { ValueMapper } from './value-mapping.js';
+export {
+  mapAsBoolean, mapIdentity, mapAsNativeType, mapAsNumber, mapAsString, mapAsTerm,
+  mapByDefault, mapInSequence, mapVocabulary, mapVocabularies,
+} from './mappers.js';
 export { type FrameParams, type FrameSolution, frame } from './frame.js';
 export { type FlattenParams, flatten } from './flatten.js';
 export { type GenerateQueryParams, generateQuery } from './generate-query.js';

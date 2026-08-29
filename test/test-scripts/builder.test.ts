@@ -1,5 +1,6 @@
 import * as Ramp from '../../src/index.js';
-import { TestScriptContext } from './test-script-context.js';
+
+import { TestScriptContext } from '../core/test-script-context.js';
 
 const factory = Ramp.DefaultDataFactory;
 
@@ -45,9 +46,5 @@ export default (context: TestScriptContext): void => {
         'Moon, somewhere between rocks'
       ]
     };
-  });
-
-  context.skipCase('builder/typed-frame-match', () => {
-    // TODO: implement
   });
 };

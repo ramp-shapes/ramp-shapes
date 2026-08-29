@@ -1,0 +1,97 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix wd: <http://www.wikidata.org/entity/>.
+@prefix wdt: <http://www.wikidata.org/prop/direct/>.
+
+wd:Q40787 wdt:P31 wd:Q5;
+    rdfs:label "Nicholas II of Russia"@en;
+    wdt:P40 wd:Q113584, wd:Q151130, wd:Q154045, wd:Q155422, wd:Q158148.
+wd:Q113584 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Olga Nikolaevna of Russia"@en.
+wd:Q120180 wdt:P31 wd:Q5;
+    rdfs:label "Alexander III of Russia"@en;
+    wdt:P40 wd:Q154444, wd:Q163176, wd:Q165113, wd:Q170293, wd:Q619068, wd:Q40787.
+wd:Q154045 wdt:P31 wd:Q5;
+    rdfs:label "Alexei Nikolaevich"@en.
+wd:Q154444 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duke Michael Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q667007.
+wd:Q151130 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Anastasia Nikolaevna of Russia"@en.
+wd:Q155422 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Maria Nikolaevna of Russia"@en.
+wd:Q158148 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Tatiana Nikolaevna of Russia"@en.
+wd:Q165113 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Xenia Alexandrovna of Russia"@en;
+    wdt:P40 wd:Q234230, wd:Q277611, wd:Q428885, wd:Q764785, wd:Q961833, wd:Q1019229, wd:Q1060210.
+wd:Q163176 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duchess Olga Alexandrovna of Russia"@en;
+    wdt:P40 wd:Q4246270.
+wd:Q4397242 wdt:P31 wd:Q5;
+    rdfs:label "Princess Olga Andreevna Romanoff"@en.
+wd:Q21066162 wdt:P31 wd:Q5;
+    rdfs:label "Prince Alexis Romanov"@en.
+wd:Q57303256 wdt:P31 wd:Q5;
+    rdfs:label "Marilia Vamvakidis"@en.
+wd:Q57303273 wdt:P31 wd:Q5;
+    rdfs:label "Yasmina Xenia Vamvakidis"@en.
+wd:Q57303242 wdt:P31 wd:Q5;
+    rdfs:label "Tatiana Sfiris"@en;
+    wdt:P40 wd:Q57303256, wd:Q57303273.
+wd:Q667007 wdt:P31 wd:Q5;
+    rdfs:label "George Mikhailovich, Count Brasov"@en.
+wd:Q1607433 wdt:P31 wd:Q5;
+    rdfs:label "Prince Alexander Romanov"@en.
+wd:Q1060210 wdt:P31 wd:Q5;
+    rdfs:label "Prince Rostislav Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q3442879.
+wd:Q764785 wdt:P31 wd:Q5;
+    rdfs:label "Prince Andrei Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q2339401, wd:Q3308867, wd:Q4397226, wd:Q4397242.
+wd:Q961833 wdt:P31 wd:Q5;
+    rdfs:label "Prince Feodor Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q3309617.
+wd:Q1019229 wdt:P31 wd:Q5;
+    rdfs:label "Prince Vasili Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q4397223.
+wd:Q1607860 wdt:P31 wd:Q5;
+    rdfs:label "Prince Nikita Romanov"@en;
+    wdt:P40 wd:Q3526472.
+wd:Q3309617 wdt:P31 wd:Q5;
+    rdfs:label "Prince Michael Feodorovich of Russia"@en.
+wd:Q3308867 wdt:P31 wd:Q5;
+    rdfs:label "Prince Michael Andreevich of Russia"@en.
+wd:Q2339401 wdt:P31 wd:Q5;
+    rdfs:label "Prince Andrew Romanov"@en;
+    wdt:P40 wd:Q21066162.
+wd:Q4397195 wdt:P31 wd:Q5;
+    rdfs:label "Prince Rostislav Romanov"@en.
+wd:Q3570870 wdt:P31 wd:Q5;
+    rdfs:label "Xenia Sfiris"@en;
+    wdt:P40 wd:Q57303242.
+wd:Q3526472 wdt:P31 wd:Q5;
+    rdfs:label "Théodore Nikitich de Russie"@en.
+wd:Q4397223 wdt:P31 wd:Q5;
+    rdfs:label "Marina Romanova"@en.
+wd:Q4397226 wdt:P31 wd:Q5;
+    rdfs:label "Princess Xenia Andreevna of Russia"@en.
+wd:Q3442879 wdt:P31 wd:Q5;
+    rdfs:label "Prince Rostislav Romanov"@en;
+    wdt:P40 wd:Q4397195.
+wd:Q4246270 wdt:P31 wd:Q5;
+    rdfs:label "Guri Nikolaevich Kulikovsky"@en.
+wd:Q3154370 wdt:P31 wd:Q5;
+    rdfs:label "Irina Yusupova"@en;
+    wdt:P40 wd:Q3570870.
+wd:Q619068 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duke Alexander Alexandrovich of Russia"@en.
+wd:Q170293 wdt:P31 wd:Q5;
+    rdfs:label "Grand Duke George Alexandrovich of Russia"@en.
+wd:Q428885 wdt:P31 wd:Q5;
+    rdfs:label "Prince Dmitri Alexandrovich of Russia"@en.
+wd:Q277611 wdt:P31 wd:Q5;
+    rdfs:label "Prince Nikita Alexandrovich of Russia"@en;
+    wdt:P40 wd:Q1607433, wd:Q1607860.
+wd:Q234230 wdt:P31 wd:Q5;
+    rdfs:label "Princess Irina Alexandrovna of Russia"@en;
+    wdt:P40 wd:Q3154370.

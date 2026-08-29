@@ -270,30 +270,41 @@ export function termToString(node: Term): string {
   }
 }
 
-export function hashTerm(node: Term): number {
+const TERM_HASHES = new WeakMap<Term, number>();
+
+export function hashTerm(term: Term): number {
+  let hash = TERM_HASHES.get(term);
+  if (hash === undefined) {
+    hash = hashTermInner(term);
+    TERM_HASHES.set(term, hash);
+  }
+  return hash;
+}
+
+function hashTermInner(term: Term): number {
   let hash = 0;
-  switch (node.termType) {
+  switch (term.termType) {
     case 'NamedNode':
     case 'BlankNode':
-      hash = hashString(node.value);
+      hash = hashString(term.value);
       break;
     case 'Literal':
-      hash = hashString(node.value);
-      if (node.datatype) {
-        hash = (Math.imul(hash, 31) + hashString(node.datatype.value)) | 0;
+      hash = hashString(term.value);
+      if (term.datatype) {
+        hash = (Math.imul(hash, 31) + hashString(term.datatype.value)) | 0;
       }
-      if (node.language) {
-        hash = (Math.imul(hash, 31) + hashString(node.language)) | 0;
+      if (term.language) {
+        hash = (Math.imul(hash, 31) + hashString(term.language)) | 0;
       }
       break;
     case 'Variable':
-      hash = hashString(node.value);
+      hash = hashString(term.value);
       break;
     case 'Quad': {
-      hash = (Math.imul(hash, 31) + hashTerm(node.subject)) | 0;
-      hash = (Math.imul(hash, 31) + hashTerm(node.predicate)) | 0;
-      hash = (Math.imul(hash, 31) + hashTerm(node.object)) | 0;
-      hash = (Math.imul(hash, 31) + hashTerm(node.graph)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(term.subject)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(term.predicate)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(term.object)) | 0;
+      hash = (Math.imul(hash, 31) + hashTerm(term.graph)) | 0;
       break;
     }
   }
@@ -353,6 +364,18 @@ export function looksLikeTerm(value: unknown): value is Term {
     default:
       return false;
   }
+}
+
+export type RawTerm<T extends Term> =
+  T extends BaseQuad ? Pick<BaseQuad, 'termType' | 'subject' | 'predicate' | 'object' | 'graph'> :
+  T extends Literal ? Pick<Literal, 'termType' | 'value' | 'datatype' | 'language'> :
+  T extends { termType: (infer Type); value: string } ? { readonly termType: Type; readonly value: string } :
+  never;
+
+export function termFromRaw<T extends Term>(factory: DataFactory, term: RawTerm<T>): T {
+  // Unsafe convesion due to DataFactory typings usage of method overloads
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return factory.fromTerm(term as any) as T;
 }
 
 export function namespacedValue<const Namespace extends string, const LocalName extends string>(

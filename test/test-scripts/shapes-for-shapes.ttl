@@ -1,0 +1,848 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+@prefix rampjs: <http://ramp-shapes.github.io/schema-js#>.
+
+ramp:Shape a ramp:AnyOf;
+    ramp:variant ramp:Record, ramp:AnyOf, ramp:Set, ramp:Optional, ramp:Resource, ramp:Literal, ramp:List, ramp:Map.
+ramp:Record a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Record;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "typeProperties";
+        ramp:path ramp:typeProperty;
+        ramp:shape [
+            a ramp:Set;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:variant ramp:FieldProperty, ramp:TransientProperty
+            ]
+        ]
+    ], [
+        ramp:name "properties";
+        ramp:path ramp:property;
+        ramp:shape [
+            a ramp:Set;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:variant ramp:FieldProperty, ramp:TransientProperty
+            ]
+        ]
+    ], [
+        ramp:name "computedProperties";
+        ramp:path ramp:computedProperty;
+        ramp:shape [
+            a ramp:Set;
+            ramp:item ramp:ComputedProperty
+        ]
+    ].
+ramp:AnyOf a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:AnyOf;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "variants";
+        ramp:path ramp:variant;
+        ramp:shape [
+            a ramp:Set;
+            ramp:item ramp:Shape
+        ]
+    ].
+ramp:Set a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Set;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "itemShape";
+        ramp:path ramp:item;
+        ramp:shape ramp:Shape
+    ], [
+        ramp:name "minCount";
+        ramp:path ramp:minCount;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsNumber ];
+                ramp:termDatatype xsd:integer
+            ]
+        ]
+    ], [
+        ramp:name "maxCount";
+        ramp:path ramp:maxCount;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsNumber ];
+                ramp:termDatatype xsd:integer
+            ]
+        ]
+    ].
+ramp:Optional a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Optional;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "itemShape";
+        ramp:path ramp:item;
+        ramp:shape ramp:Shape
+    ].
+ramp:Resource a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Resource;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "onlyNamed";
+        ramp:path ramp:onlyNamed;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "value";
+        ramp:path ramp:termValue;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsTerm ]
+            ]
+        ]
+    ], [
+        ramp:name "vocabulary";
+        ramp:path ramp:vocabulary;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item ramp:Vocabulary
+        ]
+    ].
+ramp:Literal a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Literal;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "datatype";
+        ramp:path ramp:termDatatype;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsTerm ];
+                ramp:onlyNamed true
+            ]
+        ]
+    ], [
+        ramp:name "language";
+        ramp:path ramp:termLanguage;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsString ];
+                ramp:termDatatype xsd:string
+            ]
+        ]
+    ], [
+        ramp:name "value";
+        ramp:path ramp:termValue;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsTerm ]
+            ]
+        ]
+    ].
+ramp:List a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:List;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "itemShape";
+        ramp:path ramp:item;
+        ramp:shape ramp:Shape
+    ], [
+        ramp:name "headPath";
+        ramp:path ramp:headPath;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item ramp:PropertyPath
+        ]
+    ], [
+        ramp:name "tailPath";
+        ramp:path ramp:tailPath;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item ramp:PropertyPath
+        ]
+    ], [
+        ramp:name "nil";
+        ramp:path ramp:nil;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsTerm ];
+                ramp:onlyNamed true
+            ]
+        ]
+    ].
+ramp:Map a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:Map;
+            ramp:vocabulary ramp:ShapeTypeVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape ramp:ShapeID
+    ], [
+        ramp:name "lenient";
+        ramp:path ramp:lenient;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Literal;
+                rampjs:mapper [ a rampjs:MapAsBoolean ];
+                ramp:termDatatype xsd:boolean
+            ]
+        ]
+    ], [
+        ramp:name "mapper";
+        ramp:path rampjs:mapper;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item rampjs:Mapper
+        ]
+    ], [
+        ramp:name "key";
+        ramp:path ramp:mapKey;
+        ramp:shape ramp:ShapeReference
+    ], [
+        ramp:name "value";
+        ramp:path ramp:mapValue;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item ramp:ShapeReference
+        ]
+    ], [
+        ramp:name "itemShape";
+        ramp:path ramp:item;
+        ramp:shape ramp:Shape
+    ].
+ramp:ShapeTypeVocabulary ramp:vocabItem [
+    ramp:vocabKey "record";
+    ramp:termValue ramp:Record
+  ], [
+    ramp:vocabKey "anyOf";
+    ramp:termValue ramp:AnyOf
+  ], [
+    ramp:vocabKey "set";
+    ramp:termValue ramp:Set
+  ], [
+    ramp:vocabKey "optional";
+    ramp:termValue ramp:Optional
+  ], [
+    ramp:vocabKey "resource";
+    ramp:termValue ramp:Resource
+  ], [
+    ramp:vocabKey "literal";
+    ramp:termValue ramp:Literal
+  ], [
+    ramp:vocabKey "list";
+    ramp:termValue ramp:List
+  ], [
+    ramp:vocabKey "map";
+    ramp:termValue ramp:Map
+  ].
+ramp:ShapeID a ramp:Resource;
+    rampjs:mapper [ a rampjs:MapAsTerm ].
+rampjs:Mapper a ramp:AnyOf;
+    ramp:lenient true;
+    ramp:variant rampjs:MapAsString, rampjs:MapAsTerm, rampjs:MapAsNumber, rampjs:MapAsBoolean.
+ramp:FieldProperty a ramp:Record;
+    ramp:typeProperty [
+        a ramp:TransientProperty;
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:AnyOf;
+            ramp:variant [
+                a ramp:Set;
+                ramp:item [
+                    a ramp:AnyOf;
+                    ramp:variant [
+                        a ramp:Resource;
+                        rampjs:mapper [ a rampjs:MapAsString ];
+                        ramp:termValue ramp:TransientProperty
+                    ], [
+                        a ramp:Resource;
+                        rampjs:mapper [ a rampjs:MapAsString ];
+                        ramp:termValue ramp:ComputedProperty
+                    ]
+                ];
+                ramp:maxCount 0
+            ], [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsString ];
+                ramp:termValue ramp:FieldProperty
+            ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "name";
+        ramp:path ramp:name;
+        ramp:shape [
+            a ramp:Literal;
+            rampjs:mapper [ a rampjs:MapAsString ];
+            ramp:termDatatype xsd:string
+        ]
+    ], [
+        ramp:name "path";
+        ramp:path ramp:path;
+        ramp:shape ramp:PropertyPath
+    ], [
+        ramp:name "valueShape";
+        ramp:path ramp:shape;
+        ramp:shape ramp:Shape
+    ];
+    ramp:computedProperty [
+        ramp:name "kind";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:FieldProperty;
+            ramp:vocabulary ramp:PropertyKindVocabulary
+        ]
+    ].
+ramp:TransientProperty a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "kind";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:TransientProperty;
+            ramp:vocabulary ramp:PropertyKindVocabulary
+        ]
+    ];
+    ramp:property [
+        ramp:name "path";
+        ramp:path ramp:path;
+        ramp:shape ramp:PropertyPath
+    ], [
+        ramp:name "valueShape";
+        ramp:path ramp:shape;
+        ramp:shape ramp:Shape
+    ].
+ramp:ComputedProperty a ramp:Record;
+    ramp:typeProperty [
+        a ramp:TransientProperty;
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsString ];
+                ramp:termValue ramp:ComputedProperty
+            ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "name";
+        ramp:path ramp:name;
+        ramp:shape [
+            a ramp:Literal;
+            rampjs:mapper [ a rampjs:MapAsString ];
+            ramp:termDatatype xsd:string
+        ]
+    ], [
+        ramp:name "valueShape";
+        ramp:path ramp:shape;
+        ramp:shape ramp:Shape
+    ];
+    ramp:computedProperty [
+        ramp:name "kind";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:ComputedProperty;
+            ramp:vocabulary ramp:PropertyKindVocabulary
+        ]
+    ].
+ramp:Vocabulary a ramp:Record;
+    ramp:property [
+        ramp:name "id";
+        ramp:path ();
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Resource;
+                rampjs:mapper [ a rampjs:MapAsTerm ]
+            ]
+        ]
+    ], [
+        ramp:name "terms";
+        ramp:path ramp:vocabItem;
+        ramp:shape _:map_shapes_66
+    ].
+_:map_shapes_66 a ramp:Map;
+    ramp:mapKey _:record_gen_104.
+_:record_gen_104 ramp:shape _:literal_shapes_61.
+_:literal_shapes_61 a ramp:Literal;
+    rampjs:mapper [ a rampjs:MapAsString ];
+    ramp:termDatatype xsd:string.
+_:record_gen_104 ramp:termPart ramp:TermValue.
+_:map_shapes_66 ramp:mapValue [ ramp:shape _:resource_shapes_62 ].
+_:resource_shapes_62 a ramp:Resource;
+    rampjs:mapper [ a rampjs:MapAsTerm ];
+    ramp:onlyNamed true.
+_:map_shapes_66 ramp:item [
+    a ramp:Record;
+    ramp:typeProperty [
+      ramp:name "key";
+      ramp:path ramp:vocabKey;
+      ramp:shape _:literal_shapes_61
+    ];
+    ramp:property [
+      ramp:name "term";
+      ramp:path ramp:termValue;
+      ramp:shape _:resource_shapes_62
+    ]
+  ].
+ramp:PropertyPath a ramp:AnyOf;
+    ramp:variant ramp:PredicatePath, ramp:SequencePath, ramp:InversePath, ramp:AlternativePath, ramp:ZeroOrMorePath, ramp:ZeroOrOnePath, ramp:OneOrMorePath.
+ramp:ShapeReference a ramp:Record;
+    ramp:property [
+        ramp:name "target";
+        ramp:path ramp:shape;
+        ramp:shape ramp:Shape
+    ], [
+        ramp:name "part";
+        ramp:path ramp:termPart;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:variant [
+                    a ramp:Resource;
+                    ramp:termValue ramp:TermDatatype;
+                    ramp:vocabulary ramp:TermPartVocabulary
+                ], [
+                    a ramp:Resource;
+                    ramp:termValue ramp:TermLanguage;
+                    ramp:vocabulary ramp:TermPartVocabulary
+                ], [
+                    a ramp:Resource;
+                    ramp:termValue ramp:TermValue;
+                    ramp:vocabulary ramp:TermPartVocabulary
+                ]
+            ]
+        ]
+    ].
+rampjs:MapAsString a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            rampjs:mapper [ a rampjs:MapAsTerm ];
+            ramp:termValue rampjs:MapAsString
+        ]
+    ].
+rampjs:MapAsTerm a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            rampjs:mapper [ a rampjs:MapAsTerm ];
+            ramp:termValue rampjs:MapAsTerm
+        ]
+    ].
+rampjs:MapAsNumber a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            rampjs:mapper [ a rampjs:MapAsTerm ];
+            ramp:termValue rampjs:MapAsNumber
+        ]
+    ].
+rampjs:MapAsBoolean a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "type";
+        ramp:path rdf:type;
+        ramp:shape [
+            a ramp:Resource;
+            rampjs:mapper [ a rampjs:MapAsTerm ];
+            ramp:termValue rampjs:MapAsBoolean
+        ]
+    ].
+ramp:PropertyKindVocabulary ramp:vocabItem [
+    ramp:vocabKey "field";
+    ramp:termValue ramp:FieldProperty
+  ], [
+    ramp:vocabKey "transient";
+    ramp:termValue ramp:TransientProperty
+  ], [
+    ramp:vocabKey "computed";
+    ramp:termValue ramp:ComputedProperty
+  ].
+ramp:PredicatePath a ramp:Record;
+    ramp:property [
+        ramp:name "predicate";
+        ramp:path ();
+        ramp:shape [
+            a ramp:Resource;
+            rampjs:mapper [ a rampjs:MapAsTerm ];
+            ramp:onlyNamed true
+        ]
+    ], [
+        a ramp:TransientProperty;
+        ramp:path ();
+        ramp:shape [
+            a ramp:Set;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:lenient true;
+                ramp:variant ramp:SequencePath, ramp:InversePath, ramp:AlternativePath, ramp:ZeroOrMorePath, ramp:ZeroOrOnePath, ramp:OneOrMorePath
+            ];
+            ramp:maxCount 0
+        ]
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:PredicatePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:SequencePath a ramp:Record;
+    ramp:property [
+        ramp:name "sequence";
+        ramp:path ();
+        ramp:shape [
+            a ramp:List;
+            ramp:item ramp:PropertyPath
+        ]
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:SequencePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:InversePath a ramp:Record;
+    ramp:property [
+        ramp:name "inverse";
+        ramp:path ramp:inversePath;
+        ramp:shape ramp:PropertyPath
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:InversePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:AlternativePath a ramp:Record;
+    ramp:property [
+        ramp:name "alternatives";
+        ramp:path ramp:alternativePath;
+        ramp:shape [
+            a ramp:List;
+            ramp:item ramp:PropertyPath
+        ]
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:AlternativePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:ZeroOrMorePath a ramp:Record;
+    ramp:property [
+        ramp:name "zeroOrMore";
+        ramp:path ramp:zeroOrMorePath;
+        ramp:shape ramp:PropertyPath
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:ZeroOrMorePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:ZeroOrOnePath a ramp:Record;
+    ramp:property [
+        ramp:name "zeroOrOne";
+        ramp:path ramp:zeroOrOnePath;
+        ramp:shape ramp:PropertyPath
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:ZeroOrOnePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:OneOrMorePath a ramp:Record;
+    ramp:property [
+        ramp:name "oneOrMore";
+        ramp:path ramp:oneOrMorePath;
+        ramp:shape ramp:PropertyPath
+    ];
+    ramp:computedProperty [
+        ramp:name "type";
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue ramp:OneOrMorePath;
+            ramp:vocabulary ramp:PropertyPathVocabulary
+        ]
+    ].
+ramp:TermPartVocabulary ramp:vocabItem [
+    ramp:vocabKey "datatype";
+    ramp:termValue ramp:TermDatatype
+  ], [
+    ramp:vocabKey "value";
+    ramp:termValue ramp:TermValue
+  ], [
+    ramp:vocabKey "language";
+    ramp:termValue ramp:TermLanguage
+  ].
+ramp:PropertyPathVocabulary ramp:vocabItem [
+    ramp:vocabKey "predicate";
+    ramp:termValue ramp:PredicatePath
+  ], [
+    ramp:vocabKey "sequence";
+    ramp:termValue ramp:SequencePath
+  ], [
+    ramp:vocabKey "inverse";
+    ramp:termValue ramp:InversePath
+  ], [
+    ramp:vocabKey "alternative";
+    ramp:termValue ramp:AlternativePath
+  ], [
+    ramp:vocabKey "zeroOrMore";
+    ramp:termValue ramp:ZeroOrMorePath
+  ], [
+    ramp:vocabKey "zeroOrOne";
+    ramp:termValue ramp:ZeroOrOnePath
+  ], [
+    ramp:vocabKey "oneOrMore";
+    ramp:termValue ramp:OneOrMorePath
+  ].

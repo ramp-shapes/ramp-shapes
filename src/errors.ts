@@ -1,7 +1,7 @@
 import type { Term, NamedNode } from '@rdfjs/types';
 
 import { termToString } from './rdf/rdf-model.js';
-import { Shape } from './shapes.js';
+import { Shape, PropertyPath } from './shapes.js';
 import { rdf, xsd } from './vocabulary.js';
 
 export type RampError = Error & {
@@ -10,7 +10,7 @@ export type RampError = Error & {
 };
 
 export interface StackFrame {
-  edge?: string | number;
+  edge?: PropertyPath | string | number;
   shape: Shape;
   focus?: Term;
 }
@@ -45,6 +45,7 @@ export const enum ErrorCode {
   NonMatchingTermValue = 222,
   NonMatchingLiteralDatatype = 223,
   NonMatchingLiteralLanguage = 224,
+  NoMatchingVocabularyTerm = 225,
 
   // Synthesize errors
   CannotSynthesizeShapeType = 301,
@@ -123,4 +124,45 @@ export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
     first = false;
   }
   return STACK_FRAME_SEPARATOR + result;
+}
+
+export function formatStackFrameEdge(edge: PropertyPath | string | number): string {
+  return typeof edge === 'object' ? formatPropertyPath(edge) : String(edge);
+}
+
+function formatPropertyPath(path: PropertyPath): string {
+  switch (path.type) {
+    case 'predicate': {
+      return termToString(path.predicate);
+    }
+    case 'alternative': {
+      return path.alternatives.map(formatNestedPropertyPath).join('|');
+    }
+    case 'sequence': {
+      return path.sequence.map(formatNestedPropertyPath).join('/');
+    }
+    case 'inverse': {
+      return '^' + formatNestedPropertyPath(path.inverse);
+    }
+    case 'oneOrMore': {
+      return formatNestedPropertyPath(path.oneOrMore) + '+';
+    }
+    case 'zeroOrMore': {
+      return formatNestedPropertyPath(path.zeroOrMore) + '*';
+    }
+    case 'zeroOrOne': {
+      return formatNestedPropertyPath(path.zeroOrOne) + '?';
+    }
+  }
+}
+
+function formatNestedPropertyPath(path: PropertyPath): string {
+  const formatted = formatPropertyPath(path);
+  if (
+    path.type === 'alternative' && path.alternatives.length > 1 ||
+    path.type === 'sequence' && path.sequence.length > 1
+  ) {
+    return `(${formatted})`;
+  }
+  return formatted;
 }
