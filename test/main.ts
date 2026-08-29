@@ -2,16 +2,22 @@ import chalk from 'chalk';
 import { diffLines } from 'diff';
 import { diffString } from 'json-diff';
 
-import { TestResult } from './runner.js';
-import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations.js';
+import { AssertEqualError, TestResult } from './core/assertions.js';
+import { breakReferenceCycles } from './core/data-util.js';
+import { TestScriptContext } from './core/test-script-context.js';
 
-import { TestScriptContext } from './test-scripts/test-script-context.js';
-import { registerAllTests } from './test-scripts/test-index.js';
+import { registerAllTests } from './test-scripts/index.js';
+import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations.js';
 
 interface TestCase {
   readonly name: string;
   readonly skip?: boolean;
-  readonly run: () => TestResult;
+  readonly run: () => Promise<TestResult>;
+}
+
+interface EvaluatedTestVerdict {
+  readonly result: TestResult;
+  readonly elapsedTimeMs: number;
 }
 
 enum ExitCode {
@@ -19,9 +25,10 @@ enum ExitCode {
   OperationTestIndexReadFailed = 2,
   TestCaseNotFound = 3,
   TestsFailed = 20,
+  UnexpectedError = 21,
 }
 
-function main() {
+async function main() {
   if (process.argv.length === 3) {
     const [, scriptName, argument] = process.argv;
     if (argument === '--help') {
@@ -52,35 +59,40 @@ function main() {
     ? namesToTest.map(caseName => caseByName.get(caseName)!)
     : [...caseByName.values()];
 
-  const results: TestResult[] = [];
+  const verdicts: EvaluatedTestVerdict[] = [];
   let successCount = 0;
   let failureCount = 0;
 
   console.log('Running tests...');
   for (const testCase of casesToTest) {
     let result: TestResult | undefined;
+    let elapsedTimeMs: number | undefined;
     if (!testCase.skip) {
-      result = testCase.run();
+      const startTime = performance.now();
+      result = await testCase.run();
+      const endTime = performance.now();
       if (result.type === 'success') {
         successCount++;
       }
       if (result.type === 'failure') {
         failureCount++;
       }
-      results.push(result);
+      elapsedTimeMs = endTime - startTime;
+      verdicts.push({result, elapsedTimeMs: elapsedTimeMs});
     }
     const resultIcon = (
       !result ? '-' :
       result.type === 'success' ? chalk.green('✓') :
       chalk.red('✗')
     );
-    console.log(`  ${resultIcon} ${testCase.name}`);
+    const timings = elapsedTimeMs ? chalk.gray(`${elapsedTimeMs.toFixed(2)}ms`) : '';
+    console.log(`  ${resultIcon} ${testCase.name} ${timings}`);
   }
 
   // print new line
   console.log();
 
-  for (const result of results) {
+  for (const {result} of verdicts) {
     if (result.type === 'failure') {
       console.error(`Failure in "${result.testCaseName}": ${result.message}`);
       if (result.error) {
@@ -88,6 +100,9 @@ function main() {
       }
       if (result.expected || result.given) {
         if (typeof result.expected === 'string' && typeof result.given === 'string') {
+          process.stderr.write(
+            `(Hint: ${chalk.red('expected')} / ${chalk.grey('same')} / ${chalk.green('actual')})\n`
+          );
           for (const change of diffLines(result.expected, result.given)) {
             const colored = (
               change.added ? chalk.green :
@@ -98,7 +113,11 @@ function main() {
           }
           process.stderr.write('\n');
         } else {
-          console.log(diffString(result.expected, result.given));
+          const expectedWithoutCycles = structuredClone(result.expected);
+          const givenWithoutCycles = structuredClone(result.given);
+          breakReferenceCycles(expectedWithoutCycles);
+          breakReferenceCycles(givenWithoutCycles);
+          console.log(diffString(expectedWithoutCycles, givenWithoutCycles));
         }
       } else {
         // print new line
@@ -119,24 +138,45 @@ function main() {
 }
 
 function addScriptTests(testCases: Map<string, TestCase>): void {
+  const makeCase = (name: string, body: () => void | Promise<void>): TestCase => {
+    return {
+      name,
+      run: async (): Promise<TestResult> => {
+        try {
+          await body();
+        } catch (err) {
+          if (err instanceof AssertEqualError) {
+            return {
+              type: 'failure',
+              testCaseName: name,
+              message: err.message,
+              expected: err.expected,
+              given: err.given,
+              error: err.cause,
+            };
+          }
+          return {
+            type: 'failure',
+            testCaseName: name,
+            message: 'Unexpected error occured during the test',
+            error: err,
+          };
+        }
+        return {
+          type: 'success',
+          testCaseName: name,
+        };
+      },
+    };
+  };
   const context: TestScriptContext = {
     defineCase: (name, body) => {
-      testCases.set(name, {
-        name,
-        run: (): TestResult => {
-          body();
-          return {type: 'success'};
-        },
-      });
+      testCases.set(name, makeCase(name, body));
     },
     skipCase: (name, body) => {
       testCases.set(name, {
-        name,
+        ...makeCase(name, body),
         skip: true,
-        run: (): TestResult => {
-          body();
-          return {type: 'success'};
-        },
       });
     }
   };
@@ -162,4 +202,7 @@ function addOperationTests(testCases: Map<string, TestCase>): void {
 }
 
 // Run testing
-main();
+main().catch(err => {
+  console.error('Unexpected error during test evaluation', err);
+  process.exit(ExitCode.UnexpectedError);
+});

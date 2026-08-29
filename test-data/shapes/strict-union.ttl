@@ -5,10 +5,9 @@
 
 ex:Items a ramp:Record;
     ramp:typeProperty [
-        ramp:name "type";
+        a ramp:TransientProperty;
         ramp:path rdf:type;
-        ramp:shape [ a ramp:Resource; ramp:termValue ex:Items ];
-        ramp:transient true
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:Items ]
     ];
     ramp:property [
         ramp:name "atomic";

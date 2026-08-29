@@ -1,0 +1,15 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+CONSTRUCT {
+  ?record_r_1 wdt:P31 wd:Q5.
+  ?record_r_1 rdfs:label ?literal_2.
+  ?record_r_1 wdt:P40 ?record_un_4.
+}
+WHERE {
+  wd:Q120180 (wdt:P40*) ?record_r_1.
+  ?record_r_1 wdt:P31 wd:Q5;
+    rdfs:label ?literal_2.
+  FILTER((LANG(?literal_2)) = "en")
+  OPTIONAL { ?record_r_1 wdt:P40 ?record_un_4. }
+}

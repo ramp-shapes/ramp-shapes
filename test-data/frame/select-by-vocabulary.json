@@ -1,0 +1,11 @@
+{
+  "shapes": "form-fields",
+  "matches": [
+    {
+      "valueType": "integer"
+    },
+    {
+      "valueType": "string"
+    }
+  ]
+}

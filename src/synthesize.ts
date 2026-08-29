@@ -4,10 +4,10 @@ import { ReadonlyHashMap } from '@reactodia/hashmap';
 import { equalTerms } from './rdf/rdf-model.js';
 import { ErrorCode, RampError, formatDisplayShape, makeRampError } from './errors.js';
 import {
-  SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
+  RecordProperty, SetShape, LiteralShape, ResourceShape, AnyOfShape, Shape, ShapeReference,
+  Match,
 } from './shapes.js';
 import { makeTermMap } from './common.js';
-import { ValueMapper } from './value-mapping.js';
 import { rdf } from './vocabulary.js';
 
 export function compactByReference(value: unknown, shape: Shape, ref: ShapeReference): unknown {
@@ -39,7 +39,6 @@ export function compactByReference(value: unknown, shape: Shape, ref: ShapeRefer
 
 export interface SynthesizeContext {
   readonly factory: DataFactory;
-  readonly mapper: ValueMapper;
   readonly matches: ReadonlyHashMap<Term, ReadonlyArray<ReferenceMatch>>;
   makeError(code: ErrorCode, message: string): RampError;
 }
@@ -58,40 +57,58 @@ export function synthesizeShape(
   shape: Shape,
   context: SynthesizeContext
 ): unknown {
-  let value: unknown;
+  return trySynthesizeShape(shape, true, context)!.value;
+}
+
+function trySynthesizeShape(
+  shape: Shape,
+  required: boolean,
+  context: SynthesizeContext
+): Match<unknown> | undefined {
+  let match: Match<unknown> | undefined;
   switch (shape.type) {
+    case 'anyOf': {
+      match = synthesizeAnyOf(shape, required, context);
+      break;
+    }
     case 'resource': {
-      value = synthesizeResource(shape, context);
+      match = synthesizeResource(shape, required, context);
       break;
     }
     case 'literal': {
-      value = synthesizeLiteral(shape, context);
+      match = synthesizeLiteral(shape, required, context);
       break;
     }
     case 'record': {
       const result: { [propertyName: string]: unknown } = {};
-      synthesizeProperties(result, shape.typeProperties, context);
-      synthesizeProperties(result, shape.properties, context);
-      if (shape.computedProperties) {
-        synthesizeProperties(result, shape.computedProperties, context);
+      if (!(
+        synthesizeProperties(result, shape.typeProperties, required, context) &&
+        synthesizeProperties(result, shape.properties, required, context)
+      )) {
+        return undefined;
       }
-      value = result;
+      if (shape.computedProperties) {
+        if (!synthesizeProperties(result, shape.computedProperties, required, context)) {
+          return undefined;
+        }
+      }
+      match = new Match(result);
       break;
     }
     case 'set': {
-      value = synthesizeSet(shape, context);
+      match = synthesizeSet(shape, required, context);
       break;
     }
     case 'optional': {
-      value = shape.emptyValue;
+      match = new Match(shape.emptyValue);
       break;
     }
     case 'list': {
-      value = [];
+      match = new Match([]);
       break;
     }
     case 'map': {
-      value = {};
+      match = new Match({});
       break;
     }
     default: {
@@ -101,70 +118,132 @@ export function synthesizeShape(
       );
     }
   }
-  const typed = context.mapper.fromRdf(value, shape);
-  return typed;
+
+  if (!match) {
+    throw context.makeError(
+      ErrorCode.CannotSynthesizeShapeType,
+      'Cannot synthesize value for shape ' + formatDisplayShape(shape)
+    );
+  }
+
+  return match;
 }
 
-interface AnyObjectProperty {
-  readonly name: string;
-  readonly valueShape: Shape;
+function synthesizeAnyOf(
+  shape: AnyOfShape,
+  required: boolean,
+  context: SynthesizeContext
+): Match<unknown> | undefined {
+  for (const variantShape of shape.variants) {
+    const match = trySynthesizeShape(variantShape, false, context);
+    if (match) {
+      return match;
+    }
+  }
+
+  if (required) {
+    for (const variantShape of shape.variants) {
+      // try synthesize with `required = true` to produce an error
+      trySynthesizeShape(variantShape, true, context);
+    }
+  }
+
+  return undefined;
 }
 
 function synthesizeProperties(
   template: { [propertyName: string]: unknown },
-  properties: ReadonlyArray<AnyObjectProperty>,
+  properties: ReadonlyArray<RecordProperty>,
+  required: boolean,
   context: SynthesizeContext
-) {
+): boolean {
   for (const property of properties) {
-    template[property.name] = synthesizeShape(property.valueShape, context);
+    if (property.kind === 'transient') {
+      continue;
+    }
+    const match = trySynthesizeShape(property.valueShape, required, context);
+    if (!match) {
+      return false;
+    }
+    template[property.name] = match.value;
   }
+  return true;
 }
 
-function synthesizeSet(shape: SetShape, context: SynthesizeContext) {
+function synthesizeSet(
+  shape: SetShape,
+  required: boolean,
+  context: SynthesizeContext
+): Match<unknown> | undefined {
   const count = Math.min(shape.minCount ?? 0, shape.maxCount ?? Infinity);
   const result: unknown[] = [];
   for (let i = 0; i < count; i++) {
-    result.push(synthesizeShape(shape.itemShape, context));
+    const match = trySynthesizeShape(shape.itemShape, required, context);
+    if (!match) {
+      return undefined;
+    }
+    result.push(match.value);
   }
-  return result;
+  return new Match(result);
 }
 
-function synthesizeResource(shape: ResourceShape, context: SynthesizeContext) {
+function synthesizeResource(
+  shape: ResourceShape,
+  required: boolean,
+  context: SynthesizeContext
+): Match<unknown> | undefined {
   if (shape.value) {
-    return shape.value;
+    return new Match(shape.value);
   }
   for (const match of context.matches.get(shape.id) || EMPTY_MATCHES) {
     if (equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
-          return match.match;
+          return new Match(match.match);
         case 'value':
           if (typeof match.match !== 'string') {
-            throw makeRampError(
-              ErrorCode.CannotSynthesizeResourceFromNonString,
-              `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
-              `from non-string (${typeof match.match}) ${String(match.match)}`
-            );
+            if (required) {
+              throw makeRampError(
+                ErrorCode.CannotSynthesizeResourceFromNonString,
+                `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
+                `from non-string (${typeof match.match}) ${String(match.match)}`
+              );
+            } else {
+              return undefined;
+            }
           }
-          return context.factory.namedNode(match.match);
+          return new Match(context.factory.namedNode(match.match));
         default:
-          throw makeRampError(
-            ErrorCode.CannotSynthesizeResourceFromPart,
-            `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
-            `from reference part '${match.ref.part}'`
-          );
+          if (required) {
+            throw makeRampError(
+              ErrorCode.CannotSynthesizeResourceFromPart,
+              `Cannot synthesize RDF resource for shape ${formatDisplayShape(shape)} ` +
+              `from reference part '${match.ref.part}'`
+            );
+          } else {
+            return undefined;
+          }
       }
     }
   }
-  throw makeRampError(
-    ErrorCode.NoMatchesToSynthesize,
-    `Failed to find matches to synthesize RDF resource for shape ${formatDisplayShape(shape)}`
-  );
+
+  if (required) {
+    throw makeRampError(
+      ErrorCode.NoMatchesToSynthesize,
+      `Failed to find matches to synthesize RDF resource for shape ${formatDisplayShape(shape)}`
+    );
+  } else {
+    return undefined;
+  }
 }
 
-function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
+function synthesizeLiteral(
+  shape: LiteralShape,
+  required: boolean,
+  context: SynthesizeContext
+): Match<unknown> | undefined {
   if (shape.value) {
-    return shape.value;
+    return new Match(shape.value);
   }
 
   let value: string | undefined;
@@ -175,7 +254,7 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
     if (equalTerms(match.ref.target.id, shape.id)) {
       switch (match.ref.part) {
         case undefined:
-          return match.match;
+          return new Match(match.match);
         case 'value':
           value = checkRefPart(match);
           break;
@@ -189,14 +268,19 @@ function synthesizeLiteral(shape: LiteralShape, context: SynthesizeContext) {
     }
   }
 
-  assertPart(shape, 'value', value, context);
-  assertPart(shape, 'datatype', datatype, context);
-  if (datatype && datatype.value === rdf.langString) {
-    assertPart(shape, 'language', language, context);
-    return context.factory.literal(value!, language);
-  } else {
-    return context.factory.literal(value!, datatype);
+  if (
+    assertPart(shape, 'value', value, required, context) &&
+    assertPart(shape, 'datatype', datatype, required, context)
+  ) {
+    if (datatype && datatype.value === rdf.langString) {
+      if (assertPart(shape, 'language', language, required, context)) {
+        return new Match(context.factory.literal(value, language));
+      }
+    } else {
+      return new Match(context.factory.literal(value, datatype));
+    }
   }
+  return undefined;
 }
 
 function checkRefPart(match: ReferenceMatch): string {
@@ -214,14 +298,20 @@ function assertPart(
   shape: Shape,
   part: ShapeReference['part'],
   partValue: unknown,
+  required: boolean,
   context: SynthesizeContext
-) {
+): partValue is NonNullable<unknown> {
   if (partValue === undefined) {
-    throw context.makeError(
-      ErrorCode.NoPartToSynthesize,
-      `Failed to find '${part}' part for shape ${formatDisplayShape(shape)}`
-    );
+    if (required) {
+      throw context.makeError(
+        ErrorCode.NoPartToSynthesize,
+        `Failed to find '${part}' part for shape ${formatDisplayShape(shape)}`
+      );
+    } else {
+      return false;
+    }
   }
+  return true;
 }
 
 export function *findOpenReferencedShapes(shape: Shape): Iterable<ShapeReference> {

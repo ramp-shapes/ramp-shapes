@@ -1,0 +1,232 @@
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dctypes: <http://purl.org/dc/dcmitype/>
+PREFIX doap: <http://usefulinc.com/ns/doap#>
+PREFIX exif: <http://www.w3.org/2003/12/exif/ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX oa: <http://www.w3.org/ns/oa#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sc: <http://iiif.io/api/presentation/2#>
+PREFIX svcs: <http://rdfs.org/sioc/services#>
+CONSTRUCT {
+  ?record_1 rdf:type sc:Manifest.
+  ?record_1 rdfs:label ?literal_2.
+  ?record_1 sc:metadataLabels ?optional_3.
+  ?listNode_4 rdf:rest ?nextNode_5.
+  ?listNode_4 rdf:first ?list_6.
+  ?list_6 rdfs:label ?literal_7.
+  ?list_6 rdf:value ?set_8.
+  ?record_1 sc:viewingDirection ?optional_9.
+  ?record_1 sc:viewingHint ?optional_10.
+  ?record_1 sc:attributionLabel ?optional_11.
+  ?record_1 dc:description ?optional_12.
+  ?record_1 dcterms:rights ?optional_13.
+  ?record_1 dcterms:rights ?optional_13.
+  ?record_1 sc:hasSequences ?list_14.
+  ?listNode_15 rdf:rest ?nextNode_16.
+  ?listNode_15 rdf:first ?list_17.
+  ?list_17 rdf:type sc:Sequence.
+  ?list_17 rdfs:label ?optional_18.
+  ?list_17 sc:hasCanvases ?list_19.
+  ?listNode_20 rdf:rest ?nextNode_21.
+  ?listNode_20 rdf:first ?list_22.
+  ?list_22 rdf:type sc:Canvas.
+  ?list_22 rdfs:label ?literal_23.
+  ?list_22 exif:width ?literal_24.
+  ?list_22 exif:height ?literal_25.
+  ?list_22 sc:hasImageAnnotations ?list_26.
+  ?listNode_27 rdf:rest ?nextNode_28.
+  ?listNode_27 rdf:first ?list_29.
+  ?list_29 rdf:type oa:Annotation.
+  ?list_29 oa:motivatedBy ?resource_30.
+  ?list_29 oa:hasTarget ?resource_31.
+  ?list_29 oa:hasBody ?record_32.
+  ?record_32 rdf:type dctypes:Image.
+  ?record_32 svcs:has_service ?record_33.
+  ?record_33 doap:implements ?resource_34.
+  ?record_32 dc:format ?literal_35.
+  ?record_32 exif:width ?literal_36.
+  ?record_32 exif:height ?literal_37.
+  ?list_22 sc:hasLists ?optional_38.
+  ?listNode_39 rdf:rest ?nextNode_40.
+  ?listNode_39 rdf:first ?list_41.
+  ?list_41 rdf:type sc:AnnotationList.
+  ?list_41 rdfs:label ?optional_42.
+  ?list_22 foaf:thumbnail ?optional_43.
+  ?optional_43 dc:format ?optional_44.
+  ?optional_43 exif:height ?optional_45.
+  ?optional_43 svcs:has_service ?optional_46.
+  ?optional_46 doap:implements ?resource_47.
+  ?optional_43 rdf:type ?optional_48.
+  ?optional_43 exif:width ?optional_49.
+  ?list_22 sc:viewingHint ?optional_50.
+  ?list_17 dcterms:hasFormat ?optional_51.
+  ?optional_51 rdfs:label ?literal_52.
+  ?optional_51 dc:format ?literal_53.
+  ?list_17 sc:hasStartCanvas ?optional_54.
+  ?list_17 sc:viewingDirection ?optional_55.
+  ?list_17 sc:viewingHint ?optional_56.
+  ?record_1 sc:hasRanges ?optional_57.
+  ?listNode_58 rdf:rest ?nextNode_59.
+  ?listNode_58 rdf:first ?list_60.
+  ?list_60 rdf:type sc:Range.
+  ?list_60 sc:metadataLabels ?optional_61.
+  ?listNode_62 rdf:rest ?nextNode_63.
+  ?listNode_62 rdf:first ?list_64.
+  ?list_64 rdfs:label ?literal_65.
+  ?list_64 rdf:value ?set_66.
+  ?list_60 sc:hasCanvases ?optional_67.
+  ?listNode_68 rdf:rest ?nextNode_69.
+  ?listNode_68 rdf:first ?list_70.
+  ?list_60 sc:hasRanges ?optional_71.
+  ?listNode_72 rdf:rest ?nextNode_73.
+  ?listNode_72 rdf:first ?list_74.
+  ?list_60 sc:hasParts ?optional_75.
+  ?listNode_76 rdf:rest ?nextNode_77.
+  ?listNode_76 rdf:first ?list_78.
+  ?list_78 rdfs:label ?literal_79.
+  ?list_60 dcterms:isPartOf ?optional_80.
+  ?record_1 sc:hasStartCanvas ?optional_81.
+  ?record_1 foaf:thumbnail ?optional_82.
+  ?optional_82 dc:format ?optional_83.
+  ?optional_82 exif:height ?optional_84.
+  ?optional_82 svcs:has_service ?optional_85.
+  ?optional_85 doap:implements ?resource_86.
+  ?optional_82 rdf:type ?optional_87.
+  ?optional_82 exif:width ?optional_88.
+  ?record_1 foaf:logo ?optional_89.
+  ?optional_89 svcs:has_service ?optional_90.
+  ?optional_90 doap:implements ?resource_91.
+}
+WHERE {
+  ?record_1 rdf:type sc:Manifest.
+  ?record_1 rdfs:label ?literal_2.
+  OPTIONAL {
+    ?record_1 sc:metadataLabels ?optional_3.
+    ?optional_3 (rdf:rest*) ?listNode_4.
+    ?listNode_4 rdf:rest ?nextNode_5.
+    ?listNode_4 rdf:first ?list_6.
+    ?list_6 rdfs:label ?literal_7.
+    OPTIONAL { ?list_6 rdf:value ?set_8. }
+  }
+  OPTIONAL { ?record_1 sc:viewingDirection ?optional_9. }
+  OPTIONAL { ?record_1 sc:viewingHint ?optional_10. }
+  OPTIONAL { ?record_1 sc:attributionLabel ?optional_11. }
+  OPTIONAL { ?record_1 dc:description ?optional_12. }
+  OPTIONAL {
+    { ?record_1 dcterms:rights ?optional_13. }
+    UNION
+    { ?record_1 dcterms:rights ?optional_13. }
+  }
+  ?record_1 sc:hasSequences ?list_14.
+  ?list_14 (rdf:rest*) ?listNode_15.
+  ?listNode_15 rdf:rest ?nextNode_16.
+  ?listNode_15 rdf:first ?list_17.
+  ?list_17 rdf:type sc:Sequence.
+  OPTIONAL { ?list_17 rdfs:label ?optional_18. }
+  ?list_17 sc:hasCanvases ?list_19.
+  ?list_19 (rdf:rest*) ?listNode_20.
+  ?listNode_20 rdf:rest ?nextNode_21.
+  ?listNode_20 rdf:first ?list_22.
+  ?list_22 rdf:type sc:Canvas.
+  ?list_22 rdfs:label ?literal_23.
+  ?list_22 exif:width ?literal_24.
+  ?list_22 exif:height ?literal_25.
+  ?list_22 sc:hasImageAnnotations ?list_26.
+  ?list_26 (rdf:rest*) ?listNode_27.
+  ?listNode_27 rdf:rest ?nextNode_28.
+  ?listNode_27 rdf:first ?list_29.
+  ?list_29 rdf:type oa:Annotation.
+  ?list_29 oa:motivatedBy ?resource_30.
+  ?list_29 oa:hasTarget ?resource_31.
+  ?list_29 oa:hasBody ?record_32.
+  ?record_32 rdf:type dctypes:Image.
+  ?record_32 svcs:has_service ?record_33.
+  ?record_33 doap:implements ?resource_34.
+  ?record_32 dc:format ?literal_35.
+  ?record_32 exif:width ?literal_36.
+  ?record_32 exif:height ?literal_37.
+  OPTIONAL {
+    ?list_22 sc:hasLists ?optional_38.
+    ?optional_38 (rdf:rest*) ?listNode_39.
+    ?listNode_39 rdf:rest ?nextNode_40.
+    ?listNode_39 rdf:first ?list_41.
+    ?list_41 rdf:type sc:AnnotationList.
+    OPTIONAL { ?list_41 rdfs:label ?optional_42. }
+  }
+  OPTIONAL {
+    ?list_22 foaf:thumbnail ?optional_43.
+    OPTIONAL { ?optional_43 dc:format ?optional_44. }
+    OPTIONAL { ?optional_43 exif:height ?optional_45. }
+    OPTIONAL {
+      ?optional_43 svcs:has_service ?optional_46.
+      ?optional_46 doap:implements ?resource_47.
+    }
+    OPTIONAL { ?optional_43 rdf:type ?optional_48. }
+    OPTIONAL { ?optional_43 exif:width ?optional_49. }
+  }
+  OPTIONAL { ?list_22 sc:viewingHint ?optional_50. }
+  OPTIONAL {
+    ?list_17 dcterms:hasFormat ?optional_51.
+    ?optional_51 rdfs:label ?literal_52.
+    ?optional_51 dc:format ?literal_53.
+  }
+  OPTIONAL { ?list_17 sc:hasStartCanvas ?optional_54. }
+  OPTIONAL { ?list_17 sc:viewingDirection ?optional_55. }
+  OPTIONAL { ?list_17 sc:viewingHint ?optional_56. }
+  OPTIONAL {
+    ?record_1 sc:hasRanges ?optional_57.
+    ?optional_57 (rdf:rest*) ?listNode_58.
+    ?listNode_58 rdf:rest ?nextNode_59.
+    ?listNode_58 rdf:first ?list_60.
+    ?list_60 rdf:type sc:Range.
+    OPTIONAL {
+      ?list_60 sc:metadataLabels ?optional_61.
+      ?optional_61 (rdf:rest*) ?listNode_62.
+      ?listNode_62 rdf:rest ?nextNode_63.
+      ?listNode_62 rdf:first ?list_64.
+      ?list_64 rdfs:label ?literal_65.
+      OPTIONAL { ?list_64 rdf:value ?set_66. }
+    }
+    OPTIONAL {
+      ?list_60 sc:hasCanvases ?optional_67.
+      ?optional_67 (rdf:rest*) ?listNode_68.
+      ?listNode_68 rdf:rest ?nextNode_69.
+      ?listNode_68 rdf:first ?list_70.
+    }
+    OPTIONAL {
+      ?list_60 sc:hasRanges ?optional_71.
+      ?optional_71 (rdf:rest*) ?listNode_72.
+      ?listNode_72 rdf:rest ?nextNode_73.
+      ?listNode_72 rdf:first ?list_74.
+    }
+    OPTIONAL {
+      ?list_60 sc:hasParts ?optional_75.
+      ?optional_75 (rdf:rest*) ?listNode_76.
+      ?listNode_76 rdf:rest ?nextNode_77.
+      ?listNode_76 rdf:first ?list_78.
+      ?list_78 rdfs:label ?literal_79.
+    }
+    OPTIONAL { ?list_60 dcterms:isPartOf ?optional_80. }
+  }
+  OPTIONAL { ?record_1 sc:hasStartCanvas ?optional_81. }
+  OPTIONAL {
+    ?record_1 foaf:thumbnail ?optional_82.
+    OPTIONAL { ?optional_82 dc:format ?optional_83. }
+    OPTIONAL { ?optional_82 exif:height ?optional_84. }
+    OPTIONAL {
+      ?optional_82 svcs:has_service ?optional_85.
+      ?optional_85 doap:implements ?resource_86.
+    }
+    OPTIONAL { ?optional_82 rdf:type ?optional_87. }
+    OPTIONAL { ?optional_82 exif:width ?optional_88. }
+  }
+  OPTIONAL {
+    ?record_1 foaf:logo ?optional_89.
+    OPTIONAL {
+      ?optional_89 svcs:has_service ?optional_90.
+      ?optional_90 doap:implements ?resource_91.
+    }
+  }
+}

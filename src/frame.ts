@@ -2,23 +2,23 @@ import type { DataFactory, DatasetCore, Term, BlankNode, NamedNode } from '@rdfj
 import { HashMap, HashSet, ReadonlyHashSet } from '@reactodia/hashmap';
 
 import {
-  DefaultDataFactory, hashTerm, equalTerms, termToString, looksLikeTerm,
+  DefaultDataFactory, hashTerm, equalTerms, termToString,
 } from './rdf/rdf-model.js';
 import {
-  ShapeID, Shape, RecordShape, RecordProperty, ComputedProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, TypedShape,
-  getNestedPropertyPath,
+  ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeReference, TypedShape, ValueMapper, getNestedPropertyPath,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm,
 } from './common.js';
-import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors.js';
+import { RampError, ErrorCode, formatDisplayShape, formatStackFrameEdge, makeRampError } from './errors.js';
 import {
   SynthesizeContext, ReferenceMatch, synthesizeShape, findOpenReferencedShapes, compactByReference,
   EMPTY_REF_MATCHES,
 } from './synthesize.js';
-import { ValueMapper } from './value-mapping.js';
+import { valueMap } from './value-map.js';
 
 export interface FrameParams<T> {
   shape: TypedShape<T> | Shape;
@@ -27,7 +27,8 @@ export interface FrameParams<T> {
   /** Default is `true` if there are initial candidates otherwise `false`. */
   strict?: boolean;
   factory?: DataFactory;
-  mapper?: ValueMapper;
+  /** Default mapper to use when no specific mapper is defined for a shape. */
+  mapper?: ValueMapper<unknown, unknown>;
 }
 
 export interface FrameSolution<T> {
@@ -35,7 +36,7 @@ export interface FrameSolution<T> {
 }
 
 /**
- * @throws {RamError}
+ * @throws {RampError}
  */
 export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<FrameSolution<T>> {
   const factory = params.factory || DefaultDataFactory;
@@ -43,7 +44,6 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
 
   const context: FrameContext = {
     factory,
-    mapper: params.mapper || ValueMapper.mapByDefault(factory),
     listDefaults: makeListShapeDefaults(factory),
     dataset: params.dataset,
     visiting: new HashMap(MatchKey.hash, MatchKey.equals),
@@ -60,13 +60,19 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
     } else if (match instanceof CyclicMatch) {
       throw makeError(ErrorCode.CyclicMatch, 'Failed to match cyclic shape', stack);
     }
-    yield {value: match.value as T};
+
+    const mapped = valueMap({
+      value: match.value,
+      shape: params.shape,
+      factory,
+      defaultMapper: params.mapper,
+    });
+    yield {value: mapped as T};
   }
 }
 
 interface FrameContext {
   readonly factory: DataFactory;
-  readonly mapper: ValueMapper;
   readonly listDefaults: ResolvedListShape;
   readonly dataset: DatasetCore;
   readonly visiting: HashMap<MatchKey, CyclicMatch | null>;
@@ -78,7 +84,7 @@ class StackFrame {
   constructor(
     readonly parent: StackFrame | undefined,
     readonly shape: Shape,
-    readonly edge?: string | number,
+    readonly edge?: PropertyPath | string | number,
     readonly focus?: Term
   ) {}
   setFocus(focus: Term): FocusedStackFrame {
@@ -201,9 +207,7 @@ function *frameShape(
           ref.match = value;
         }
       }
-
-      const typed = context.mapper.fromRdf(value.value, shape);
-      yield new CandidateMatch(typed, value.candidate);
+      yield value;
     }
   }
 }
@@ -272,7 +276,7 @@ function *frameRecord(
 }
 
 function frameProperties(
-  properties: ReadonlyArray<RecordProperty>,
+  properties: ReadonlyArray<FieldProperty | TransientProperty>,
   required: boolean,
   candidate: NamedNode | BlankNode,
   template: { [fieldName: string]: unknown },
@@ -281,25 +285,26 @@ function frameProperties(
 ): boolean {
   for (const property of properties) {
     const values = findByPropertyPath(property.path, candidate, context);
-    const nextStack = new StackFrame(focusedStack, property.valueShape, property.name);
+    const nextEdge = property.kind === 'transient' ? property.path : property.name;
+    const nextStack = new StackFrame(focusedStack, property.valueShape, nextEdge);
     let found = false;
     for (const match of frameShape(property.valueShape, required, values, nextStack, context)) {
       if (match instanceof Mismatch) {
         return required ? failMatch(
           focusedStack,
           ErrorCode.PropertyMismatch,
-          `Failed to match property "${property.name}"`
+          `Failed to match property "${formatStackFrameEdge(nextEdge)}"`
         ) : false;
       }
       if (found) {
         return required ? failMatch(
           focusedStack,
           ErrorCode.MultiplePropertyMatches,
-          `Found multiple matches for property "${property.name}"`
+          `Found multiple matches for property "${formatStackFrameEdge(nextEdge)}"`
         ) : false;
       }
       found = true;
-      if (property.transient) {
+      if (property.kind === 'transient') {
         /* ignore property value */
       } else if (match instanceof CyclicMatch) {
         match.addHole({target: template, property: property.name});
@@ -312,7 +317,7 @@ function frameProperties(
       return required ? failMatch(
         focusedStack,
         ErrorCode.NoPropertyMatches,
-        `Found no matches for property "${property.name}"`
+        `Found no matches for property "${formatStackFrameEdge(nextEdge)}"`
       ) : false;
     }
   }
@@ -325,17 +330,23 @@ function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: st
   throw makeError(code, fullMessage, focusedStack);
 }
 
+const TRACKED_RECORD_REFS = new WeakMap<RecordShape, RefContext[]>();
+
 function findTrackedRecordRefs(
   shape: RecordShape
 ): RefContext[] | undefined {
   if (shape.computedProperties.length === 0) {
     return undefined;
   }
-  const refContexts: RefContext[] = [];
-  for (const property of shape.computedProperties) {
-    for (const reference of findOpenReferencedShapes(property.valueShape)) {
-      refContexts.push({source: shape.id, reference});
+  let refContexts = TRACKED_RECORD_REFS.get(shape);
+  if (!refContexts) {
+    refContexts = [];
+    for (const property of shape.computedProperties) {
+      for (const reference of findOpenReferencedShapes(property.valueShape)) {
+        refContexts.push({source: shape.id, reference});
+      }
     }
+    TRACKED_RECORD_REFS.set(shape, refContexts);
   }
   return refContexts;
 }
@@ -351,7 +362,6 @@ function synthesizeComputedProperties(
   let propertyStack = stack;
   const synthesizeContext: SynthesizeContext = {
     factory: context.factory,
-    mapper: context.mapper,
     matches: makeReferenceMatchesFromContexts(refContexts, stack, context),
     makeError: (code, message) => makeError(code, message, propertyStack),
   };
@@ -672,23 +682,27 @@ function *frameMap(
     }
     if (keyContext.match === undefined) {
       throw makeError(
-        ErrorCode.NoMapKeyMatches, `Failed to frame item as key of map ${termToString(shape.id)}`, stack
+        ErrorCode.NoMapKeyMatches,
+        `Failed to frame item as key of map ${formatDisplayShape(shape)}`,
+        stack
       );
     }
     if (valueContext && valueContext.match === undefined) {
       throw makeError(
-        ErrorCode.NoMapValueMatches, `Failed to frame item as value of map ${termToString(shape.id)}`, stack
+        ErrorCode.NoMapValueMatches,
+        `Failed to frame item as value of map ${formatDisplayShape(shape)}`,
+        stack
       );
     }
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
     if (key !== undefined && value !== undefined) {
       if (!(typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean')) {
-        const message = `Cannot use non-primitive value as a key of map ${termToString(shape.id)}: ` +
+        const message = `Cannot use non-primitive value as a key of map ${formatDisplayShape(shape)}: ` +
           `(${typeof key}) ${String(key as unknown)}`;
         throw makeError(ErrorCode.CompositeMapKey, message, stack);
       }
-      result[key.toString()] = value;
+      result[String(key)] = value;
     }
   }
 
@@ -709,8 +723,7 @@ function frameByReference(
   }
   const shape = refContext.reference.target;
   try {
-    const compacted = compactByReference(refContext.match.value, shape, refContext.reference);
-    return looksLikeTerm(compacted) ? context.mapper.fromRdf(compacted, shape) : compacted;
+    return compactByReference(refContext.match.value, shape, refContext.reference);
   } catch (e) {
     const message = (e as Error).message
       || `Error compacting value of shape ${termToString(shape.id)}`;
