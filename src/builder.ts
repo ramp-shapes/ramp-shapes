@@ -8,7 +8,7 @@ import {
   RecordProperty, ComputedProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary,
   TypedShape, TypedShapeID, TypedVocabulary, ValueMapper,
 } from './shapes.js';
-import { mapAsString, mapAsTerm, mapVocabulary } from './value-mapping.js';
+import { mapAsString, mapAsTerm, mapVocabulary } from './mappers.js';
 
 export interface ShapeBuilderOptions {
   factory?: DataFactory;

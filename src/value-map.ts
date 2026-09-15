@@ -3,7 +3,9 @@ import type { DataFactory } from '@rdfjs/types';
 import { DefaultDataFactory } from './rdf/rdf-model.js';
 import { Shape, TypedShape, ValueHole } from './shapes.js';
 import { type TransformVisitor, DefaultMatchCache, transform } from './transform.js';
-import { mapByDefault } from './value-mapping.js';
+import { mapByDefault } from './mappers.js';
+
+type ValueMatch = { readonly value: unknown } | ValueHole;
 
 export interface ValueMapParams<S extends Shape> {
   value: unknown;
@@ -15,36 +17,49 @@ export function valueMap<S extends Shape>(
   params: ValueMapParams<S>
 ): S extends TypedShape<infer T> ? T : unknown {
   const {factory = DefaultDataFactory} = params;
-  const cache = new DefaultMatchCache();
+  const cache = new DefaultMatchCache<ValueMatch>();
   const defaultMapper = mapByDefault();
 
-  const visitByDefault = (match: unknown, shape: Shape, value: unknown) => {
-    return (shape.mapper ?? defaultMapper).map(match, shape);
+  const visitArray = (matches: ValueMatch[], shape: Shape, value: unknown) => {
+    const values = matches.map(m => m.value);
+    return {value: (shape.mapper ?? defaultMapper).map(values, shape)};
   };
 
-  const visitor: TransformVisitor<unknown> = {
+  const visitor: TransformVisitor<ValueMatch> = {
     createPlaceholder: (value, shape) => new ValueHole(value, shape),
-    visitAnyOf: visitByDefault,
-    visitList: visitByDefault,
+    visitAnyOf: (match, shape) => {
+      return {value: (shape.mapper ?? defaultMapper).map(match.value, shape)};
+    },
+    visitList: visitArray,
     visitLiteral: (value, shape) => {
-      return (shape.mapper ?? defaultMapper).map(value, shape);
+      return {value: (shape.mapper ?? defaultMapper).map(value, shape)};
     },
     visitNode: (value, shape) => {
-      return (shape.mapper ?? defaultMapper).map(value, shape);
+      return {value: (shape.mapper ?? defaultMapper).map(value, shape)};
     },
-    visitMap: visitByDefault,
-    visitOptional: visitByDefault,
+    visitMap: (matches, shape) => {
+      const mapped = Object.create(null) as Record<string, unknown>;
+      for (const property in matches) {
+        if (Object.prototype.hasOwnProperty.call(matches, property)) {
+          mapped[property] = matches[property].value;
+        }
+      }
+      return {value: (shape.mapper ?? defaultMapper).map(mapped, shape)};
+    },
+    visitOptional: (match, shape) => {
+      return {value: (shape.mapper ?? defaultMapper).map(match?.value, shape)};
+    },
     visitRecord: (matches, shape, value) => {
       const mapped = Object.create(null) as Record<string, unknown>;
       for (const {match, property} of matches) {
-        mapped[property.name] = match;
+        mapped[property.name] = match.value;
       }
-      return (shape.mapper ?? defaultMapper).map(mapped, shape);
+      return {value: (shape.mapper ?? defaultMapper).map(mapped, shape)};
     },
-    visitSet: visitByDefault,
+    visitSet: visitArray,
   };
 
-  const transformed = transform<unknown>({
+  const transformed = transform<ValueMatch>({
     shape: params.shape,
     value: params.value,
     factory,
@@ -52,5 +67,68 @@ export function valueMap<S extends Shape>(
     cache,
   });
 
-  return transformed as S extends TypedShape<infer T> ? T : unknown;
+  return transformed.value as S extends TypedShape<infer T> ? T : unknown;
+}
+
+export interface ValueUnmapParams<S extends Shape> {
+  value: S extends TypedShape<infer T> ? T : unknown;
+  shape: S;
+  factory?: DataFactory;
+}
+
+export function valueUnmap<S extends Shape>(
+  params: ValueMapParams<S>
+): unknown {
+  const {factory = DefaultDataFactory} = params;
+  const cache = new DefaultMatchCache<ValueMatch>();
+  const defaultMapper = mapByDefault();
+
+  const visitArray = (matches: ValueMatch[], shape: Shape, value: unknown) => {
+    const values = matches.map(m => m.value);
+    return (shape.mapper ?? defaultMapper).unmap(values, shape);
+  };
+
+  const visitor: TransformVisitor<ValueMatch> = {
+    createPlaceholder: (value, shape) => new ValueHole(value, shape),
+    visitAnyOf: (match, shape) => {
+      return (shape.mapper ?? defaultMapper).unmap(match.value, shape);
+    },
+    visitList: visitArray,
+    visitLiteral: (value, shape) => {
+      return (shape.mapper ?? defaultMapper).unmap(value, shape);
+    },
+    visitNode: (value, shape) => {
+      return (shape.mapper ?? defaultMapper).unmap(value, shape);
+    },
+    visitMap: (matches, shape) => {
+      const mapped = Object.create(null) as Record<string, unknown>;
+      for (const property in matches) {
+        if (Object.prototype.hasOwnProperty.call(matches, property)) {
+          mapped[property] = matches[property].value;
+        }
+      }
+      return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
+    },
+    visitOptional: (match, shape) => {
+      return {value: (shape.mapper ?? defaultMapper).map(match?.value, shape)};
+    },
+    visitRecord: (matches, shape, value) => {
+      const mapped = Object.create(null) as Record<string, unknown>;
+      for (const {match, property} of matches) {
+        mapped[property.name] = match;
+      }
+      return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
+    },
+    visitSet: visitArray,
+  };
+
+  const transformed = transform({
+    shape: params.shape,
+    value: params.value,
+    factory,
+    visitor,
+    cache,
+  });
+
+  return transformed.value;
 }

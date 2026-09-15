@@ -19,7 +19,7 @@ export interface TransformParams<M> {
   shape: Shape;
   factory: DataFactory;
   visitor: TransformVisitor<M>;
-  cache: MatchCache<M>;
+  cache: MatchCache<NoInfer<M>>;
 }
 
 export function transform<M>(

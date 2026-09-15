@@ -14,7 +14,9 @@ export {
   ShapeBuilder, type ShapeBuilderOptions,
   computedProperty, definesType, inverseProperty, property, propertyPath, self, transient
 } from './builder.js';
-export { ValueMapper } from './value-mapping.js';
+export {
+  mapAsBoolean, mapAsNumber, mapAsString, mapAsTerm, mapByDefault, mapVocabulary, mapChain,
+} from './mappers.js';
 export { type FrameParams, type FrameSolution, frame } from './frame.js';
 export { type FlattenParams, flatten } from './flatten.js';
 export { type GenerateQueryParams, generateQuery } from './generate-query.js';

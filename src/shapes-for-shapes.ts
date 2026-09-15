@@ -3,13 +3,13 @@ import { DatasetCore } from '@rdfjs/types';
 import { DefaultDataFactory } from './rdf/rdf-model.js';
 import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder.js';
 import {
-  Shape, TypedShapeID, RecordShape, RecordProperty, ComputedProperty, PropertyPath, Vocabulary,
+  Shape, TypedShape, TypedShapeID, RecordShape, RecordProperty, ComputedProperty, PropertyPath, Vocabulary,
   PredicatePath, SequencePath, InversePath, AlternativePath, ZeroOrMorePath, ZeroOrOnePath, OneOrMorePath,
   AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
   typedShapeID,
 } from './shapes.js';
 import { frame } from './frame.js';
-import { mapAsBoolean } from './value-mapping.js';
+import { mapAsBoolean } from './mappers.js';
 import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary.js';
 
 export function makeShapesForShapes(factory = DefaultDataFactory) {
@@ -274,7 +274,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     properties: {
       id: self(schema.optional(schema.resourceTerm())),
       terms: property(ramp.vocabItem, schema.map({
-        key: {target: VocabularyItemKey},
+        key: {target: VocabularyItemKey, part: 'value'},
         value: {target: VocabularyItemTerm},
         itemShape: VocabularyItem,
       })),
@@ -347,11 +347,11 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
 
 export function frameShapes(dataset: DatasetCore, factory = DefaultDataFactory): Shape[] {
   const shapesForShapes = makeShapesForShapes(factory);
-  const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!;
+  const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape)) as TypedShape<Shape>;
   const framingResults = frame({shape: rootShape, dataset});
   const shapes: Shape[] = [];
   for (const {value} of framingResults) {
-    shapes.push(value as Shape);
+    shapes.push(value);
   }
   return shapes;
 }

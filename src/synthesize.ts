@@ -99,8 +99,7 @@ export function synthesizeShape(
       );
     }
   }
-  const typed = context.mapper.fromRdf(value, shape);
-  return typed;
+  return value;
 }
 
 interface AnyObjectProperty {

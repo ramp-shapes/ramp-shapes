@@ -12,6 +12,7 @@ import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './error
 import {
   type TransformVisitor, type MatchCache, DefaultMatchCache, transform,
 } from './transform.js';
+import { valueUnmap } from './value-map.js';
 
 export interface FlattenParams<S extends Shape> {
   value: S extends TypedShape<infer T> ? T : unknown;
@@ -161,9 +162,11 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
     },
   };
 
+  const unmapped = valueUnmap({value: params.value, shape: params.shape, factory});
+
   const match = transform({
     shape: params.shape,
-    value: params.value,
+    value: unmapped,
     factory,
     visitor,
     cache,

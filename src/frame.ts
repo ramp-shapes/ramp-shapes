@@ -18,6 +18,7 @@ import {
   SynthesizeContext, ReferenceMatch, synthesizeShape, findOpenReferencedShapes, compactByReference,
   EMPTY_REF_MATCHES,
 } from './synthesize.js';
+import { valueMap } from './value-map.js';
 
 export interface FrameParams<T> {
   shape: TypedShape<T> | Shape;
@@ -57,7 +58,9 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
     } else if (match instanceof CyclicMatch) {
       throw makeError(ErrorCode.CyclicMatch, 'Failed to match cyclic shape', stack);
     }
-    yield {value: match.value as T};
+
+    const mapped = valueMap({value: match.value, shape: params.shape, factory});
+    yield {value: mapped as T};
   }
 }
 
@@ -197,9 +200,7 @@ function *frameShape(
           ref.match = value;
         }
       }
-
-      const typed = context.mapper.fromRdf(value.value, shape);
-      yield new CandidateMatch(typed, value.candidate);
+      yield value;
     }
   }
 }
@@ -683,7 +684,7 @@ function *frameMap(
           `(${typeof key}) ${String(key as unknown)}`;
         throw makeError(ErrorCode.CompositeMapKey, message, stack);
       }
-      result[key.toString()] = value;
+      result[String(key)] = value;
     }
   }
 
@@ -704,8 +705,7 @@ function frameByReference(
   }
   const shape = refContext.reference.target;
   try {
-    const compacted = compactByReference(refContext.match.value, shape, refContext.reference);
-    return looksLikeTerm(compacted) ? context.mapper.fromRdf(compacted, shape) : compacted;
+    return compactByReference(refContext.match.value, shape, refContext.reference);
   } catch (e) {
     const message = (e as Error).message
       || `Error compacting value of shape ${termToString(shape.id)}`;
