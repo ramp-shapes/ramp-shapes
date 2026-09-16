@@ -1,11 +1,13 @@
 import { DatasetCore } from '@rdfjs/types';
 
 import { DefaultDataFactory } from './rdf/rdf-model.js';
-import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder.js';
+import { ShapeBuilder, property, self, definesType, computedProperty } from './builder.js';
 import {
-  Shape, TypedShape, TypedShapeID, RecordShape, RecordProperty, ComputedProperty, PropertyPath, Vocabulary,
+  Shape, TypedShape, TypedShapeID,
+  RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
   PredicatePath, SequencePath, InversePath, AlternativePath, ZeroOrMorePath, ZeroOrOnePath, OneOrMorePath,
-  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeReference, Vocabulary,
   typedShapeID,
 } from './shapes.js';
 import { frame } from './frame.js';
@@ -50,6 +52,15 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     }
   });
 
+  const PropertyKindVocabulary = schema.vocabulary({
+    id: ramp.PropertyKindVocabulary,
+    terms: {
+      'field': ramp.FieldProperty,
+      'transient': ramp.TransientProperty,
+      'computed': ramp.ComputedProperty,
+    },
+  });
+
   const makeBaseProperties = () => ({
     id: self(ShapeID),
     lenient: property(ramp.lenient, schema.optional(
@@ -60,36 +71,58 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   schema.readonlyRecord<RecordShape>({
     id: ramp.Record,
     properties: {
-      type: definesType(
-        property(RDF_TYPE, schema.fromVocabulary('record', ShapeTypeVocabulary))
-      ),
+      type: property(RDF_TYPE, schema.fromVocabulary('record', ShapeTypeVocabulary)),
       ...makeBaseProperties(),
-      typeProperties: property(ramp.typeProperty, schema.set(typedShapeID(ramp.Property))),
-      properties: property(ramp.property, schema.set(typedShapeID(ramp.Property))),
+      typeProperties: property(ramp.typeProperty, schema.set(schema.anyOf([
+        typedShapeID(ramp.FieldProperty),
+        typedShapeID(ramp.TransientProperty),
+      ]))),
+      properties: property(ramp.property, schema.set(schema.anyOf([
+        typedShapeID(ramp.FieldProperty),
+        typedShapeID(ramp.TransientProperty),
+      ]))),
       computedProperties: property(ramp.computedProperty,
         schema.set(typedShapeID(ramp.ComputedProperty))
       ),
     }
   });
 
-  schema.readonlyRecord<RecordProperty>({
-    id: ramp.Property,
+  schema.readonlyRecord<FieldProperty>({
+    id: ramp.FieldProperty,
     properties: {
+      kind: computedProperty(schema.fromVocabulary('field', PropertyKindVocabulary)),
       name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
       path: property(ramp.path, typedShapeID<PropertyPath>(ramp.PropertyPath)),
       valueShape: property(ramp.shape, Shape),
-      transient: property(ramp.transient, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
-    }
+    },
+    transients: [
+      definesType(
+        property(RDF_TYPE, schema.optional(schema.constant(ramp.FieldProperty)))
+      ),
+    ],
+  });
+
+  schema.readonlyRecord<TransientProperty>({
+    id: ramp.TransientProperty,
+    properties: {
+      kind: property(RDF_TYPE, schema.fromVocabulary('transient', PropertyKindVocabulary)),
+      path: property(ramp.path, typedShapeID<PropertyPath>(ramp.PropertyPath)),
+      valueShape: property(ramp.shape, Shape),
+    },
   });
 
   schema.readonlyRecord<ComputedProperty>({
     id: ramp.ComputedProperty,
     properties: {
+      kind: computedProperty(schema.fromVocabulary('computed', PropertyKindVocabulary)),
       name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
       valueShape: property(ramp.shape, Shape),
-    }
+    },
+    transients: [
+      definesType(
+        property(RDF_TYPE, schema.optional(schema.constant(ramp.ComputedProperty)))
+      ),
+    ],
   });
 
   const PropertyPath: TypedShapeID<PropertyPath> = schema.anyOf([
@@ -117,12 +150,17 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     }
   });
 
-  schema.readonlyRecord<PredicatePath & { exclude: undefined }>({
+  schema.readonlyRecord<PredicatePath>({
     id: ramp.PredicatePath,
     properties: {
       predicate: self(schema.namedNodeTerm()),
+      type: computedProperty(
+        schema.fromVocabulary('predicate', PropertyPathTypeVocabulary)
+      ),
+    },
+    transients: [
       // negative properties to exclude other property path types
-      exclude: transient(self(
+      self(
         schema.set(
           schema.anyOf<TypedShapeID<any>[]>([
             typedShapeID(ramp.SequencePath),
@@ -134,11 +172,8 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
           ], {lenient: true}),
           {maxCount: 0}
         )
-      )),
-      type: computedProperty(
-        schema.fromVocabulary('predicate', PropertyPathTypeVocabulary)
-      ),
-    }
+      )
+    ],
   });
 
   schema.record<SequencePath>({

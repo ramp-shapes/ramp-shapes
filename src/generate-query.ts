@@ -6,8 +6,8 @@ import {
   DefaultDataFactory, equalTerms, termToString, looksLikeTerm,
 } from './rdf/rdf-model.js';
 import {
-  ShapeID, Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, PropertyPath,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults,
@@ -304,7 +304,7 @@ function generateForRecord(
 
 function generateForProperties(
   subject: SparqlJs.Term,
-  properties: ReadonlyArray<RecordProperty>,
+  properties: ReadonlyArray<FieldProperty | TransientProperty>,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ) {
@@ -546,7 +546,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<RecordProperty>
+    properties: ReadonlyArray<FieldProperty | TransientProperty>
   ): Iterable<SparqlJsPredicate> {
     for (const property of properties) {
       path.push(propertyPathToSparql(property.path));
@@ -595,7 +595,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<RecordProperty>
+    properties: ReadonlyArray<FieldProperty | TransientProperty>
   ): Iterable<NamedNode> {
     for (const property of properties) {
       if (isSelfPath(property.path)) {

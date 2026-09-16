@@ -141,6 +141,9 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
       function *generate(edge: Edge | undefined): Iterable<Quad> {
         yield* generateEdge(edge, subject, context);
         for (const {property, match} of matches) {
+          if (property.kind === 'computed') {
+            continue;
+          }
           yield* pushMatchGeneration({subject, path: property.path}, match);
         }
       }
@@ -170,6 +173,7 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
     factory,
     visitor,
     cache,
+    synthesizeTransient: true,
   });
 
   queuedGenerations.push({match});
@@ -291,7 +295,11 @@ function *generatePropertyPath(
 }
 
 function isSelfProperty(property: RecordProperty) {
-  return property.path.type === 'sequence' && property.path.sequence.length === 0;
+  return (
+    property.kind !== 'computed' &&
+    property.path.type === 'sequence' &&
+    property.path.sequence.length === 0
+  );
 }
 
 function makeDefaultBlankNodeGenerator(factory: DataFactory) {

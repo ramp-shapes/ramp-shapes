@@ -41,9 +41,11 @@ export function makeRampVocabulary(factory: DataFactory) {
     property: namespacedNode(factory, NAMESPACE, 'property'),
     computedProperty: namespacedNode(factory, NAMESPACE, 'computedProperty'),
 
-    // Property and ComputedProperty
-    Property: namespacedNode(factory, NAMESPACE, 'Property'),
+    // Record properties
+    FieldProperty: namespacedNode(factory, NAMESPACE, 'FieldProperty'),
+    TransientProperty: namespacedNode(factory, NAMESPACE, 'TransientProperty'),
     ComputedProperty: namespacedNode(factory, NAMESPACE, 'ComputedProperty'),
+    PropertyKindVocabulary: namespacedNode(factory, NAMESPACE, 'PropertyKindVocabulary'),
     PropertyPath: namespacedNode(factory, NAMESPACE, 'PropertyPath'),
     PropertyPathVocabulary: namespacedNode(factory, NAMESPACE, 'PropertyPathVocabulary'),
     PredicatePath: namespacedNode(factory, NAMESPACE, 'PredicatePath'),

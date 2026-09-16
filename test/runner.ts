@@ -26,7 +26,7 @@ export interface ExpectedError {
 }
 
 interface ExpectedStackFrame {
-  readonly edge?: string | number;
+  readonly edge?: Ramp.PropertyPath | string | number;
   readonly shape: string | { type: Ramp.Shape['type'] };
   readonly focus?: string;
 }

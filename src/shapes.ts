@@ -65,19 +65,28 @@ export interface LiteralShape extends ShapeBase {
 export interface RecordShape extends ShapeBase {
   readonly type: 'record';
   readonly id: ShapeID;
-  readonly typeProperties: ReadonlyArray<RecordProperty>;
-  readonly properties: ReadonlyArray<RecordProperty>;
+  readonly typeProperties: ReadonlyArray<FieldProperty | TransientProperty>;
+  readonly properties: ReadonlyArray<FieldProperty | TransientProperty>;
   readonly computedProperties: ReadonlyArray<ComputedProperty>;
 }
 
-export interface RecordProperty {
+export type RecordProperty = FieldProperty | TransientProperty | ComputedProperty;
+
+export interface FieldProperty {
+  readonly kind: 'field';
   readonly name: string;
   readonly path: PropertyPath;
   readonly valueShape: Shape;
-  readonly transient?: boolean;
+}
+
+export interface TransientProperty {
+  readonly kind: 'transient';
+  readonly path: PropertyPath;
+  readonly valueShape: Shape;
 }
 
 export interface ComputedProperty {
+  readonly kind: 'computed';
   readonly name: string;
   readonly valueShape: Shape;
 }

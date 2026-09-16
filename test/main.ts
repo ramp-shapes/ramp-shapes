@@ -5,7 +5,7 @@ import { diffString } from 'json-diff';
 import { TestResult } from './runner.js';
 import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations.js';
 
-import { TestScriptContext } from './test-scripts/test-script-context.js';
+import { TestScriptContext, AssertEqualError } from './test-scripts/test-script-context.js';
 import { registerAllTests } from './test-scripts/test-index.js';
 
 interface TestCase {
@@ -119,24 +119,45 @@ function main() {
 }
 
 function addScriptTests(testCases: Map<string, TestCase>): void {
+  const makeCase = (name: string, body: () => void): TestCase => {
+    return {
+      name,
+      run: (): TestResult => {
+        try {
+          body();
+        } catch (err) {
+          if (err instanceof AssertEqualError) {
+            return {
+              type: 'failure',
+              testCaseName: name,
+              message: err.message,
+              expected: err.expected,
+              given: err.given,
+              error: err.cause,
+            };
+          }
+          return {
+            type: 'failure',
+            testCaseName: name,
+            message: 'Unexpected error occured during the test',
+            error: err,
+          };
+        }
+        return {
+          type: 'success',
+          testCaseName: name,
+        };
+      },
+    };
+  };
   const context: TestScriptContext = {
     defineCase: (name, body) => {
-      testCases.set(name, {
-        name,
-        run: (): TestResult => {
-          body();
-          return {type: 'success'};
-        },
-      });
+      testCases.set(name, makeCase(name, body));
     },
     skipCase: (name, body) => {
       testCases.set(name, {
-        name,
+        ...makeCase(name, body),
         skip: true,
-        run: (): TestResult => {
-          body();
-          return {type: 'success'};
-        },
       });
     }
   };

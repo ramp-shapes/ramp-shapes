@@ -12,7 +12,7 @@ export { ErrorCode, type RampError, type StackFrame, isRampError } from './error
 export { makeShapesForShapes, frameShapes } from './shapes-for-shapes.js';
 export {
   ShapeBuilder, type ShapeBuilderOptions,
-  computedProperty, definesType, inverseProperty, property, propertyPath, self, transient
+  computedProperty, definesType, inverseProperty, property, propertyPath, self,
 } from './builder.js';
 export {
   mapAsBoolean, mapAsNumber, mapAsString, mapAsTerm, mapByDefault, mapVocabulary, mapChain,

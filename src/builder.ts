@@ -5,8 +5,8 @@ import {
   DefaultDataFactory, type RawTerm, hashTerm, equalTerms, looksLikeTerm, randomString,
 } from './rdf/rdf-model.js';
 import {
-  RecordProperty, ComputedProperty, PropertyPath, Shape, ShapeID, ShapeReference, Vocabulary,
-  TypedShape, TypedShapeID, TypedVocabulary, ValueMapper,
+  FieldProperty, TransientProperty, ComputedProperty, PropertyPath, Shape, ShapeID,
+  ShapeReference, Vocabulary, TypedShape, TypedShapeID, TypedVocabulary, ValueMapper,
 } from './shapes.js';
 import { mapAsString, mapAsTerm, mapVocabulary } from './mappers.js';
 
@@ -27,13 +27,21 @@ interface RecordShapeProps<Props, R>
   properties: {
     [Name in keyof Props]: PartialProperty<Props[Name]>;
   };
+  transients?: PartialGraphProperty<any>[];
 }
 
-interface PartialProperty<T> {
+type PartialProperty<T> = PartialGraphProperty<T> | PartialComputedProperty<T>;
+
+interface PartialGraphProperty<T> {
+  kind: 'graph';
+  definesType?: boolean;
   path: PropertyPath;
   valueShape: TypedShapeID<T>;
-  kind?: 'type' | 'computed';
-  transient?: boolean;
+}
+
+interface PartialComputedProperty<T> {
+  kind: 'computed';
+  valueShape: TypedShapeID<T>;
 }
 
 interface OptionalShapeProps<
@@ -122,45 +130,52 @@ export class ShapeBuilder {
   >(
     props: RecordShapeProps<Props, R>
   ): TypedShapeID<R> {
-    const {id = this.makeShapeID('record'), properties} = props;
+    const {id = this.makeShapeID('record'), properties, transients = []} = props;
     const {_shapes} = this;
 
-    function makeProperty(name: string, partial: PartialProperty<any>): RecordProperty {
-      const {path, valueShape, transient} = partial;
-      return {
-        name,
-        path,
-        transient,
-        get valueShape() {
-          return _shapes.get(valueShape)!;
-        }
-      };
-    }
-
-    function makeComputedProperty(name: string, partial: PartialProperty<any>): ComputedProperty {
-      return {
-        name,
-        get valueShape() {
-          return _shapes.get(partial.valueShape)!;
-        }
-      };
-    }
-
-    const typeProperties: RecordProperty[] = [];
-    const normalProperties: RecordProperty[] = [];
+    const typeProperties: Array<FieldProperty | TransientProperty> = [];
+    const normalProperties: Array<FieldProperty | TransientProperty> = [];
     const computedProperties: ComputedProperty[] = [];
 
     for (const propertyName of Object.keys(properties)) {
       const partial = (properties as { [name: string]: PartialProperty<any> })[propertyName];
       if (partial.kind === 'computed') {
-        computedProperties.push(makeComputedProperty(propertyName, partial));
+        computedProperties.push({
+          kind: 'computed',
+          name: propertyName,
+          get valueShape() {
+            return _shapes.get(partial.valueShape)!;
+          }
+        });
       } else {
-        const property = makeProperty(propertyName, partial);
-        if (partial.kind === 'type') {
+        const property: FieldProperty = {
+          kind: 'field',
+          name: propertyName,
+          path: partial.path,
+          get valueShape() {
+            return _shapes.get(partial.valueShape)!;
+          }
+        };
+        if (partial.definesType) {
           typeProperties.push(property);
         } else {
           normalProperties.push(property);
         }
+      }
+    }
+
+    for (const transient of transients) {
+      const property: TransientProperty = {
+        kind: 'transient',
+        path: transient.path,
+        get valueShape() {
+          return _shapes.get(transient.valueShape)!;
+        }
+      };
+      if (transient.definesType) {
+        typeProperties.push(property);
+      } else {
+        normalProperties.push(property);
       }
     }
 
@@ -442,22 +457,23 @@ export class ShapeBuilder {
   }
 }
 
-export function self<T>(valueShape: TypedShapeID<T>): PartialProperty<T> {
-  return {path: {type: 'sequence', sequence: []}, valueShape};
+export function self<T>(valueShape: TypedShapeID<T>): PartialGraphProperty<T> {
+  return {kind: 'graph', path: {type: 'sequence', sequence: []}, valueShape};
 }
 
 export function property<T>(
   predicate: NamedNode,
   valueShape: TypedShapeID<T>
-): PartialProperty<T> {
-  return {path: {type: 'predicate', predicate}, valueShape};
+): PartialGraphProperty<T> {
+  return {kind: 'graph', path: {type: 'predicate', predicate}, valueShape};
 }
 
 export function inverseProperty<T>(
   predicate: NamedNode,
   valueShape: TypedShapeID<T>
-): PartialProperty<T> {
+): PartialGraphProperty<T> {
   return {
+    kind: 'graph',
     path: {
       type: 'inverse',
       inverse: {type: 'predicate', predicate}
@@ -469,22 +485,17 @@ export function inverseProperty<T>(
 export function propertyPath<T>(
   path: PropertyPath,
   valueShape: TypedShapeID<T>
-): PartialProperty<T> {
-  return {path, valueShape};
+): PartialGraphProperty<T> {
+  return {kind: 'graph', path, valueShape};
 }
 
-export function definesType<T>(property: PartialProperty<T>): PartialProperty<T> {
-  return {...property, kind: 'type'};
+export function definesType<T>(property: PartialGraphProperty<T>): PartialGraphProperty<T> {
+  return {...property, definesType: true};
 }
 
-export function transient(property: PartialProperty<any>): PartialProperty<undefined> {
-  return {...property, transient: true};
-}
-
-export function computedProperty<T>(valueShape: TypedShapeID<T>): PartialProperty<T> {
+export function computedProperty<T>(valueShape: TypedShapeID<T>): PartialComputedProperty<T> {
   return {
-    path: {type: 'sequence', sequence: []},
-    valueShape,
     kind: 'computed',
+    valueShape,
   };
 }

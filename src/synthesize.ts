@@ -4,7 +4,7 @@ import { ReadonlyHashMap } from '@reactodia/hashmap';
 import { equalTerms } from './rdf/rdf-model.js';
 import { ErrorCode, RampError, formatDisplayShape, makeRampError } from './errors.js';
 import {
-  SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
+  RecordProperty, SetShape, LiteralShape, ResourceShape, Shape, ShapeReference,
 } from './shapes.js';
 import { makeTermMap } from './common.js';
 import { rdf } from './vocabulary.js';
@@ -102,17 +102,15 @@ export function synthesizeShape(
   return value;
 }
 
-interface AnyObjectProperty {
-  readonly name: string;
-  readonly valueShape: Shape;
-}
-
 function synthesizeProperties(
   template: { [propertyName: string]: unknown },
-  properties: ReadonlyArray<AnyObjectProperty>,
+  properties: ReadonlyArray<RecordProperty>,
   context: SynthesizeContext
 ) {
   for (const property of properties) {
+    if (property.kind === 'transient') {
+      continue;
+    }
     template[property.name] = synthesizeShape(property.valueShape, context);
   }
 }

@@ -5,15 +5,15 @@ import {
   DefaultDataFactory, hashTerm, equalTerms, termToString, looksLikeTerm,
 } from './rdf/rdf-model.js';
 import {
-  ShapeID, Shape, RecordShape, RecordProperty, ComputedProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference, TypedShape,
-  ValueMapper, getNestedPropertyPath,
+  ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeReference, TypedShape, getNestedPropertyPath,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm,
 } from './common.js';
-import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors.js';
+import { RampError, ErrorCode, formatDisplayShape, formatStackFrameEdge, makeRampError } from './errors.js';
 import {
   SynthesizeContext, ReferenceMatch, synthesizeShape, findOpenReferencedShapes, compactByReference,
   EMPTY_REF_MATCHES,
@@ -77,7 +77,7 @@ class StackFrame {
   constructor(
     readonly parent: StackFrame | undefined,
     readonly shape: Shape,
-    readonly edge?: string | number,
+    readonly edge?: PropertyPath | string | number,
     readonly focus?: Term
   ) {}
   setFocus(focus: Term): FocusedStackFrame {
@@ -269,7 +269,7 @@ function *frameRecord(
 }
 
 function frameProperties(
-  properties: ReadonlyArray<RecordProperty>,
+  properties: ReadonlyArray<FieldProperty | TransientProperty>,
   required: boolean,
   candidate: NamedNode | BlankNode,
   template: { [fieldName: string]: unknown },
@@ -278,25 +278,26 @@ function frameProperties(
 ): boolean {
   for (const property of properties) {
     const values = findByPropertyPath(property.path, candidate, context);
-    const nextStack = new StackFrame(focusedStack, property.valueShape, property.name);
+    const nextEdge = property.kind === 'transient' ? property.path : property.name;
+    const nextStack = new StackFrame(focusedStack, property.valueShape, nextEdge);
     let found = false;
     for (const match of frameShape(property.valueShape, required, values, nextStack, context)) {
       if (match instanceof Mismatch) {
         return required ? failMatch(
           focusedStack,
           ErrorCode.PropertyMismatch,
-          `Failed to match property "${property.name}"`
+          `Failed to match property "${formatStackFrameEdge(nextEdge)}"`
         ) : false;
       }
       if (found) {
         return required ? failMatch(
           focusedStack,
           ErrorCode.MultiplePropertyMatches,
-          `Found multiple matches for property "${property.name}"`
+          `Found multiple matches for property "${formatStackFrameEdge(nextEdge)}"`
         ) : false;
       }
       found = true;
-      if (property.transient) {
+      if (property.kind === 'transient') {
         /* ignore property value */
       } else if (match instanceof CyclicMatch) {
         match.addHole({target: template, property: property.name});
@@ -309,7 +310,7 @@ function frameProperties(
       return required ? failMatch(
         focusedStack,
         ErrorCode.NoPropertyMatches,
-        `Found no matches for property "${property.name}"`
+        `Found no matches for property "${formatStackFrameEdge(nextEdge)}"`
       ) : false;
     }
   }

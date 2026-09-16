@@ -6,11 +6,13 @@ import {
   ResolvedListShape, SubjectMemo, assertUnknownShape, makeListShapeDefaults, resolveListShape,
   matchesTerm, makeTermMap,
 } from './common.js';
-import { ErrorCode, RampError, StackFrame, makeRampError, formatDisplayShape } from './errors.js';
 import {
-  Shape, TypedShape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeID, ShapeReference,
-  ValueMapper,
+  ErrorCode, RampError, StackFrame, formatDisplayShape, formatStackFrameEdge, makeRampError,
+} from './errors.js';
+import {
+  Shape, TypedShape, RecordShape, RecordProperty, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeID, ShapeReference, ValueMapper,
 } from './shapes.js';
 import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize.js';
 
@@ -20,18 +22,27 @@ export interface TransformParams<M> {
   factory: DataFactory;
   visitor: TransformVisitor<M>;
   cache: MatchCache<NoInfer<M>>;
+  synthesizeTransient?: boolean;
 }
 
 export function transform<M>(
   params: TransformParams<M>
 ): M {
-  const {value: rootValue, shape: rootShape, factory, visitor, cache} = params;
+  const {
+    value: rootValue,
+    shape: rootShape,
+    factory,
+    visitor,
+    cache,
+    synthesizeTransient = false,
+  } = params;
 
   const context: TransformContext<M> = {
     stack: [],
     factory,
     visitor,
     cache,
+    synthesizeTransient,
     makeError: (code, message) => {
       return makeRampError(code, message, [...context.stack]);
     },
@@ -52,6 +63,7 @@ interface TransformContext<M> {
   readonly factory: DataFactory;
   readonly visitor: TransformVisitor<M>;
   readonly cache: MatchCache<M>;
+  readonly synthesizeTransient: boolean;
   makeError(code: ErrorCode, message: string): RampError;
 }
 
@@ -325,7 +337,10 @@ function transformRecord<M>(
     return undefined;
   }
   const checkProperties = required || shape.typeProperties.length > 0;
-  if (!matchProperties(shape.properties, checkProperties, value, matches, context)) {
+  if (!(
+    matchProperties(shape.properties, checkProperties, value, matches, context) &&
+    matchProperties(shape.computedProperties, checkProperties, value, matches, context)
+  )) {
     if (checkProperties) {
       throw context.makeError(
         ErrorCode.FailedToMatchProperties,
@@ -351,9 +366,13 @@ function matchProperties<M>(
   context: TransformContext<M>
 ): boolean {
   for (const property of properties) {
-    const frame: StackFrame = {shape: property.valueShape, edge: property.name};
+    const edge = property.kind === 'transient' ? property.path : property.name;
+    const frame: StackFrame = {shape: property.valueShape, edge};
     let propertyValue: unknown;
-    if (property.transient) {
+    if (property.kind === 'transient') {
+      if (!context.synthesizeTransient) {
+        continue;
+      }
       propertyValue = synthesizeShape(property.valueShape, {
         factory: context.factory,
         matches: EMPTY_REF_MATCHES,
@@ -368,7 +387,7 @@ function matchProperties<M>(
     } else if (required) {
       throw context.makeError(
         ErrorCode.FailedToMatchProperty,
-        `Failed to match property "${property.name}"`
+        `Failed to match property "${formatStackFrameEdge(edge)}"`
       );
     } else {
       return false;

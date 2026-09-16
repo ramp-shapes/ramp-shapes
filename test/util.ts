@@ -1,13 +1,16 @@
 import fs from 'node:fs';
-import type { Quad } from '@rdfjs/types';
+import type {
+  BlankNode, DataFactory, DefaultGraph, DirectionalLanguage, Literal, NamedNode,
+  Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Variable,
+} from '@rdfjs/types';
 import * as N3 from 'n3';
 import * as SparqlJs from 'sparqljs';
 
 import * as Ramp from '../src/index.js';
 
-export function readQuadsFromTurtle(path: string): Quad[] {
+export function readQuadsFromTurtle(path: string, factory = Ramp.DefaultDataFactory): Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
-  const parser = new N3.Parser({factory: Ramp.DefaultDataFactory});
+  const parser = new N3.Parser({factory});
   return parser.parse(ttl);
 }
 
@@ -65,4 +68,47 @@ export function findFirstShape(
     }
   }
   return undefined;
+}
+
+export class SequentialDataFactory implements DataFactory {
+  private nextBlankIndex: number;
+
+  constructor(
+    private readonly baseFactory: DataFactory,
+    blankStartIndex = 0
+  ) {
+    this.variable = baseFactory.variable ? (value) => baseFactory.variable!(value) : undefined;
+    this.nextBlankIndex = blankStartIndex;
+  }
+
+  namedNode<Iri extends string = string>(value: Iri): NamedNode<Iri> {
+    return this.baseFactory.namedNode(value);
+  }
+
+  blankNode(value?: string): BlankNode {
+    return this.baseFactory.blankNode(value ?? `b${this.nextBlankIndex++}`);
+  }
+
+  literal(value: string, languageOrDatatype?: string | NamedNode | DirectionalLanguage): Literal {
+    return this.baseFactory.literal(value, languageOrDatatype);
+  }
+
+  variable: ((value: string) => Variable) | undefined;
+
+  defaultGraph(): DefaultGraph {
+    return this.baseFactory.defaultGraph();
+  }
+
+  quad(subject: Quad_Subject, predicate: Quad_Predicate, object: Quad_Object, graph?: Quad_Graph): Quad {
+    return this.baseFactory.quad(subject, predicate, object, graph);
+  }
+
+  fromTerm(original: any): any {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.baseFactory.fromTerm(original);
+  }
+
+  fromQuad(original: Quad): Quad {
+    return this.baseFactory.fromQuad(original);
+  }
 }

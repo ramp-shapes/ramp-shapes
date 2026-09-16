@@ -6,9 +6,8 @@
 # Human
 wd:Q5 a ramp:Record;
     ramp:typeProperty [
-        ramp:name "type";
+        a ramp:TransientProperty;
         ramp:path wdt:P31;
-        ramp:transient true;
         ramp:shape [ a ramp:Resource; ramp:termValue wd:Q5 ]
     ];
     ramp:property [

@@ -38,22 +38,27 @@ export function valueMap<S extends Shape>(
       return {value: (shape.mapper ?? defaultMapper).map(value, shape)};
     },
     visitMap: (matches, shape) => {
-      const mapped = Object.create(null) as Record<string, unknown>;
+      const entries: [string, unknown][] = [];
       for (const property in matches) {
         if (Object.prototype.hasOwnProperty.call(matches, property)) {
-          mapped[property] = matches[property].value;
+          entries.push([property, matches[property].value]);
         }
       }
+      const mapped = Object.fromEntries(entries);
       return {value: (shape.mapper ?? defaultMapper).map(mapped, shape)};
     },
     visitOptional: (match, shape) => {
       return {value: (shape.mapper ?? defaultMapper).map(match?.value, shape)};
     },
     visitRecord: (matches, shape, value) => {
-      const mapped = Object.create(null) as Record<string, unknown>;
+      const entries: [string, unknown][] = [];
       for (const {match, property} of matches) {
-        mapped[property.name] = match.value;
+        if (property.kind === 'transient') {
+          continue;
+        }
+        entries.push([property.name, match.value]);
       }
+      const mapped = Object.fromEntries(entries);
       return {value: (shape.mapper ?? defaultMapper).map(mapped, shape)};
     },
     visitSet: visitArray,
@@ -101,22 +106,27 @@ export function valueUnmap<S extends Shape>(
       return (shape.mapper ?? defaultMapper).unmap(value, shape);
     },
     visitMap: (matches, shape) => {
-      const mapped = Object.create(null) as Record<string, unknown>;
+      const entries: [string, unknown][] = [];
       for (const property in matches) {
         if (Object.prototype.hasOwnProperty.call(matches, property)) {
-          mapped[property] = matches[property].value;
+          entries.push([property, matches[property].value]);
         }
       }
+      const mapped = Object.fromEntries(entries);
       return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
     },
     visitOptional: (match, shape) => {
       return {value: (shape.mapper ?? defaultMapper).map(match?.value, shape)};
     },
     visitRecord: (matches, shape, value) => {
-      const mapped = Object.create(null) as Record<string, unknown>;
+      const entries: [string, unknown][] = [];
       for (const {match, property} of matches) {
-        mapped[property.name] = match;
+        if (property.kind === 'transient') {
+          continue;
+        }
+        entries.push([property.name, match]);
       }
+      const mapped = Object.fromEntries(entries);
       return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
     },
     visitSet: visitArray,
