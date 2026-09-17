@@ -49,6 +49,49 @@ export function readCyclicJson(path: string): unknown {
   return parsed;
 }
 
+export function breakReferenceCycles(root: unknown): void {
+  const assignedRefs = new Map<unknown, number>();
+  const visiting = new Set<unknown>();
+
+  const visit = (value: unknown): unknown => {
+    if (visiting.has(value)) {
+      let ref = assignedRefs.get(value);
+      if (ref === undefined) {
+        ref = assignedRefs.size;
+        assignedRefs.set(value, ref);
+        (value as Record<string, unknown>)['@ref'] = ref;
+      }
+      return {'@use': ref};
+    }
+    visiting.add(value);
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const item: unknown = value[i];
+        const changed = visit(item);
+        if (changed !== item) {
+          value[i] = changed;
+        }
+      }
+    } else if (Ramp.looksLikeTerm(value)) {
+      /* ignore */
+    } else if (typeof value === 'object' && value !== null) {
+      for (const key in value) {
+        if (Object.hasOwnProperty.call(value, key)) {
+          const nested = (value as Record<string, unknown>)[key];
+          const changed = visit(nested);
+          if (changed !== nested) {
+            (value as Record<string, unknown>)[key] = changed;
+          }
+        }
+      }
+    }
+    visiting.delete(value);
+    return value;
+  };
+
+  visit(root);
+}
+
 export function readQuery(path: string): SparqlJs.SparqlQuery {
   const queryText = fs.readFileSync(path, {encoding: 'utf-8'});
   return new SparqlJs.Parser().parse(queryText);

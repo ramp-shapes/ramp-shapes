@@ -5,7 +5,7 @@ import {
 } from './rdf/rdf-model.js';
 import {
   Shape, TypedShape, RecordProperty, PropertyPath, ResourceShape, LiteralShape,
-  getNestedPropertyPath,
+  ValueMapper, getNestedPropertyPath,
 } from './shapes.js';
 import { SubjectMemo, makeListShapeDefaults, resolveListShape } from './common.js';
 import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors.js';
@@ -18,6 +18,8 @@ export interface FlattenParams<S extends Shape> {
   value: S extends TypedShape<infer T> ? T : unknown;
   shape: S;
   factory?: DataFactory;
+  /** Default mapper to use when no specific mapper is defined for a shape. */
+  mapper?: ValueMapper<unknown, unknown>;
   /**
    * Causes quads for entities with non-blank subject to appear only after current stack of
    * blank groups or lists are emitted to produce better looking Turtle serialization.
@@ -31,6 +33,7 @@ export interface FlattenParams<S extends Shape> {
 export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Quad> {
   const {
     factory = DefaultDataFactory,
+    mapper,
     postponeNamed = true,
     unstable_generateBlankNode,
   } = params;
@@ -72,7 +75,8 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
   };
 
   const visitor: TransformVisitor<ShapeMatch> = {
-    createPlaceholder: (value, shape) => new PlaceholderMatch(context, shape, value),
+    createPlaceholder: (hole) => new PlaceholderMatch(context, hole.shape, hole.value),
+    resolvePlaceholder: (hole, match) => {/* ignore */},
     visitAnyOf: (match, shape, value) => match,
     visitList: (matches, shape, value) => {
       const {head, tail, nil} = resolveListShape(shape, listDefaults);
@@ -165,7 +169,12 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
     },
   };
 
-  const unmapped = valueUnmap({value: params.value, shape: params.shape, factory});
+  const unmapped = valueUnmap({
+    value: params.value,
+    shape: params.shape,
+    factory,
+    defaultMapper: params.mapper,
+  });
 
   const match = transform({
     shape: params.shape,
@@ -210,7 +219,7 @@ class PlaceholderMatch implements ShapeMatch {
   }
 
   *generate(edge: Edge | undefined): Iterable<Quad> {
-    const match = this.context.cache.getMatch(this.shape, this.value);
+    const match = this.context.cache.get(this.shape, this.value);
     if (!match) {
       const displayedShape = formatDisplayShape(this.shape);
       throw this.context.makeError(

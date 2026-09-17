@@ -1,17 +1,16 @@
-import { DatasetCore } from '@rdfjs/types';
+import { DatasetCore, BlankNode, NamedNode } from '@rdfjs/types';
 
-import { DefaultDataFactory } from './rdf/rdf-model.js';
+import { DefaultDataFactory, RawTerm, equalTerms } from './rdf/rdf-model.js';
 import { ShapeBuilder, property, self, definesType, computedProperty } from './builder.js';
 import {
   Shape, TypedShape, TypedShapeID,
   RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
   PredicatePath, SequencePath, InversePath, AlternativePath, ZeroOrMorePath, ZeroOrOnePath, OneOrMorePath,
   AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
-  ShapeReference, Vocabulary,
-  typedShapeID,
+  ShapeReference, Vocabulary, ValueMapper, Match, typedShapeID,
 } from './shapes.js';
 import { frame } from './frame.js';
-import { mapAsBoolean } from './mappers.js';
+import { mapAsBoolean, mapAsNumber, mapAsString } from './mappers.js';
 import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary.js';
 
 export function makeShapesForShapes(factory = DefaultDataFactory) {
@@ -19,7 +18,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   const XSD_BOOLEAN = factory.namedNode(xsd.boolean);
   const XSD_STRING = factory.namedNode(xsd.string);
   const XSD_INTEGER = factory.namedNode(xsd.integer);
-  const ramp = makeRampVocabulary(factory);
+  const {ramp, rampjs} = makeRampVocabulary(factory);
 
   const schema = new ShapeBuilder({factory, blankUniqueKey: 'shapes'});
 
@@ -61,11 +60,43 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     },
   });
 
+  const mappers: Record<string, NamedMapper<unknown, unknown>> = {
+    [rampjs.MapAsString.value]: new NamedMapper(rampjs.MapAsString, mapAsString(factory)),
+    [rampjs.MapAsNumber.value]: new NamedMapper(rampjs.MapAsNumber, mapAsNumber(factory)),
+    [rampjs.MapAsBoolean.value]: new NamedMapper(rampjs.MapAsBoolean, mapAsBoolean(factory)),
+  };
+  type MapperForMapper = ValueMapper<
+    RawTerm<BlankNode | NamedNode>,
+    NamedMapper<unknown, unknown> | undefined
+  >;
+  const mapperForMapper: MapperForMapper = {
+    map: (value, shape) => {
+      if (value.termType === 'NamedNode' && Object.prototype.hasOwnProperty.call(mappers, value.value)) {
+        return new Match(mappers[value.value]);
+      }
+      return undefined;
+    },
+    unmap: (value, shape) => {
+      if (value instanceof NamedMapper) {
+        return new Match(value.id);
+      }
+      return undefined;
+    },
+  };
+
   const makeBaseProperties = () => ({
     id: self(ShapeID),
     lenient: property(ramp.lenient, schema.optional(
       schema.literal({datatype: XSD_BOOLEAN, mapper: mapAsBoolean(factory)})
     )),
+    mapper: property(rampjs.mapper, schema.optional(schema.anyOf(
+      [
+        schema.constant(rampjs.MapAsString),
+        schema.constant(rampjs.MapAsNumber),
+        schema.constant(rampjs.MapAsBoolean),
+      ],
+      {mapper: mapperForMapper}
+    ))),
   });
 
   schema.readonlyRecord<RecordShape>({
@@ -378,6 +409,21 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   });
 
   return schema.shapes;
+}
+
+class NamedMapper<In, Out> implements ValueMapper<In, Out> {
+  constructor(
+    readonly id: NamedNode,
+    private readonly baseMapper: ValueMapper<In, Out>
+  ) {}
+
+  map(value: In, shape: Shape): Match<Out> | undefined {
+    return this.baseMapper.map(value, shape);
+  }
+
+  unmap(value: Out, shape: Shape): Match<In> | undefined {
+    return this.baseMapper.unmap(value, shape);
+  }
 }
 
 export function frameShapes(dataset: DatasetCore, factory = DefaultDataFactory): Shape[] {

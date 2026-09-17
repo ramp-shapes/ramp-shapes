@@ -12,36 +12,47 @@ export function cyclicSame(a: unknown, b: unknown, visitLeft: Set<unknown>, visi
   }
   visitLeft.add(a);
   visitRight.add(b);
-  switch (typeof a) {
+  let result = false;
+  outer: switch (typeof a) {
     case 'number': {
-      if (Number.isNaN(a) && Number.isNaN(b as number)) { return true; }
+      if (Number.isNaN(a) && Number.isNaN(b as number)) {
+        result = true;
+        break outer;
+      }
       break;
     }
     case 'object': {
       if (a === null || b === null) {
-        return a === b;
+        result = a === b;
+        break outer;
       } else if (Array.isArray(a) && Array.isArray(b)) {
-        if (a.length !== b.length) { return false; }
-        for (let i = 0; i < a.length; i++) {
-          if (!cyclicSame(a[i], b[i], visitLeft, visitRight)) { return false; }
+        if (a.length !== b.length) {
+          break outer;
         }
-        return true;
+        for (let i = 0; i < a.length; i++) {
+          if (!cyclicSame(a[i], b[i], visitLeft, visitRight)) {
+            break outer;
+          }
+        }
+        result = true;
+        break outer;
       } else if (Ramp.looksLikeTerm(a) && Ramp.looksLikeTerm(b)) {
-        return Ramp.equalTerms(a, b);
+        result = Ramp.equalTerms(a, b);
+        break outer;
       } else {
         const aPrototype: unknown = Object.getPrototypeOf(a);
         const bPrototype: unknown = Object.getPrototypeOf(b);
         if (aPrototype !== bPrototype) {
-          return false;
+          break outer;
         }
         for (const key in a) {
           if (Object.hasOwnProperty.call(a, key)) {
             const aValue = (a as Record<string, unknown>)[key];
             if (aValue !== undefined && !Object.hasOwnProperty.call(b, key)) {
-              return false;
+              break outer;
             }
             if (!cyclicSame(aValue, (b as Record<string, unknown>)[key], visitLeft, visitRight)) {
-              return false;
+              break outer;
             }
           }
         }
@@ -49,15 +60,16 @@ export function cyclicSame(a: unknown, b: unknown, visitLeft: Set<unknown>, visi
           if (Object.hasOwnProperty.call(b, key)) {
             const bValue = (b as Record<string, unknown>)[key];
             if (bValue !== undefined && !Object.hasOwnProperty.call(a, key)) {
-              return false;
+              break outer;
             }
           }
         }
-        return true;
+        result = true;
+        break outer;
       }
     }
   }
   visitLeft.delete(a);
   visitRight.delete(b);
-  return false;
+  return result;
 }

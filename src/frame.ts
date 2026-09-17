@@ -7,7 +7,7 @@ import {
 import {
   ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
   AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
-  ShapeReference, TypedShape, getNestedPropertyPath,
+  ShapeReference, TypedShape, ValueMapper, getNestedPropertyPath,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults, resolveListShape,
@@ -27,6 +27,8 @@ export interface FrameParams<T> {
   /** Default is `true` if there are initial candidates otherwise `false`. */
   strict?: boolean;
   factory?: DataFactory;
+  /** Default mapper to use when no specific mapper is defined for a shape. */
+  mapper?: ValueMapper<unknown, unknown>;
 }
 
 export interface FrameSolution<T> {
@@ -59,7 +61,12 @@ export function *frame<T = unknown>(params: FrameParams<T>): IterableIterator<Fr
       throw makeError(ErrorCode.CyclicMatch, 'Failed to match cyclic shape', stack);
     }
 
-    const mapped = valueMap({value: match.value, shape: params.shape, factory});
+    const mapped = valueMap({
+      value: match.value,
+      shape: params.shape,
+      factory,
+      defaultMapper: params.mapper,
+    });
     yield {value: mapped as T};
   }
 }

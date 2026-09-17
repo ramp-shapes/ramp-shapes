@@ -4,6 +4,7 @@ import { diffString } from 'json-diff';
 
 import { TestResult } from './runner.js';
 import { OperationTestCase, readOperationTestIndex, runOperationTest } from './operations.js';
+import { breakReferenceCycles } from './util.js';
 
 import { TestScriptContext, AssertEqualError } from './test-scripts/test-script-context.js';
 import { registerAllTests } from './test-scripts/test-index.js';
@@ -98,7 +99,11 @@ function main() {
           }
           process.stderr.write('\n');
         } else {
-          console.log(diffString(result.expected, result.given));
+          const expectedWithoutCycles = structuredClone(result.expected);
+          const givenWithoutCycles = structuredClone(result.given);
+          breakReferenceCycles(expectedWithoutCycles);
+          breakReferenceCycles(givenWithoutCycles);
+          console.log(diffString(expectedWithoutCycles, givenWithoutCycles));
         }
       } else {
         // print new line

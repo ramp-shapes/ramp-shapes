@@ -26,24 +26,34 @@ export interface ShapeBase {
 }
 
 export interface ValueMapper<In, Out> {
-  map(value: In, shape: Shape): Out;
-  unmap(value: unknown, shape: Shape): { value: In } | undefined;
+  map(value: In, shape: Shape): Match<Out> | undefined;
+  unmap(value: Out, shape: Shape): Match<In> | undefined;
+}
+
+export class Match<T> {
+  private declare readonly _brand: 'match';
+
+  constructor(
+    readonly value: T
+  ) {}
 }
 
 export class ValueHole {
-  private _resolver: ((mapped: unknown) => void) | undefined;
+  private _resolvers: Array<(mapped: unknown) => void> = [];
 
   constructor(
     readonly value: unknown,
     readonly shape: Shape
   ) {}
 
-  setResolver(resolver: (mapped: unknown) => void): void {
-    this._resolver = resolver;
+  addResolver(resolver: (mapped: unknown) => void): void {
+    this._resolvers.push(resolver);
   }
 
   resolve(mapped: unknown): void {
-    this._resolver?.(mapped);
+    for (const resolver of this._resolvers) {
+      resolver(mapped);
+    }
   }
 }
 

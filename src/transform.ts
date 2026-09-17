@@ -12,7 +12,7 @@ import {
 import {
   Shape, TypedShape, RecordShape, RecordProperty, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
   AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
-  ShapeID, ShapeReference, ValueMapper,
+  ShapeID, ShapeReference, ValueMapper, ValueHole,
 } from './shapes.js';
 import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize.js';
 
@@ -42,6 +42,7 @@ export function transform<M>(
     factory,
     visitor,
     cache,
+    holes: new DefaultMatchCache(),
     synthesizeTransient,
     makeError: (code, message) => {
       return makeRampError(code, message, [...context.stack]);
@@ -63,15 +64,14 @@ interface TransformContext<M> {
   readonly factory: DataFactory;
   readonly visitor: TransformVisitor<M>;
   readonly cache: MatchCache<M>;
+  readonly holes: MatchCache<ValueHole>;
   readonly synthesizeTransient: boolean;
   makeError(code: ErrorCode, message: string): RampError;
 }
 
 export interface TransformVisitor<M> {
-  createPlaceholder(
-    value: unknown,
-    shape: Shape
-  ): M | undefined;
+  createPlaceholder(hole: ValueHole): M | undefined;
+  resolvePlaceholder(hole: ValueHole, match: M | undefined): void;
   visitAnyOf(
     match: M,
     shape: AnyOfShape,
@@ -113,17 +113,17 @@ export interface TransformVisitor<M> {
 }
 
 export interface MatchCache<M> {
-  getMatch(shape: Shape, value: unknown): M | null | undefined;
-  setMatch(shape: Shape, value: unknown, match: M | null | undefined): void;
+  get(shape: Shape, value: unknown): M | null | undefined;
+  set(shape: Shape, value: unknown, match: M | null | undefined): void;
 }
 
-export class DefaultMatchCache<M> {
+export class DefaultMatchCache<M> implements MatchCache<M> {
   private readonly matches = new HashMap<ShapeID, Map<unknown, M | null>>(
     hashTerm,
     equalTerms
   );
 
-  getMatch(shape: Shape, value: unknown): M | null | undefined {
+  get(shape: Shape, value: unknown): M | null | undefined {
     const map = this.matches.get(shape.id);
     if (!map) {
       return undefined;
@@ -131,7 +131,7 @@ export class DefaultMatchCache<M> {
     return map.get(value);
   }
 
-  setMatch(shape: Shape, value: unknown, match: M | null | undefined): void {
+  set(shape: Shape, value: unknown, match: M | null | undefined): void {
     let map = this.matches.get(shape.id);
     if (!map) {
       map = new Map<unknown, M | null>();
@@ -152,9 +152,14 @@ function transformShape<M>(
   frame: StackFrame,
   context: TransformContext<M>
 ): M | undefined {
-  let existing = context.cache.getMatch(shape, value);
+  let existing = context.cache.get(shape, value);
   if (existing === null) {
-    existing = context.visitor.createPlaceholder(value, shape);
+    let hole = context.holes.get(shape, value);
+    if (!hole) {
+      hole = new ValueHole(value, shape);
+      context.holes.set(shape, value, hole);
+    }
+    existing = context.visitor.createPlaceholder(hole);
   }
 
   if (existing) {
@@ -162,7 +167,7 @@ function transformShape<M>(
   }
 
   context.stack.push(frame);
-  context.cache.setMatch(shape, value, null);
+  context.cache.set(shape, value, null);
 
   let match: M | undefined;
   switch (shape.type) {
@@ -201,7 +206,12 @@ function transformShape<M>(
   }
 
   context.stack.pop();
-  context.cache.setMatch(shape, value, match);
+  context.cache.set(shape, value, match);
+  const pendingHole = context.holes.get(shape, value);
+  if (pendingHole) {
+    context.visitor.resolvePlaceholder(pendingHole, match);
+    context.holes.set(shape, value, undefined);
+  }
   return match;
 }
 

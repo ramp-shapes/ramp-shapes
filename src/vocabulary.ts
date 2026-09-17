@@ -26,9 +26,13 @@ export namespace ramp {
   export const Shape = namespacedValue(NAMESPACE, 'Shape');
 }
 
+export namespace rampjs {
+  export const NAMESPACE = 'http://ramp-shapes.github.io/schema-js#';
+}
+
 export function makeRampVocabulary(factory: DataFactory) {
   const NAMESPACE = ramp.NAMESPACE;
-  return {
+  const rampVocab = {
     NAMESPACE,
     Shape: namespacedNode(factory, NAMESPACE, 'Shape'),
     ShapeID: namespacedNode(factory, NAMESPACE, 'ShapeID'),
@@ -108,7 +112,19 @@ export function makeRampVocabulary(factory: DataFactory) {
     vocabulary: namespacedNode(factory, NAMESPACE, 'vocabulary'),
     vocabItem: namespacedNode(factory, NAMESPACE, 'vocabItem'),
     vocabKey: namespacedNode(factory, NAMESPACE, 'vocabKey'),
+  } as const;
+
+  const NAMESPACE_JS = rampjs.NAMESPACE;
+  const rampjsVocab = {
+    mapper: namespacedNode(factory, NAMESPACE_JS, 'mapper'),
+    MapAsString: namespacedNode(factory, NAMESPACE_JS, 'MapAsString'),
+    MapAsNumber: namespacedNode(factory, NAMESPACE_JS, 'MapAsNumber'),
+    MapAsBoolean: namespacedNode(factory, NAMESPACE_JS, 'MapAsBoolean'),
+  };
+
+  return {
+    ramp: rampVocab,
+    rampjs: rampjsVocab,
   };
 }
-
 

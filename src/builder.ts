@@ -285,7 +285,6 @@ export class ShapeBuilder {
     return this.constantShape(node, {
       ...props,
       vocabulary,
-      mapper: props.mapper ?? mapVocabulary(vocabulary),
     }) as TypedShapeID<any>;
   }
 
