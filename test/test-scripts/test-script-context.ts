@@ -1,5 +1,7 @@
 import * as Ramp from '../../src/index.js';
 
+import { structurallySame } from '../compare.js';
+
 export interface TestScriptContext {
   defineCase(name: string, body: () => void): void;
   skipCase(name: string, body: () => void): void;
@@ -27,6 +29,12 @@ export class AssertEqualError extends Error {
 
 export function assertEqual(given: unknown, expected: unknown, message?: string): void {
   if (given !== expected) {
+    throw new AssertEqualError({message, expected, given});
+  }
+}
+
+export function assertEqualStructural(given: unknown, expected: unknown, message?: string): void {
+  if (!structurallySame(given, expected)) {
     throw new AssertEqualError({message, expected, given});
   }
 }

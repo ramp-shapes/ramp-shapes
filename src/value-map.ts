@@ -126,7 +126,7 @@ export function valueUnmap<S extends Shape>(
       }
       return new Match(Object.fromEntries(entries));
     },
-    fromOptional: fromIdentity,
+    fromOptional: (match, shape) => match ?? new Match(shape.emptyValue),
     fromRecord: (matches, shape) => {
       const entries: [string, unknown][] = [];
       for (const {match, property} of matches) {

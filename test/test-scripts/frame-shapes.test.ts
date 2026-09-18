@@ -1,15 +1,18 @@
+import path from 'node:path';
+
 import * as Ramp from '../../src/index.js';
 
-import { structurallySame } from '../compare.js';
-import { SequentialDataFactory, readQuadsFromTurtle, findFirstShape } from '../util.js';
-import { TestScriptContext, AssertEqualError, assertEqual } from './test-script-context.js';
+import { SequentialDataFactory, readQuadsFromTurtle } from '../util.js';
+import {
+  TestScriptContext, AssertEqualError, assertEqual, assertEqualStructural,
+} from './test-script-context.js';
 
 const factory = Ramp.DefaultDataFactory;
 
 export default (context: TestScriptContext): void => {
   context.defineCase('frame-shapes/simple-point-record', () => {
     const shapeQuads = readQuadsFromTurtle(
-      'test-data/shapes/points-simple.ttl',
+      path.join(import.meta.dirname, '../../test-data/shapes/points-simple.ttl'),
       new SequentialDataFactory(factory)
     );
     const shapes = Ramp.frameShapes(Ramp.dataset(shapeQuads));
@@ -73,12 +76,6 @@ export default (context: TestScriptContext): void => {
       });
     }
 
-    if (!structurallySame(shape, expected)) {
-      throw new AssertEqualError({
-        message: 'Expected correctly framed "Point" shape',
-        expected,
-        given: shape,
-      });
-    }
+    assertEqualStructural(shape, expected, 'Expected correctly framed "Point" shape');
   });
 };

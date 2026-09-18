@@ -8,7 +8,7 @@ import {
   FieldProperty, TransientProperty, ComputedProperty, PropertyPath, Shape, ShapeID,
   ShapeReference, Vocabulary, TypedShape, TypedShapeID, TypedVocabulary, ValueMapper,
 } from './shapes.js';
-import { mapAsString, mapAsTerm, mapVocabulary } from './mappers.js';
+import { mapAsString, mapAsTerm } from './mappers.js';
 
 export interface ShapeBuilderOptions {
   factory?: DataFactory;
@@ -97,7 +97,7 @@ type NullableAsOptional<T> = Omit<T, NullableKeys<T>> & Partial<Pick<T, Nullable
 export class ShapeBuilder {
   private readonly _shapes = new HashMap<ShapeID, Shape>(hashTerm, equalTerms);
 
-  private readonly factory: DataFactory;
+  readonly factory: DataFactory;
   private readonly blankUniqueKey: string | undefined;
   private blankSequence = 1;
 
@@ -266,11 +266,27 @@ export class ShapeBuilder {
     return id as TypedShapeID<any>;
   }
 
-  constant<T extends NamedNode<any> | BlankNode | Literal, R = T>(
+  constant<
+    T extends NamedNode<any> | BlankNode | Literal,
+    R = T extends NamedNode<infer IRI> ? IRI : string
+  >(
     value: T,
     props: ShapeBaseProps<RawTerm<T>, R> = {}
   ): TypedShapeID<R> {
-    return this.constantShape(value, props) as TypedShapeID<any>;
+    return this.constantShape(value, {
+      ...props,
+      mapper: props.mapper ?? mapAsString(this.factory),
+    }) as TypedShapeID<any>;
+  }
+
+  constantTerm<T extends NamedNode<any> | BlankNode | Literal, R = T>(
+    value: T,
+    props: ShapeBaseProps<RawTerm<T>, R> = {}
+  ): TypedShapeID<R> {
+    return this.constantShape(value, {
+      ...props,
+      mapper: props.mapper ?? mapAsTerm(this.factory),
+    }) as TypedShapeID<any>;
   }
 
   fromVocabulary<Vocab extends Vocabulary['terms'], K extends keyof Vocab, R = K>(
@@ -292,7 +308,6 @@ export class ShapeBuilder {
     value: NamedNode | BlankNode | Literal,
     props: ShapeBaseProps<unknown, unknown> & {
       vocabulary?: Vocabulary;
-      keepAsTerm?: boolean;
     }
   ): ShapeID {
     const {lenient, vocabulary, mapper} = props;
