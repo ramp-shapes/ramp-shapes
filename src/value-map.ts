@@ -133,7 +133,7 @@ export function valueUnmap<S extends Shape>(
         if (property.kind === 'transient') {
           continue;
         }
-        entries.push([property.name, match]);
+        entries.push([property.name, match.value]);
       }
       return new Match(Object.fromEntries(entries));
     },

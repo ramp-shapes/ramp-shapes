@@ -1,0 +1,9 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix : <http://example.com/data#>.
+
+:fieldA a ex:FormField;
+    ex:valueType xsd:integer.
+
+:fieldB a ex:FormField;
+    ex:valueType xsd:string.

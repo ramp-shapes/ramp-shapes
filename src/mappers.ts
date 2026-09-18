@@ -4,8 +4,7 @@ import { ReadonlyHashMap } from '@reactodia/hashmap';
 import { type RawTerm, looksLikeTerm, termFromRaw, termToString } from './rdf/rdf-model.js';
 import { makeTermMap } from './common.js';
 import {
-  Shape, ValueMapper, Match, ResourceShape, LiteralShape, Vocabulary, TypedVocabulary,
-  ValueHole,
+  ValueMapper, Match, ResourceShape, LiteralShape, Vocabulary, TypedVocabulary, ValueHole,
 } from './shapes.js';
 import { rdf, xsd } from './vocabulary.js';
 
@@ -14,11 +13,11 @@ export function mapByDefault(factory: DataFactory): ValueMapper<unknown, unknown
     mapResolveHoles(),
     mapVocabularies(),
     mapAsNativeType(factory),
-    mapAsIs(),
+    mapIdentity(),
   ]);
 }
 
-export function mapAsIs<T>(): ValueMapper<T, T> {
+export function mapIdentity<T>(): ValueMapper<T, T> {
   return {
     map: (value, shape) => new Match(value),
     unmap: (value, shape) => new Match(value),
@@ -204,9 +203,7 @@ export function mapVocabulary<T extends Vocabulary['terms']>(
   return {
     map: (value, shape) => {
       if (!termToKey.has(value as Term)) {
-        throw new Error(
-          `Cannot find RDF term ${termToString(value as Term)} in vocabulary for shape ${termToString(shape.id)}`
-        );
+        return undefined;
       }
       return new Match(termToKey.get(value as Term)!);
     },

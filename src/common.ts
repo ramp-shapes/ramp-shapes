@@ -5,7 +5,7 @@ import { hashTerm, equalTerms, termToString } from './rdf/rdf-model.js';
 import {
   ListShape, LiteralShape, PropertyPath, ResourceShape, Shape,
 } from './shapes.js';
-import { ErrorCode, RampError } from './errors.js';
+import { ErrorCode, RampError, formatDisplayShape } from './errors.js';
 import { rdf } from './vocabulary.js';
 
 export function makeTermSet() {
@@ -36,6 +36,7 @@ export function matchesTerm(
         return false;
       }
     }
+
     if (shape.onlyNamed && node.termType !== 'NamedNode') {
       if (makeError) {
         throw makeError(
@@ -44,6 +45,29 @@ export function matchesTerm(
         );
       } else {
         return false;
+      }
+    }
+
+    if (shape.vocabulary) {
+      const {terms} = shape.vocabulary;
+      let found = false;
+      for (const key in terms) {
+        if (Object.prototype.hasOwnProperty.call(terms, key)) {
+          if (equalTerms(node, terms[key])) {
+            found = true;
+          }
+        }
+      }
+
+      if (!found) {
+        if (makeError) {
+          throw makeError(
+            ErrorCode.NoMatchingVocabularyTerm,
+            `Cannot find RDF term ${termToString(node)} in vocabulary for shape ${formatDisplayShape(shape)}`
+          );
+        } else {
+          return false;
+        }
       }
     }
   } else {
@@ -80,6 +104,7 @@ export function matchesTerm(
       }
     }
   }
+
   if (shape.value && !equalTerms(shape.value, node)) {
     if (makeError) {
       throw makeError(
@@ -90,6 +115,7 @@ export function matchesTerm(
       return false;
     }
   }
+
   return true;
 }
 

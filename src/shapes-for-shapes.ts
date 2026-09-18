@@ -102,7 +102,9 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   schema.readonlyRecord<RecordShape>({
     id: ramp.Record,
     properties: {
-      type: property(RDF_TYPE, schema.fromVocabulary('record', ShapeTypeVocabulary)),
+      type: definesType(
+        property(RDF_TYPE, schema.fromVocabulary('record', ShapeTypeVocabulary))
+      ),
       ...makeBaseProperties(),
       typeProperties: property(ramp.typeProperty, schema.set(schema.anyOf([
         typedShapeID(ramp.FieldProperty),
@@ -145,7 +147,9 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   schema.readonlyRecord<TransientProperty>({
     id: ramp.TransientProperty,
     properties: {
-      kind: property(RDF_TYPE, schema.fromVocabulary('transient', PropertyKindVocabulary)),
+      kind: definesType(
+        property(RDF_TYPE, schema.fromVocabulary('transient', PropertyKindVocabulary))
+      ),
       path: property(ramp.path, typedShapeID<PropertyPath>(ramp.PropertyPath)),
       valueShape: property(ramp.shape, Shape),
     },

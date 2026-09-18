@@ -15,8 +15,8 @@ export {
   computedProperty, definesType, inverseProperty, property, propertyPath, self,
 } from './builder.js';
 export {
-  mapAsBoolean, mapAsIs, mapAsNativeType, mapAsNumber, mapAsString, mapAsTerm, mapByDefault,
-  mapInSequence, mapResolveHoles, mapVocabulary, mapVocabularies,
+  mapAsBoolean, mapIdentity, mapAsNativeType, mapAsNumber, mapAsString, mapAsTerm,
+  mapByDefault, mapInSequence, mapResolveHoles, mapVocabulary, mapVocabularies,
 } from './mappers.js';
 export { type FrameParams, type FrameSolution, frame } from './frame.js';
 export { type FlattenParams, flatten } from './flatten.js';

@@ -2,7 +2,7 @@ import type { DataFactory, DatasetCore, Term, BlankNode, NamedNode } from '@rdfj
 import { HashMap, HashSet, ReadonlyHashSet } from '@reactodia/hashmap';
 
 import {
-  DefaultDataFactory, hashTerm, equalTerms, termToString, looksLikeTerm,
+  DefaultDataFactory, hashTerm, equalTerms, termToString,
 } from './rdf/rdf-model.js';
 import {
   ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
