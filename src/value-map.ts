@@ -23,7 +23,7 @@ export function valueMap<S extends Shape>(
   } = params;
   const cache = new DefaultMatchCache<ValueMatch>();
 
-  const visitArray = (matches: ValueMatch[], shape: Shape, value: unknown) => {
+  const fromArray = (matches: ValueMatch[], shape: Shape) => {
     const values = matches.map(m => m.value);
     return (shape.mapper ?? defaultMapper).map(values, shape);
   };
@@ -35,17 +35,18 @@ export function valueMap<S extends Shape>(
         hole.resolve(match.value);
       }
     },
-    visitAnyOf: (match, shape) => {
+    intoShape: boxed => new Match(boxed),
+    fromAnyOf: (match, shape) => {
       return (shape.mapper ?? defaultMapper).map(match.value, shape);
     },
-    visitList: visitArray,
-    visitLiteral: (value, shape) => {
+    fromList: fromArray,
+    fromLiteral: (value, shape) => {
       return (shape.mapper ?? defaultMapper).map(value, shape);
     },
-    visitNode: (value, shape) => {
+    fromNode: (value, shape) => {
       return (shape.mapper ?? defaultMapper).map(value, shape);
     },
-    visitMap: (matches, shape) => {
+    fromMap: (matches, shape) => {
       const entries: [string, unknown][] = [];
       for (const property in matches) {
         if (Object.prototype.hasOwnProperty.call(matches, property)) {
@@ -55,10 +56,10 @@ export function valueMap<S extends Shape>(
       const mapped = Object.fromEntries(entries);
       return (shape.mapper ?? defaultMapper).map(mapped, shape);
     },
-    visitOptional: (match, shape) => {
+    fromOptional: (match, shape) => {
       return (shape.mapper ?? defaultMapper).map(match?.value, shape);
     },
-    visitRecord: (matches, shape, value) => {
+    fromRecord: (matches, shape) => {
       const entries: [string, unknown][] = [];
       for (const {match, property} of matches) {
         if (property.kind === 'transient') {
@@ -69,7 +70,7 @@ export function valueMap<S extends Shape>(
       const mapped = Object.fromEntries(entries);
       return (shape.mapper ?? defaultMapper).map(mapped, shape);
     },
-    visitSet: visitArray,
+    fromSet: fromArray,
   };
 
   const transformed = transform<ValueMatch>({
@@ -99,9 +100,9 @@ export function valueUnmap<S extends Shape>(
   } = params;
   const cache = new DefaultMatchCache<ValueMatch>();
 
-  const visitArray = (matches: ValueMatch[], shape: Shape, value: unknown) => {
-    const values = matches.map(m => m.value);
-    return (shape.mapper ?? defaultMapper).unmap(values, shape);
+  const fromIdentity = (match: ValueMatch) => match;
+  const fromArray = (matches: ValueMatch[], shape: Shape) => {
+    return new Match(matches.map(m => m.value));
   };
 
   const visitor: TransformVisitor<ValueMatch> = {
@@ -111,30 +112,22 @@ export function valueUnmap<S extends Shape>(
         hole.resolve(match.value);
       }
     },
-    visitAnyOf: (match, shape) => {
-      return (shape.mapper ?? defaultMapper).unmap(match.value, shape);
-    },
-    visitList: visitArray,
-    visitLiteral: (value, shape) => {
-      return (shape.mapper ?? defaultMapper).unmap(value, shape);
-    },
-    visitNode: (value, shape) => {
-      return (shape.mapper ?? defaultMapper).unmap(value, shape);
-    },
-    visitMap: (matches, shape) => {
+    intoShape: (boxed, shape) => (shape.mapper ?? defaultMapper).unmap(boxed, shape),
+    fromAnyOf: fromIdentity,
+    fromList: fromArray,
+    fromLiteral: (value, shape) => new Match(value),
+    fromNode: (value, shape) => new Match(value),
+    fromMap: (matches, shape) => {
       const entries: [string, unknown][] = [];
       for (const property in matches) {
         if (Object.prototype.hasOwnProperty.call(matches, property)) {
           entries.push([property, matches[property].value]);
         }
       }
-      const mapped = Object.fromEntries(entries);
-      return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
+      return new Match(Object.fromEntries(entries));
     },
-    visitOptional: (match, shape) => {
-      return (shape.mapper ?? defaultMapper).map(match?.value, shape);
-    },
-    visitRecord: (matches, shape, value) => {
+    fromOptional: fromIdentity,
+    fromRecord: (matches, shape) => {
       const entries: [string, unknown][] = [];
       for (const {match, property} of matches) {
         if (property.kind === 'transient') {
@@ -142,10 +135,9 @@ export function valueUnmap<S extends Shape>(
         }
         entries.push([property.name, match]);
       }
-      const mapped = Object.fromEntries(entries);
-      return (shape.mapper ?? defaultMapper).unmap(mapped, shape);
+      return new Match(Object.fromEntries(entries));
     },
-    visitSet: visitArray,
+    fromSet: fromArray,
   };
 
   const transformed = transform({

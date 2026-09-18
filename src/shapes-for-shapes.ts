@@ -128,7 +128,16 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     },
     transients: [
       definesType(
-        property(RDF_TYPE, schema.optional(schema.constant(ramp.FieldProperty)))
+        property(RDF_TYPE, schema.anyOf([
+          schema.constant(ramp.FieldProperty),
+          schema.set(
+            schema.anyOf([
+              schema.constant(ramp.TransientProperty),
+              schema.constant(ramp.ComputedProperty),
+            ], {lenient: true}),
+            {maxCount: 0}
+          )
+        ]))
       ),
     ],
   });

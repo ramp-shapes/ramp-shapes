@@ -330,17 +330,23 @@ function failMatch(focusedStack: FocusedStackFrame, code: ErrorCode, message: st
   throw makeError(code, fullMessage, focusedStack);
 }
 
+const TRACKED_RECORD_REFS = new WeakMap<RecordShape, RefContext[]>();
+
 function findTrackedRecordRefs(
   shape: RecordShape
 ): RefContext[] | undefined {
   if (shape.computedProperties.length === 0) {
     return undefined;
   }
-  const refContexts: RefContext[] = [];
-  for (const property of shape.computedProperties) {
-    for (const reference of findOpenReferencedShapes(property.valueShape)) {
-      refContexts.push({source: shape.id, reference});
+  let refContexts = TRACKED_RECORD_REFS.get(shape);
+  if (!refContexts) {
+    refContexts = [];
+    for (const property of shape.computedProperties) {
+      for (const reference of findOpenReferencedShapes(property.valueShape)) {
+        refContexts.push({source: shape.id, reference});
+      }
     }
+    TRACKED_RECORD_REFS.set(shape, refContexts);
   }
   return refContexts;
 }
@@ -676,19 +682,23 @@ function *frameMap(
     }
     if (keyContext.match === undefined) {
       throw makeError(
-        ErrorCode.NoMapKeyMatches, `Failed to frame item as key of map ${termToString(shape.id)}`, stack
+        ErrorCode.NoMapKeyMatches,
+        `Failed to frame item as key of map ${formatDisplayShape(shape)}`,
+        stack
       );
     }
     if (valueContext && valueContext.match === undefined) {
       throw makeError(
-        ErrorCode.NoMapValueMatches, `Failed to frame item as value of map ${termToString(shape.id)}`, stack
+        ErrorCode.NoMapValueMatches,
+        `Failed to frame item as value of map ${formatDisplayShape(shape)}`,
+        stack
       );
     }
     const key = frameByReference(keyContext, stack, context);
     const value = valueContext ? frameByReference(valueContext, stack, context) : item;
     if (key !== undefined && value !== undefined) {
       if (!(typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean')) {
-        const message = `Cannot use non-primitive value as a key of map ${termToString(shape.id)}: ` +
+        const message = `Cannot use non-primitive value as a key of map ${formatDisplayShape(shape)}: ` +
           `(${typeof key}) ${String(key as unknown)}`;
         throw makeError(ErrorCode.CompositeMapKey, message, stack);
       }

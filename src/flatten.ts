@@ -5,7 +5,7 @@ import {
 } from './rdf/rdf-model.js';
 import {
   Shape, TypedShape, RecordProperty, PropertyPath, ResourceShape, LiteralShape,
-  ValueMapper, getNestedPropertyPath,
+  ValueMapper, Match, getNestedPropertyPath,
 } from './shapes.js';
 import { SubjectMemo, makeListShapeDefaults, resolveListShape } from './common.js';
 import { RampError, ErrorCode, formatDisplayShape, makeRampError } from './errors.js';
@@ -60,7 +60,7 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
     }
   };
 
-  const visitTerm = (
+  const fromTerm = (
     value: RawTerm<NamedNode | BlankNode | Literal>,
     shape: ResourceShape | LiteralShape
   ): ShapeMatch => {
@@ -77,8 +77,9 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
   const visitor: TransformVisitor<ShapeMatch> = {
     createPlaceholder: (hole) => new PlaceholderMatch(context, hole.shape, hole.value),
     resolvePlaceholder: (hole, match) => {/* ignore */},
-    visitAnyOf: (match, shape, value) => match,
-    visitList: (matches, shape, value) => {
+    intoShape: boxed => new Match(boxed),
+    fromAnyOf: (match, shape) => match,
+    fromList: (matches, shape) => {
       const {head, tail, nil} = resolveListShape(shape, listDefaults);
       const list = matches.length === 0 ? nil : context.generateBlankNode('list');
 
@@ -101,9 +102,9 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
 
       return {nodes, generate};
     },
-    visitLiteral: visitTerm,
-    visitNode: visitTerm,
-    visitMap: (matches, shape, value) => {
+    fromLiteral: fromTerm,
+    fromNode: fromTerm,
+    fromMap: (matches, shape) => {
       function *nodes() {
         for (const match of Object.values(matches)) {
           yield* match.nodes();
@@ -118,7 +119,7 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
 
       return {nodes, generate};
     },
-    visitOptional: (match, shape, value) => {
+    fromOptional: (match, shape) => {
       function nodes(): Iterable<RdfNode> {
         return match ? match.nodes() : [];
       }
@@ -127,7 +128,7 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
       }
       return {nodes, generate};
     },
-    visitRecord: (matches, shape, value) => {
+    fromRecord: (matches, shape) => {
       const memo = new SubjectMemo(shape);
       for (const {property, match} of matches) {
         if (isSelfProperty(property)) {
@@ -154,7 +155,7 @@ export function *flatten<S extends Shape>(params: FlattenParams<S>): Iterable<Qu
 
       return {nodes, generate};
     },
-    visitSet: (matches, shape, value) => {
+    fromSet: (matches, shape) => {
       function *nodes(): Iterable<RdfNode> {
         for (const match of matches) {
           yield* match.nodes();

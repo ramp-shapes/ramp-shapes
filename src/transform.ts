@@ -2,17 +2,13 @@ import type { DataFactory, Term, BlankNode, Literal, NamedNode } from '@rdfjs/ty
 import { HashMap } from '@reactodia/hashmap';
 
 import { type RawTerm, hashTerm, equalTerms, looksLikeTerm } from './rdf/rdf-model.js';
-import {
-  ResolvedListShape, SubjectMemo, assertUnknownShape, makeListShapeDefaults, resolveListShape,
-  matchesTerm, makeTermMap,
-} from './common.js';
+import { assertUnknownShape, matchesTerm, makeTermMap } from './common.js';
 import {
   ErrorCode, RampError, StackFrame, formatDisplayShape, formatStackFrameEdge, makeRampError,
 } from './errors.js';
 import {
-  Shape, TypedShape, RecordShape, RecordProperty, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
-  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
-  ShapeID, ShapeReference, ValueMapper, ValueHole,
+  Shape, RecordShape, RecordProperty, AnyOfShape, SetShape, OptionalShape, ResourceShape,
+  LiteralShape, ListShape, MapShape, ShapeID, ShapeReference, ValueHole, Match,
 } from './shapes.js';
 import { ReferenceMatch, synthesizeShape, EMPTY_REF_MATCHES } from './synthesize.js';
 
@@ -43,6 +39,7 @@ export function transform<M>(
     visitor,
     cache,
     holes: new DefaultMatchCache(),
+    trackedRefs: new HashMap<ShapeID, M[]>(hashTerm, equalTerms),
     synthesizeTransient,
     makeError: (code, message) => {
       return makeRampError(code, message, [...context.stack]);
@@ -65,6 +62,7 @@ interface TransformContext<M> {
   readonly visitor: TransformVisitor<M>;
   readonly cache: MatchCache<M>;
   readonly holes: MatchCache<ValueHole>;
+  readonly trackedRefs: HashMap<ShapeID, M[]>;
   readonly synthesizeTransient: boolean;
   makeError(code: ErrorCode, message: string): RampError;
 }
@@ -72,43 +70,38 @@ interface TransformContext<M> {
 export interface TransformVisitor<M> {
   createPlaceholder(hole: ValueHole): M | undefined;
   resolvePlaceholder(hole: ValueHole, match: M | undefined): void;
-  visitAnyOf(
+  intoShape(boxed: unknown, shape: Shape): Match<unknown> | undefined;
+  fromAnyOf(
     match: M,
-    shape: AnyOfShape,
-    value: unknown,
+    shape: AnyOfShape
   ): M | undefined;
-  visitList(
+  fromList(
     matches: M[],
-    shape: ListShape,
-    value: unknown[]
+    shape: ListShape
   ): M | undefined;
-  visitLiteral(
+  fromLiteral(
     value: RawTerm<Literal>,
     shape: LiteralShape
   ): M | undefined;
-  visitNode(
+  fromNode(
     value: RawTerm<NamedNode | BlankNode>,
     shape: ResourceShape
   ): M | undefined;
-  visitMap(
+  fromMap(
     matches: { [key: string]: M },
-    shape: MapShape,
-    value: { [key: string]: unknown }
+    shape: MapShape
   ): M | undefined;
-  visitOptional(
+  fromOptional(
     match: M | undefined,
-    shape: OptionalShape,
-    value: unknown
+    shape: OptionalShape
   ): M | undefined;
-  visitRecord(
+  fromRecord(
     matches: Array<{ property: RecordProperty; match: M }>,
-    shape: RecordShape,
-    value: Record<string, unknown>
+    shape: RecordShape
   ): M | undefined;
-  visitSet(
+  fromSet(
     matches: M[],
-    shape: SetShape,
-    value: unknown[]
+    shape: SetShape
   ): M | undefined;
 }
 
@@ -148,50 +141,60 @@ export class DefaultMatchCache<M> implements MatchCache<M> {
 function transformShape<M>(
   shape: Shape,
   required: boolean,
-  value: unknown,
+  boxed: unknown,
   frame: StackFrame,
   context: TransformContext<M>
 ): M | undefined {
-  let existing = context.cache.get(shape, value);
+  const unboxed = context.visitor.intoShape(boxed, shape);
+  if (!unboxed) {
+    return undefined;
+  }
+
+  const trackedRef = context.trackedRefs.get(shape.id);
+
+  let existing = context.cache.get(shape, boxed);
   if (existing === null) {
-    let hole = context.holes.get(shape, value);
+    let hole = context.holes.get(shape, boxed);
     if (!hole) {
-      hole = new ValueHole(value, shape);
-      context.holes.set(shape, value, hole);
+      hole = new ValueHole(boxed, shape);
+      context.holes.set(shape, boxed, hole);
     }
     existing = context.visitor.createPlaceholder(hole);
   }
 
   if (existing) {
+    if (trackedRef) {
+      trackedRef.push(existing);
+    }
     return existing;
   }
 
   context.stack.push(frame);
-  context.cache.set(shape, value, null);
+  context.cache.set(shape, boxed, null);
 
   let match: M | undefined;
   switch (shape.type) {
     case 'anyOf':
-      match = transformAnyOf(shape, required, value, context);
+      match = transformAnyOf(shape, required, unboxed.value, context);
       break;
     case 'list':
-      match = transformList(shape, required, value, context);
+      match = transformList(shape, required, unboxed.value, context);
       break;
     case 'map':
-      match = transformMap(shape, required, value, context);
+      match = transformMap(shape, required, unboxed.value, context);
       break;
     case 'optional':
-      match = transformOptional(shape, required, value, context);
+      match = transformOptional(shape, required, unboxed.value, context);
       break;
     case 'record':
-      match = transformRecord(shape, required, value, context);
+      match = transformRecord(shape, required, unboxed.value, context);
       break;
     case 'set':
-      match = transformSet(shape, required, value, context);
+      match = transformSet(shape, required, unboxed.value, context);
       break;
     case 'resource':
     case 'literal':
-      match = transformTerm(shape, required, value, context);
+      match = transformTerm(shape, required, unboxed.value, context);
       break;
     default:
       return assertUnknownShape(shape);
@@ -201,17 +204,23 @@ function transformShape<M>(
     const displayedShape = formatDisplayShape(shape);
     throw context.makeError(
       ErrorCode.ShapeMismatch,
-      `Value does not match ${displayedShape}: ${JSON.stringify(value)}`
+      `Value does not match ${displayedShape}: ${JSON.stringify(unboxed.value)}`
     );
   }
 
   context.stack.pop();
-  context.cache.set(shape, value, match);
-  const pendingHole = context.holes.get(shape, value);
+  context.cache.set(shape, boxed, match);
+  
+  const pendingHole = context.holes.get(shape, boxed);
   if (pendingHole) {
     context.visitor.resolvePlaceholder(pendingHole, match);
-    context.holes.set(shape, value, undefined);
+    context.holes.set(shape, boxed, undefined);
   }
+
+  if (match && trackedRef) {
+    trackedRef.push(match);
+  }
+
   return match;
 }
 
@@ -224,7 +233,7 @@ function transformAnyOf<M>(
   for (const variantShape of shape.variants) {
     const match = transformShape(variantShape, false, value, {shape: variantShape}, context);
     if (match) {
-      return context.visitor.visitAnyOf(match, shape, value);
+      return context.visitor.fromAnyOf(match, shape);
     }
   }
 
@@ -259,7 +268,7 @@ function transformList<M>(
     matches.push(match);
   }
 
-  return context.visitor.visitList(matches, shape, value);
+  return context.visitor.fromList(matches, shape);
 }
 
 function transformMap<M>(
@@ -292,14 +301,32 @@ function transformMap<M>(
       });
     }
 
-    const match = transformShape(itemShape, required, item, frame, context);
-    if (!match) {
-      return undefined;
+    if (shape.value) {
+      context.trackedRefs.set(shape.value.target.id, []);
     }
-    matches[key] = match;
+
+    let itemMatch = transformShape(itemShape, required, item, frame, context);
+    if (itemMatch) {
+      if (shape.value) {
+        const valueMatches = context.trackedRefs.get(shape.value.target.id);
+        if (!(valueMatches && valueMatches.length > 0)) {
+          throw context.makeError(
+            ErrorCode.NoMapValueMatches,
+            `Failed to transform item as value of map ${formatDisplayShape(shape)}`
+          );
+        }
+        itemMatch = valueMatches[0];
+      }
+
+      matches[key] = itemMatch;
+    }
+
+    if (shape.value) {
+      context.trackedRefs.delete(shape.value.target.id);
+    }
   }
 
-  return context.visitor.visitMap(matches, shape, value as { [key: string]: unknown });
+  return context.visitor.fromMap(matches, shape);
 }
 
 function addRefMatch(
@@ -329,7 +356,7 @@ function transformOptional<M>(
     return undefined;
   }
 
-  return context.visitor.visitOptional(match, shape, value);
+  return context.visitor.fromOptional(match, shape);
 }
 
 function transformRecord<M>(
@@ -346,7 +373,7 @@ function transformRecord<M>(
   if (!matchProperties(shape.typeProperties, required, value, matches, context)) {
     return undefined;
   }
-  const checkProperties = required || shape.typeProperties.length > 0;
+  const checkProperties = required || matches.length > 0;
   if (!(
     matchProperties(shape.properties, checkProperties, value, matches, context) &&
     matchProperties(shape.computedProperties, checkProperties, value, matches, context)
@@ -361,7 +388,7 @@ function transformRecord<M>(
     }
   }
 
-  return context.visitor.visitRecord(matches, shape, value);
+  return context.visitor.fromRecord(matches, shape);
 }
 
 function isObjectWithProperties(obj: unknown): obj is { [propertyName: string]: unknown } {
@@ -425,7 +452,7 @@ function transformSet<M>(
     matches.push(match);
   }
 
-  return context.visitor.visitSet(matches, shape, value);
+  return context.visitor.fromSet(matches, shape);
 }
 
 function transformTerm<M>(
@@ -447,6 +474,6 @@ function transformTerm<M>(
   }
 
   return shape.type === 'resource'
-    ? context.visitor.visitNode(value as RawTerm<NamedNode | BlankNode>, shape)
-    : context.visitor.visitLiteral(value as RawTerm<Literal>, shape);
+    ? context.visitor.fromNode(value as RawTerm<NamedNode | BlankNode>, shape)
+    : context.visitor.fromLiteral(value as RawTerm<Literal>, shape);
 }
