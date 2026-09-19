@@ -1,0 +1,43 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix wd: <http://www.wikidata.org/entity/>.
+@prefix wdt: <http://www.wikidata.org/prop/direct/>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+
+# Human
+wd:Q5 a ramp:Record;
+    ramp:typeProperty [
+        a ramp:TransientProperty;
+        ramp:path wdt:P31;
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue wd:Q5
+        ]
+    ];
+    ramp:property [
+        ramp:name "iri";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource ]
+    ];
+    ramp:property [
+        ramp:name "label";
+        ramp:path rdfs:label;
+        ramp:shape [ a ramp:Literal; ramp:termLanguage "en" ]
+    ];
+    ramp:property [
+        ramp:name "children";
+        ramp:path wdt:P40;
+        ramp:shape [ a ramp:Set; ramp:item wd:Q5 ]
+    ].
+
+# Alexander III of Russia
+wd:Q120180 a ramp:Record;
+    ramp:property [
+        ramp:name "iri";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource; ramp:termValue wd:Q120180 ]
+    ];
+    ramp:property [
+        ramp:name "asHuman";
+        ramp:path ();
+        ramp:shape wd:Q5
+    ].

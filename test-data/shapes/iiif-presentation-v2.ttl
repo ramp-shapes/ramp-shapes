@@ -1,0 +1,316 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix dctypes: <http://purl.org/dc/dcmitype/>.
+@prefix doap: <http://usefulinc.com/ns/doap#>.
+@prefix exif: <http://www.w3.org/2003/12/exif/ns#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix oa: <http://www.w3.org/ns/oa#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix sc: <http://iiif.io/api/presentation/2#>.
+@prefix svcs: <http://rdfs.org/sioc/services#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+
+sc:Manifest a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue sc:Manifest ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property _:labelProperty;
+    ramp:property _:metadataProperty;
+    ramp:property _:viewingDirectionProperty;
+    ramp:property _:viewingHintProperty;
+    ramp:property [
+        ramp:name "attribution";
+        ramp:path sc:attributionLabel;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+    ];
+    ramp:property [
+        ramp:name "description";
+        ramp:path dc:description;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+    ];
+    ramp:property [
+        ramp:name "license";
+        ramp:path dcterms:rights;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:variant [ a ramp:Resource ],
+                    [ a ramp:Literal; ramp:termDatatype xsd:string ]
+            ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "sequences";
+        ramp:path sc:hasSequences;
+        ramp:shape [ a ramp:List; ramp:item sc:Sequence ]
+    ];
+    ramp:property [
+        ramp:name "structures";
+        ramp:path sc:hasRanges;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:List; ramp:item sc:Range ] ]
+    ];
+    ramp:property [
+        ramp:name "startCanvas";
+        ramp:path sc:hasStartCanvas;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]
+    ];
+    ramp:property _:thumbnailProperty;
+    ramp:property [
+        ramp:name "logo";
+        ramp:path foaf:logo;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Record;
+                ramp:property _:idProperty;
+                ramp:property [
+                    ramp:name "service";
+                    ramp:path svcs:has_service;
+                    ramp:shape [ a ramp:Optional; ramp:item _:service ]
+                ]
+            ]
+        ]
+    ].
+
+sc:Sequence a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue sc:Sequence ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property [
+        ramp:name "label";
+        ramp:path rdfs:label;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+    ];
+    ramp:property [
+        ramp:name "canvases";
+        ramp:path sc:hasCanvases;
+        ramp:shape [ a ramp:List; ramp:item sc:Canvas ]
+    ];
+    ramp:property [
+        ramp:name "rendering";
+        ramp:path dcterms:hasFormat;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:Record;
+                ramp:property _:idProperty;
+                ramp:property _:labelProperty;
+                ramp:property _:formatProperty
+            ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "startCanvas";
+        ramp:path sc:hasStartCanvas;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]
+    ];
+    ramp:property _:viewingDirectionProperty;
+    ramp:property _:viewingHintProperty.
+
+sc:Canvas a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue sc:Canvas ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property _:labelProperty;
+    ramp:property _:widthProperty;
+    ramp:property _:heightProperty;
+    ramp:property [
+        ramp:name "images";
+        ramp:path sc:hasImageAnnotations;
+        ramp:shape [ a ramp:List; ramp:item oa:Annotation ]
+    ];
+    ramp:property [
+        ramp:name "otherContent";
+        ramp:path sc:hasLists;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:List; ramp:item sc:AnnotationList ] ]
+    ];
+    ramp:property _:thumbnailProperty;
+    ramp:property _:viewingHintProperty.
+
+oa:Annotation a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue oa:Annotation ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property [
+        ramp:name "motivation";
+        ramp:path oa:motivatedBy;
+        ramp:shape [ a ramp:Resource ]
+    ];
+    ramp:property [
+        ramp:name "on";
+        ramp:path oa:hasTarget;
+        ramp:shape [ a ramp:Resource ]
+    ];
+    ramp:property [
+        ramp:name "resource";
+        ramp:path oa:hasBody;
+        ramp:shape [
+            a ramp:Record;
+            ramp:typeProperty [
+                ramp:name "@type";
+                ramp:path rdf:type;
+                ramp:shape [ a ramp:Resource; ramp:termValue dctypes:Image ]
+            ];
+            ramp:property _:idProperty;
+            ramp:property _:serviceProperty;
+            ramp:property _:formatProperty;
+            ramp:property _:widthProperty;
+            ramp:property _:heightProperty
+        ]
+    ].
+
+sc:AnnotationList a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue sc:AnnotationList ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property [
+        ramp:name "label";
+        ramp:path rdfs:label;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+    ].
+
+sc:Range a ramp:Record;
+    ramp:typeProperty [
+        ramp:name "@type";
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue sc:Range ]
+    ];
+    ramp:property _:idProperty;
+    ramp:property _:metadataProperty;
+    ramp:property [
+        ramp:name "canvases";
+        ramp:path sc:hasCanvases;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [ a ramp:List; ramp:item [ a ramp:Resource ] ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "ranges";
+        ramp:path sc:hasRanges;
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [ a ramp:List; ramp:item [ a ramp:Resource ] ]
+        ]
+    ];
+    ramp:property [
+        ramp:name "members";
+        ramp:path sc:hasParts;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:List; ramp:item _:rangePart ] ]
+    ];
+    ramp:property [
+        ramp:name "within";
+        ramp:path dcterms:isPartOf;
+        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]
+    ].
+
+_:rangePart a ramp:Record;
+    ramp:property _:idProperty;
+    ramp:property _:labelProperty.
+
+# Properties with multiple usage
+
+_:formatProperty ramp:name "format";
+    ramp:path dc:format;
+    ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ].
+
+_:heightProperty ramp:name "height";
+    ramp:path exif:height;
+    ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ].
+
+_:idProperty ramp:name "@id";
+    ramp:path ();
+    ramp:shape [ a ramp:Resource ].
+
+_:labelProperty ramp:name "label";
+    ramp:path rdfs:label;
+    ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:string ].
+
+_:metadataProperty ramp:name "metadata";
+    ramp:path sc:metadataLabels;
+    ramp:shape [ a ramp:Optional; ramp:item [ a ramp:List; ramp:item _:metadataItem ] ].
+
+_:metadataItem a ramp:Record;
+    ramp:typeProperty _:labelProperty;
+    ramp:property [
+        ramp:name "value";
+        ramp:path rdf:value;
+        ramp:shape [ a ramp:Set; ramp:item [ a ramp:Literal ] ]
+    ].
+
+_:serviceProperty ramp:name "service";
+    ramp:path svcs:has_service;
+    ramp:shape _:service.
+
+_:service a ramp:Record;
+    ramp:property _:idProperty;
+    ramp:property [
+        ramp:name "profile";
+        ramp:path doap:implements;
+        ramp:shape [ a ramp:Resource ]
+    ].
+
+_:thumbnailProperty ramp:name "thumbnail";
+    ramp:path foaf:thumbnail;
+    ramp:shape [
+        a ramp:Optional;
+        ramp:item [
+            a ramp:Record;
+            ramp:property [
+                ramp:name "format";
+                ramp:path dc:format;
+                ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+            ];
+            ramp:property [
+                ramp:name "height";
+                ramp:path exif:height;
+                ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:integer ] ]
+            ];
+            ramp:property _:idProperty;
+            ramp:property [
+                ramp:name "service";
+                ramp:path svcs:has_service;
+                ramp:shape [ a ramp:Optional; ramp:item _:service ]
+            ];
+            ramp:property [
+                ramp:name "@type";
+                ramp:path rdf:type;
+                ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]
+            ];
+            ramp:property [
+                ramp:name "width";
+                ramp:path exif:width;
+                ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:integer ] ]
+            ]
+        ]
+    ].
+
+_:viewingDirectionProperty ramp:name "viewingDirection";
+    ramp:path sc:viewingDirection;
+    ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]. #TODO: use vocab here
+
+_:viewingHintProperty ramp:name "viewingHint";
+    ramp:path sc:viewingHint;
+    ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Resource ] ]. #TODO: use vocab here
+
+_:widthProperty ramp:name "width";
+    ramp:path exif:width;
+    ramp:shape [ a ramp:Literal; ramp:termDatatype xsd:integer ].

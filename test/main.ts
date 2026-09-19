@@ -12,7 +12,7 @@ import { registerAllTests } from './test-scripts/test-index.js';
 interface TestCase {
   readonly name: string;
   readonly skip?: boolean;
-  readonly run: () => TestResult;
+  readonly run: () => Promise<TestResult>;
 }
 
 enum ExitCode {
@@ -20,9 +20,10 @@ enum ExitCode {
   OperationTestIndexReadFailed = 2,
   TestCaseNotFound = 3,
   TestsFailed = 20,
+  UnexpectedError = 21,
 }
 
-function main() {
+async function main() {
   if (process.argv.length === 3) {
     const [, scriptName, argument] = process.argv;
     if (argument === '--help') {
@@ -61,7 +62,7 @@ function main() {
   for (const testCase of casesToTest) {
     let result: TestResult | undefined;
     if (!testCase.skip) {
-      result = testCase.run();
+      result = await testCase.run();
       if (result.type === 'success') {
         successCount++;
       }
@@ -124,12 +125,12 @@ function main() {
 }
 
 function addScriptTests(testCases: Map<string, TestCase>): void {
-  const makeCase = (name: string, body: () => void): TestCase => {
+  const makeCase = (name: string, body: () => void | Promise<void>): TestCase => {
     return {
       name,
-      run: (): TestResult => {
+      run: async (): Promise<TestResult> => {
         try {
-          body();
+          await body();
         } catch (err) {
           if (err instanceof AssertEqualError) {
             return {
@@ -188,4 +189,7 @@ function addOperationTests(testCases: Map<string, TestCase>): void {
 }
 
 // Run testing
-main();
+main().catch(err => {
+  console.error('Unexpected error during test evaluation', err);
+  process.exit(ExitCode.UnexpectedError);
+});

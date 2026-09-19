@@ -2,7 +2,9 @@ import path from 'node:path';
 import { Quad } from '@rdfjs/types';
 
 import * as Ramp from '../src/index.js';
-import { readQuadsFromTurtle, findFirstShape } from './util.js';
+import {
+  SequentialDataFactory, readQuadsFromTurtle, findFirstShape,
+} from './util.js';
 
 export type TestResult = TestSuccess | TestFailure;
 
@@ -76,7 +78,8 @@ export function readTestShapes(name: string, root?: Ramp.ShapeID): Ramp.Shape {
 export function readTestGraph(relativePath: string): Ramp.IndexedDataset {
   try {
     return Ramp.dataset(readQuadsFromTurtle(
-      path.join('test-data', relativePath)
+      path.join('test-data', relativePath),
+      new SequentialDataFactory(Ramp.DefaultDataFactory)
     ));
   } catch (error) {
     throw makeFailureError({

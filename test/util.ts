@@ -10,7 +10,7 @@ import * as Ramp from '../src/index.js';
 
 export function readQuadsFromTurtle(path: string, factory = Ramp.DefaultDataFactory): Quad[] {
   const ttl = fs.readFileSync(path, {encoding: 'utf-8'});
-  const parser = new N3.Parser({factory});
+  const parser = new N3.Parser({factory, blankNodePrefix: ''});
   return parser.parse(ttl);
 }
 
