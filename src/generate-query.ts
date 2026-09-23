@@ -6,8 +6,8 @@ import {
   DefaultDataFactory, equalTerms, termToString, looksLikeTerm,
 } from './rdf/rdf-model.js';
 import {
-  ShapeID, Shape, RecordShape, RecordProperty, PropertyPath, AnyOfShape, SetShape,
-  OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeID, Shape, RecordShape, FieldProperty, TransientProperty, PropertyPath,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
 } from './shapes.js';
 import {
   ResolvedListShape, makeTermMap, makeTermSet, assertUnknownShape, makeListShapeDefaults,
@@ -24,7 +24,7 @@ export interface GenerateQueryParams {
 }
 
 /**
- * @throws {RamError}
+ * @throws {RampError}
  */
 export function generateQuery(params: GenerateQueryParams): SparqlJs.ConstructQuery {
   const factory = params.factory || DefaultDataFactory;
@@ -279,7 +279,7 @@ function generateForShape(
   }
 
   context.onEmit(shape, edge.object, outBuffer);
-  moveFromTo(outBuffer, out);
+  movePatternsFromTo(outBuffer, out);
 
   context.visitingShapes.delete(shape.id);
   context.stack.pop();
@@ -304,7 +304,7 @@ function generateForRecord(
 
 function generateForProperties(
   subject: SparqlJs.Term,
-  properties: ReadonlyArray<RecordProperty>,
+  properties: ReadonlyArray<FieldProperty | TransientProperty>,
   out: SparqlJs.Pattern[],
   context: GenerateQueryContext,
 ) {
@@ -546,7 +546,7 @@ function findRecursivePaths(origin: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<RecordProperty>
+    properties: ReadonlyArray<FieldProperty | TransientProperty>
   ): Iterable<SparqlJsPredicate> {
     for (const property of properties) {
       path.push(propertyPathToSparql(property.path));
@@ -595,7 +595,7 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   }
 
   function *visitProperties(
-    properties: ReadonlyArray<RecordProperty>
+    properties: ReadonlyArray<FieldProperty | TransientProperty>
   ): Iterable<NamedNode> {
     for (const property of properties) {
       if (isSelfPath(property.path)) {
@@ -616,9 +616,18 @@ function findSubject(shape: Shape, context: GenerateQueryContext) {
   return term ? term : null;
 }
 
-function moveFromTo<T>(from: T[], to: T[]): void {
+function movePatternsFromTo(from: SparqlJs.Pattern[], to: SparqlJs.Pattern[]): void {
   for (const item of from) {
-    to.push(item);
+    const lastPattern = to.length === 0 ? undefined : to[to.length - 1];
+    if (item.type === 'bgp' && lastPattern?.type === 'bgp') {
+      // Combine BGP-patterns to allow for compact pattern forms
+      // (i.e. shared subject) when generating query string from AST
+      for (const triple of item.triples) {
+        lastPattern.triples.push(triple);
+      }
+    } else {
+      to.push(item);
+    }
   }
   from.length = 0;
 }

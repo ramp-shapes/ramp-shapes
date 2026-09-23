@@ -1,7 +1,5 @@
 import type { BlankNode, Literal, NamedNode } from '@rdfjs/types';
 
-import {} from './rdf/rdf-model.js';
-
 export type ShapeID = NamedNode | BlankNode;
 export type Shape =
   | ResourceShape
@@ -24,13 +22,52 @@ export type UnwrapShape<T> =
 export interface ShapeBase {
   readonly id: ShapeID;
   readonly lenient?: boolean;
+  readonly mapper?: ValueMapper<unknown, unknown>;
+}
+
+export interface ValueMapper<In, Out> {
+  readonly type?: NamedNode | BlankNode;
+  map(value: In, shape: Shape): Match<Out> | undefined;
+  unmap(value: Out, shape: Shape): Match<In> | undefined;
+}
+
+export interface NamedMapper<In, Out>
+  extends Omit<ValueMapper<In, Out>, 'type'>
+{
+  readonly type: NamedNode | BlankNode;
+}
+
+export class Match<T> {
+  private declare readonly _brand: 'match';
+
+  constructor(
+    readonly value: T
+  ) {}
+}
+
+export class ValueHole {
+  private _resolvers: Array<(mapped: unknown) => void> = [];
+
+  constructor(
+    readonly value: unknown,
+    readonly shape: Shape
+  ) {}
+
+  addResolver(resolver: (mapped: unknown) => void): void {
+    this._resolvers.push(resolver);
+  }
+
+  resolve(mapped: unknown): void {
+    for (const resolver of this._resolvers) {
+      resolver(mapped);
+    }
+  }
 }
 
 export interface ResourceShape extends ShapeBase {
   readonly type: 'resource';
   readonly onlyNamed?: boolean;
   readonly value?: NamedNode | BlankNode;
-  readonly keepAsTerm?: boolean;
   readonly vocabulary?: Vocabulary;
 }
 
@@ -40,25 +77,33 @@ export interface LiteralShape extends ShapeBase {
   readonly datatype?: NamedNode;
   readonly language?: string;
   readonly value?: Literal;
-  readonly keepAsTerm?: boolean;
 }
 
 export interface RecordShape extends ShapeBase {
   readonly type: 'record';
   readonly id: ShapeID;
-  readonly typeProperties: ReadonlyArray<RecordProperty>;
-  readonly properties: ReadonlyArray<RecordProperty>;
+  readonly typeProperties: ReadonlyArray<FieldProperty | TransientProperty>;
+  readonly properties: ReadonlyArray<FieldProperty | TransientProperty>;
   readonly computedProperties: ReadonlyArray<ComputedProperty>;
 }
 
-export interface RecordProperty {
+export type RecordProperty = FieldProperty | TransientProperty | ComputedProperty;
+
+export interface FieldProperty {
+  readonly kind: 'field';
   readonly name: string;
   readonly path: PropertyPath;
   readonly valueShape: Shape;
-  readonly transient?: boolean;
+}
+
+export interface TransientProperty {
+  readonly kind: 'transient';
+  readonly path: PropertyPath;
+  readonly valueShape: Shape;
 }
 
 export interface ComputedProperty {
+  readonly kind: 'computed';
   readonly name: string;
   readonly valueShape: Shape;
 }

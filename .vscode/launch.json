@@ -17,6 +17,7 @@
         "request": "launch",
         "runtimeExecutable": "tsx",
         "program": "${workspaceFolder}/test/main.ts",
+        "args": [],
       }
     ]
 }

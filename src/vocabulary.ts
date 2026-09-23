@@ -26,9 +26,18 @@ export namespace ramp {
   export const Shape = namespacedValue(NAMESPACE, 'Shape');
 }
 
+export namespace rampjs {
+  export const NAMESPACE = 'http://ramp-shapes.github.io/schema-js#';
+  export const Mapper = namespacedValue(NAMESPACE, 'Mapper');
+  export const MapAsString = namespacedValue(NAMESPACE, 'MapAsString');
+  export const MapAsTerm = namespacedValue(NAMESPACE, 'MapAsTerm');
+  export const MapAsNumber = namespacedValue(NAMESPACE, 'MapAsNumber');
+  export const MapAsBoolean = namespacedValue(NAMESPACE, 'MapAsBoolean');
+}
+
 export function makeRampVocabulary(factory: DataFactory) {
   const NAMESPACE = ramp.NAMESPACE;
-  return {
+  const rampVocab = {
     NAMESPACE,
     Shape: namespacedNode(factory, NAMESPACE, 'Shape'),
     ShapeID: namespacedNode(factory, NAMESPACE, 'ShapeID'),
@@ -41,9 +50,11 @@ export function makeRampVocabulary(factory: DataFactory) {
     property: namespacedNode(factory, NAMESPACE, 'property'),
     computedProperty: namespacedNode(factory, NAMESPACE, 'computedProperty'),
 
-    // Property and ComputedProperty
-    Property: namespacedNode(factory, NAMESPACE, 'Property'),
+    // Record properties
+    FieldProperty: namespacedNode(factory, NAMESPACE, 'FieldProperty'),
+    TransientProperty: namespacedNode(factory, NAMESPACE, 'TransientProperty'),
     ComputedProperty: namespacedNode(factory, NAMESPACE, 'ComputedProperty'),
+    PropertyKindVocabulary: namespacedNode(factory, NAMESPACE, 'PropertyKindVocabulary'),
     PropertyPath: namespacedNode(factory, NAMESPACE, 'PropertyPath'),
     PropertyPathVocabulary: namespacedNode(factory, NAMESPACE, 'PropertyPathVocabulary'),
     PredicatePath: namespacedNode(factory, NAMESPACE, 'PredicatePath'),
@@ -70,7 +81,6 @@ export function makeRampVocabulary(factory: DataFactory) {
     termDatatype: namespacedNode(factory, NAMESPACE, 'termDatatype'),
     termLanguage: namespacedNode(factory, NAMESPACE, 'termLanguage'),
     termValue: namespacedNode(factory, NAMESPACE, 'termValue'),
-    keepAsTerm: namespacedNode(factory, NAMESPACE, 'keepAsTerm'),
 
     // AnyOf
     AnyOf: namespacedNode(factory, NAMESPACE, 'AnyOf'),
@@ -107,7 +117,21 @@ export function makeRampVocabulary(factory: DataFactory) {
     vocabulary: namespacedNode(factory, NAMESPACE, 'vocabulary'),
     vocabItem: namespacedNode(factory, NAMESPACE, 'vocabItem'),
     vocabKey: namespacedNode(factory, NAMESPACE, 'vocabKey'),
+  } as const;
+
+  const NAMESPACE_JS = rampjs.NAMESPACE;
+  const rampjsVocab = {
+    mapper: namespacedNode(factory, NAMESPACE_JS, 'mapper'),
+    Mapper: namespacedNode(factory, NAMESPACE_JS, 'Mapper'),
+    MapAsString: namespacedNode(factory, NAMESPACE_JS, 'MapAsString'),
+    MapAsTerm: namespacedNode(factory, NAMESPACE_JS, 'MapAsTerm'),
+    MapAsNumber: namespacedNode(factory, NAMESPACE_JS, 'MapAsNumber'),
+    MapAsBoolean: namespacedNode(factory, NAMESPACE_JS, 'MapAsBoolean'),
+  };
+
+  return {
+    ramp: rampVocab,
+    rampjs: rampjsVocab,
   };
 }
-
 

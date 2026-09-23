@@ -5,12 +5,17 @@ import * as SparqlJs from 'sparqljs';
 
 import * as Ramp from '../src/index.js';
 
-import { structurallySame } from './compare.js';
 import {
-  TestResult, TestFailure, TestFailureError, ExpectedError,
-  makeFailureError, readTestShapes, readTestGraph, rampStackToTestStack,
-} from './runner.js';
-import { readCyclicJson, readQuery } from './util.js';
+  TestResult, ExpectedError, rampStackToTestStack,
+  assertEqual,
+  AssertEqualError,
+} from './core/assertions.js';
+import { structurallySame } from './core/compare.js';
+import {
+  SequentialDataFactory, readCyclicJson, readTurtle, readQuery,
+  readTestShapes, readTestGraph,
+} from './core/data-util.js';
+import { quadsToTurtleString } from './core/turtle-blank.js';
 
 export interface OperationTestCase {
   readonly type: 'frame' | 'flatten' | 'generateQuery';
@@ -21,9 +26,12 @@ export const OperationTestCase = {
   getFullName(testCase: OperationTestCase): string {
     return `${testCase.type}/${testCase.name}`;
   },
-  getTestGraphName(testCase: OperationTestCase): string {
-    return path.join(testCase.type, `${testCase.name}.ttl`);
-  }
+  getTestGraphPath(testCase: OperationTestCase): string {
+    return path.join(
+      import.meta.dirname,
+      `../test-data/${testCase.type}/${testCase.name}.ttl`
+    );
+  },
 };
 
 export function readOperationTestIndex(): OperationTestCase[] {
@@ -32,7 +40,7 @@ export function readOperationTestIndex(): OperationTestCase[] {
   return testDataIndex;
 }
 
-export function runOperationTest(testCase: OperationTestCase): TestResult {
+export async function runOperationTest(testCase: OperationTestCase): Promise<TestResult> {
   let result: TestResult;
   try {
     switch (testCase.type) {
@@ -41,7 +49,7 @@ export function runOperationTest(testCase: OperationTestCase): TestResult {
         break;
       }
       case 'flatten': {
-        result = runFlattenTest(testCase);
+        result = await runFlattenTest(testCase);
         break;
       }
       case 'generateQuery': {
@@ -52,23 +60,22 @@ export function runOperationTest(testCase: OperationTestCase): TestResult {
         throw new Error(`Unknown test type: ${(testCase as OperationTestCase).type}`);
     }
   } catch (error) {
-    const testError = error as TestFailureError;
-    let failure: TestFailure;
-    if (testError && testError.testFailure) {
-      failure = {
-        ...testError.testFailure,
-        testCaseName: OperationTestCase.getFullName(testCase),
-      };
-      return failure;
-    } else {
-      failure = {
+    if (error instanceof AssertEqualError) {
+      return {
         type: 'failure',
         testCaseName: OperationTestCase.getFullName(testCase),
-        message: 'Unexpected error while running test',
-        error,
+        message: error.message,
+        expected: error.expected,
+        given: error.given,
       };
     }
-    return failure;
+
+    return {
+      type: 'failure',
+      testCaseName: OperationTestCase.getFullName(testCase),
+      message: 'Unexpected error while running test',
+      error,
+    };
   }
 
   result = {
@@ -80,24 +87,27 @@ export function runOperationTest(testCase: OperationTestCase): TestResult {
 
 interface FrameTest {
   readonly shapes: string;
+  readonly rootShape?: string;
   readonly matches?: ReadonlyArray<unknown>;
   readonly error?: ExpectedError;
 }
 
 interface FlattenTest {
   readonly shapes: string;
+  readonly rootShape?: string;
   readonly value: unknown;
   readonly error?: ExpectedError;
 }
 
 interface GenerateQueryTest {
   readonly shapes: string;
+  readonly rootShape?: string;
 }
 
 function runFrameTest(testCase: OperationTestCase): TestResult {
   const frameTest = readTestDefinition(testCase) as FrameTest;
-  const shape = readTestShapes(frameTest.shapes);
-  const dataset = readTestGraph(OperationTestCase.getTestGraphName(testCase));
+  const shape = readShapes(frameTest);
+  const dataset = readTestGraph(OperationTestCase.getTestGraphPath(testCase));
 
   try {
     const matches = Ramp.frame({shape, dataset});
@@ -163,22 +173,18 @@ function runFrameTest(testCase: OperationTestCase): TestResult {
   return {type: 'success'};
 }
 
-function runFlattenTest(testCase: OperationTestCase): TestResult {
+async function runFlattenTest(testCase: OperationTestCase): Promise<TestResult> {
   const flattenTest = readTestDefinition(testCase) as FlattenTest;
-  const shape = readTestShapes(flattenTest.shapes);
+  const shape = readShapes(flattenTest);
 
-  let quads: Quad[] | undefined;
+  let quads: Quad[];
   try {
-    let blankIndex = 1;
-    quads = [...Ramp.flatten({
+    const sequentialFactory = new SequentialDataFactory(Ramp.DefaultDataFactory);
+    quads = Array.from(Ramp.flatten({
       shape,
       value: flattenTest.value,
-      unstable_generateBlankNode: () => {
-        const blankNode = Ramp.DefaultDataFactory.blankNode(`b${blankIndex}`);
-        blankIndex++;
-        return blankNode;
-      }
-    })];
+      unstable_generateBlankNode: prefix => sequentialFactory.blankNode(),
+    }));
   } catch (error) {
     if (Ramp.isRampError(error) && flattenTest.error) {
       if (error.rampErrorCode !== flattenTest.error.code) {
@@ -191,7 +197,9 @@ function runFlattenTest(testCase: OperationTestCase): TestResult {
         };
       }
       const stack = error.rampStack ? rampStackToTestStack(error.rampStack) : undefined;
-      if (!structurallySame(stack, flattenTest.error.stack)) {
+      if (structurallySame(stack, flattenTest.error.stack)) {
+        return {type: 'success'};
+      } else {
         return {
           type: 'failure',
           message: 'Expected a different flatten error stack',
@@ -200,36 +208,34 @@ function runFlattenTest(testCase: OperationTestCase): TestResult {
           given: stack,
         };
       }
-    } else {
-      return {
-        type: 'failure',
-        message: 'Unexpected error while flattening test value',
-        error,
-      };
     }
-  }
-
-  if (quads) {
-    if (flattenTest.error) {
-      return {
-        type: 'failure',
-        message: 'Framing expected to fail with error',
-      };
-    }
-
-    const dataset = readTestGraph(OperationTestCase.getTestGraphName(testCase));
     return {
       type: 'failure',
-      message: 'Flatten result graph comparison is not implemented yet',
+      message: 'Unexpected error while flattening test value',
+      error,
     };
   }
+
+  if (flattenTest.error) {
+    return {
+      type: 'failure',
+      message: 'Framing expected to fail with error',
+    };
+  }
+
+  const expected = readTurtle(
+    OperationTestCase.getTestGraphPath(testCase),
+    new SequentialDataFactory(Ramp.DefaultDataFactory)
+  );
+  const givenTurtle = await quadsToTurtleString(quads, expected.prefixes);
+  assertEqual(givenTurtle, expected.turtle, 'Flatten produced different result graph');
 
   return {type: 'success'};
 }
 
 function runGenerateQueryTest(testCase: OperationTestCase): TestResult {
   const generateQueryTest = readTestDefinition(testCase) as GenerateQueryTest;
-  const shape = readTestShapes(generateQueryTest.shapes);
+  const shape = readShapes(generateQueryTest);
 
   let expectedQuery: SparqlJs.SparqlQuery;
   try {
@@ -280,13 +286,22 @@ function runGenerateQueryTest(testCase: OperationTestCase): TestResult {
 function readTestDefinition(testCase: OperationTestCase): unknown {
   try {
     return readCyclicJson(
-      path.join('test-data', testCase.type, `${testCase.name}.json`)
+      path.join(
+        import.meta.dirname,
+        `../test-data/${testCase.type}/${testCase.name}.json`
+      )
     );
-  } catch (error) {
-    throw makeFailureError({
-      type: 'failure',
-      message: 'Failed to read test definition',
-      error,
-    });
+  } catch (err) {
+    throw new Error('Failed to read test definition', {cause: err});
   }
+}
+
+function readShapes(test: FrameTest | FlattenTest | GenerateQueryTest): Ramp.Shape {
+  const shapePath = path.join(
+    import.meta.dirname,
+    `../test-data/shapes/${test.shapes}.ttl`
+  );
+  const rootShape = test.rootShape
+    ? Ramp.DefaultDataFactory.namedNode(test.rootShape) : undefined;
+  return readTestShapes(shapePath, rootShape);
 }

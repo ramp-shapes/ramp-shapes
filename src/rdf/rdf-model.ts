@@ -355,6 +355,18 @@ export function looksLikeTerm(value: unknown): value is Term {
   }
 }
 
+export type RawTerm<T extends Term> =
+  T extends BaseQuad ? Pick<BaseQuad, 'termType' | 'subject' | 'predicate' | 'object' | 'graph'> :
+  T extends Literal ? Pick<Literal, 'termType' | 'value' | 'datatype' | 'language'> :
+  T extends { termType: (infer Type); value: string } ? { readonly termType: Type; readonly value: string } :
+  never;
+
+export function termFromRaw<T extends Term>(factory: DataFactory, term: RawTerm<T>): T {
+  // Unsafe convesion due to DataFactory typings usage of method overloads
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return factory.fromTerm(term as any) as T;
+}
+
 export function namespacedValue<const Namespace extends string, const LocalName extends string>(
   namespace: Namespace,
   localName: LocalName

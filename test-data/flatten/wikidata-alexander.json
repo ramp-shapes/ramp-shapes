@@ -1,0 +1,214 @@
+{
+  "shapes": "wikidata-people",
+  "rootShape": "http://www.wikidata.org/entity/Q120180",
+  "value": {
+    "iri": "http://www.wikidata.org/entity/Q120180",
+    "asHuman": {
+      "iri": "http://www.wikidata.org/entity/Q120180",
+      "label": "Alexander III of Russia",
+      "children": [
+        {
+          "iri": "http://www.wikidata.org/entity/Q154444",
+          "label": "Grand Duke Michael Alexandrovich of Russia",
+          "children": [
+            {
+              "iri": "http://www.wikidata.org/entity/Q667007",
+              "label": "George Mikhailovich, Count Brasov",
+              "children": []
+            }
+          ]
+        },
+        {
+          "iri": "http://www.wikidata.org/entity/Q163176",
+          "label": "Grand Duchess Olga Alexandrovna of Russia",
+          "children": [
+            {
+              "iri": "http://www.wikidata.org/entity/Q4246270",
+              "label": "Guri Nikolaevich Kulikovsky",
+              "children": []
+            }
+          ]
+        },
+        {
+          "iri": "http://www.wikidata.org/entity/Q165113",
+          "label": "Grand Duchess Xenia Alexandrovna of Russia",
+          "children": [
+            {
+              "iri": "http://www.wikidata.org/entity/Q234230",
+              "label": "Princess Irina Alexandrovna of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q3154370",
+                  "label": "Irina Yusupova",
+                  "children": [
+                    {
+                      "iri": "http://www.wikidata.org/entity/Q3570870",
+                      "label": "Xenia Sfiris",
+                      "children": [
+                        {
+                          "iri": "http://www.wikidata.org/entity/Q57303242",
+                          "label": "Tatiana Sfiris",
+                          "children": [
+                            {
+                              "iri": "http://www.wikidata.org/entity/Q57303256",
+                              "label": "Marilia Vamvakidis",
+                              "children": []
+                            },
+                            {
+                              "iri": "http://www.wikidata.org/entity/Q57303273",
+                              "label": "Yasmina Xenia Vamvakidis",
+                              "children": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q277611",
+              "label": "Prince Nikita Alexandrovich of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q1607433",
+                  "label": "Prince Alexander Romanov",
+                  "children": []
+                },
+                {
+                  "iri": "http://www.wikidata.org/entity/Q1607860",
+                  "label": "Prince Nikita Romanov",
+                  "children": [
+                    {
+                      "iri": "http://www.wikidata.org/entity/Q3526472",
+                      "label": "Théodore Nikitich de Russie",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q428885",
+              "label": "Prince Dmitri Alexandrovich of Russia",
+              "children": []
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q764785",
+              "label": "Prince Andrei Alexandrovich of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q2339401",
+                  "label": "Prince Andrew Romanov",
+                  "children": [
+                    {
+                      "iri": "http://www.wikidata.org/entity/Q21066162",
+                      "label": "Prince Alexis Romanov",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "iri": "http://www.wikidata.org/entity/Q3308867",
+                  "label": "Prince Michael Andreevich of Russia",
+                  "children": []
+                },
+                {
+                  "iri": "http://www.wikidata.org/entity/Q4397226",
+                  "label": "Princess Xenia Andreevna of Russia",
+                  "children": []
+                },
+                {
+                  "iri": "http://www.wikidata.org/entity/Q4397242",
+                  "label": "Princess Olga Andreevna Romanoff",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q961833",
+              "label": "Prince Feodor Alexandrovich of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q3309617",
+                  "label": "Prince Michael Feodorovich of Russia",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q1019229",
+              "label": "Prince Vasili Alexandrovich of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q4397223",
+                  "label": "Marina Romanova",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q1060210",
+              "label": "Prince Rostislav Alexandrovich of Russia",
+              "children": [
+                {
+                  "iri": "http://www.wikidata.org/entity/Q3442879",
+                  "label": "Prince Rostislav Romanov",
+                  "children": [
+                    {
+                      "iri": "http://www.wikidata.org/entity/Q4397195",
+                      "label": "Prince Rostislav Romanov",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "iri": "http://www.wikidata.org/entity/Q170293",
+          "label": "Grand Duke George Alexandrovich of Russia",
+          "children": []
+        },
+        {
+          "iri": "http://www.wikidata.org/entity/Q619068",
+          "label": "Grand Duke Alexander Alexandrovich of Russia",
+          "children": []
+        },
+        {
+          "iri": "http://www.wikidata.org/entity/Q40787",
+          "label": "Nicholas II of Russia",
+          "children": [
+            {
+              "iri": "http://www.wikidata.org/entity/Q113584",
+              "label": "Grand Duchess Olga Nikolaevna of Russia",
+              "children": []
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q151130",
+              "label": "Grand Duchess Anastasia Nikolaevna of Russia",
+              "children": []
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q154045",
+              "label": "Alexei Nikolaevich",
+              "children": []
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q155422",
+              "label": "Grand Duchess Maria Nikolaevna of Russia",
+              "children": []
+            },
+            {
+              "iri": "http://www.wikidata.org/entity/Q158148",
+              "label": "Grand Duchess Tatiana Nikolaevna of Russia",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
