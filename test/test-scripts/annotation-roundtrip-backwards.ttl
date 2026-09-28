@@ -1,0 +1,40 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix oa: <http://www.w3.org/ns/oa#>.
+
+<example:range-source1> oa:hasSource <example:document1>;
+    oa:hasSelector [
+        a oa:RangeSelector;
+        oa:hasStartSelector [
+            a oa:XPathSelector;
+            rdf:value "/table[1]/tbody[1]/tr[4]/td[1]";
+            oa:refinedBy [ oa:start "9"^^xsd:nonNegativeInteger ], <example:offset1>
+        ];
+        oa:hasEndSelector [
+            a oa:XPathSelector;
+            rdf:value "/table[1]/tbody[1]/tr[4]/td[1]";
+            oa:refinedBy [ oa:start "34"^^xsd:nonNegativeInteger ], <example:offset2>
+        ]
+    ].
+<example:annotation1> oa:hasTarget <example:range-source1>;
+    a oa:Annotation;
+    oa:hasTarget [
+        oa:hasSource <example:document1>;
+        oa:hasSelector [
+            a oa:RangeSelector;
+            oa:hasStartSelector [
+                a oa:XPathSelector;
+                rdf:value "/table[1]/tbody[1]/tr[4]/td[1]";
+                oa:refinedBy [ oa:start "9"^^xsd:nonNegativeInteger ], <example:offset1>
+            ];
+            oa:hasEndSelector [
+                a oa:XPathSelector;
+                rdf:value "/table[1]/tbody[1]/tr[4]/td[1]";
+                oa:refinedBy [ oa:start "34"^^xsd:nonNegativeInteger ], <example:offset2>
+            ]
+        ]
+    ];
+    oa:hasBody [
+        rdfs:label "Borders"@en, "Границы"@ru, "Borders"@en
+    ].

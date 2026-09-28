@@ -6,10 +6,12 @@
 # Human
 wd:Q5 a ramp:Record;
     ramp:typeProperty [
-        ramp:name "type";
+        a ramp:TransientProperty;
         ramp:path wdt:P31;
-        ramp:transient true;
-        ramp:shape [ a ramp:Resource; ramp:termValue wd:Q5 ]
+        ramp:shape [
+            a ramp:Resource;
+            ramp:termValue wd:Q5
+        ]
     ];
     ramp:property [
         ramp:name "iri";
@@ -25,4 +27,17 @@ wd:Q5 a ramp:Record;
         ramp:name "children";
         ramp:path wdt:P40;
         ramp:shape [ a ramp:Set; ramp:item wd:Q5 ]
+    ].
+
+# Alexander III of Russia
+wd:Q120180 a ramp:Record;
+    ramp:property [
+        ramp:name "iri";
+        ramp:path ();
+        ramp:shape [ a ramp:Resource; ramp:termValue wd:Q120180 ]
+    ];
+    ramp:property [
+        ramp:name "asHuman";
+        ramp:path ();
+        ramp:shape wd:Q5
     ].

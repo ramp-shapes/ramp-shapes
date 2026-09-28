@@ -1,14 +1,16 @@
 import { DatasetCore } from '@rdfjs/types';
 
 import { DefaultDataFactory } from './rdf/rdf-model.js';
-import { ShapeBuilder, property, self, transient, definesType, computedProperty } from './builder.js';
+import { ShapeBuilder, property, self, definesType, computedProperty } from './builder.js';
 import {
-  Shape, TypedShapeID, RecordShape, RecordProperty, ComputedProperty, PropertyPath, Vocabulary,
+  Shape, TypedShape, TypedShapeID,
+  RecordShape, FieldProperty, TransientProperty, ComputedProperty, PropertyPath,
   PredicatePath, SequencePath, InversePath, AlternativePath, ZeroOrMorePath, ZeroOrOnePath, OneOrMorePath,
-  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape, ShapeReference,
-  typedShapeID,
+  AnyOfShape, SetShape, OptionalShape, ResourceShape, LiteralShape, ListShape, MapShape,
+  ShapeReference, Vocabulary, ValueMapper, NamedMapper, Match, typedShapeID,
 } from './shapes.js';
 import { frame } from './frame.js';
+import { mapAsBoolean, mapAsNumber, mapAsString, mapAsTerm } from './mappers.js';
 import { rdf, xsd, ramp as rampVocabulary, makeRampVocabulary } from './vocabulary.js';
 
 export function makeShapesForShapes(factory = DefaultDataFactory) {
@@ -16,7 +18,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
   const XSD_BOOLEAN = factory.namedNode(xsd.boolean);
   const XSD_STRING = factory.namedNode(xsd.string);
   const XSD_INTEGER = factory.namedNode(xsd.integer);
-  const ramp = makeRampVocabulary(factory);
+  const {ramp, rampjs} = makeRampVocabulary(factory);
 
   const schema = new ShapeBuilder({factory, blankUniqueKey: 'shapes'});
 
@@ -49,10 +51,22 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     }
   });
 
+  const PropertyKindVocabulary = schema.vocabulary({
+    id: ramp.PropertyKindVocabulary,
+    terms: {
+      'field': ramp.FieldProperty,
+      'transient': ramp.TransientProperty,
+      'computed': ramp.ComputedProperty,
+    },
+  });
+
   const makeBaseProperties = () => ({
     id: self(ShapeID),
     lenient: property(ramp.lenient, schema.optional(
-      schema.literal<boolean>({datatype: XSD_BOOLEAN})
+      schema.literal({datatype: XSD_BOOLEAN, mapper: mapAsBoolean(factory)})
+    )),
+    mapper: property(rampjs.mapper, schema.optional(
+      typedShapeID<ValueMapper<unknown, unknown>>(rampjs.Mapper)
     )),
   });
 
@@ -63,32 +77,67 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
         property(RDF_TYPE, schema.fromVocabulary('record', ShapeTypeVocabulary))
       ),
       ...makeBaseProperties(),
-      typeProperties: property(ramp.typeProperty, schema.set(typedShapeID(ramp.Property))),
-      properties: property(ramp.property, schema.set(typedShapeID(ramp.Property))),
+      typeProperties: property(ramp.typeProperty, schema.set(schema.anyOf([
+        typedShapeID(ramp.FieldProperty),
+        typedShapeID(ramp.TransientProperty),
+      ]))),
+      properties: property(ramp.property, schema.set(schema.anyOf([
+        typedShapeID(ramp.FieldProperty),
+        typedShapeID(ramp.TransientProperty),
+      ]))),
       computedProperties: property(ramp.computedProperty,
         schema.set(typedShapeID(ramp.ComputedProperty))
       ),
     }
   });
 
-  schema.readonlyRecord<RecordProperty>({
-    id: ramp.Property,
+  schema.readonlyRecord<FieldProperty>({
+    id: ramp.FieldProperty,
     properties: {
+      kind: computedProperty(schema.fromVocabulary('field', PropertyKindVocabulary)),
       name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
       path: property(ramp.path, typedShapeID<PropertyPath>(ramp.PropertyPath)),
       valueShape: property(ramp.shape, Shape),
-      transient: property(ramp.transient, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
-    }
+    },
+    transients: [
+      definesType(
+        property(RDF_TYPE, schema.anyOf([
+          schema.set(
+            schema.anyOf([
+              schema.constant(ramp.TransientProperty),
+              schema.constant(ramp.ComputedProperty),
+            ]),
+            {maxCount: 0}
+          ),
+          schema.constant(ramp.FieldProperty),
+        ]))
+      ),
+    ],
+  });
+
+  schema.readonlyRecord<TransientProperty>({
+    id: ramp.TransientProperty,
+    properties: {
+      kind: definesType(
+        property(RDF_TYPE, schema.fromVocabulary('transient', PropertyKindVocabulary))
+      ),
+      path: property(ramp.path, typedShapeID<PropertyPath>(ramp.PropertyPath)),
+      valueShape: property(ramp.shape, Shape),
+    },
   });
 
   schema.readonlyRecord<ComputedProperty>({
     id: ramp.ComputedProperty,
     properties: {
+      kind: computedProperty(schema.fromVocabulary('computed', PropertyKindVocabulary)),
       name: property(ramp.name, schema.literal({datatype: XSD_STRING})),
       valueShape: property(ramp.shape, Shape),
-    }
+    },
+    transients: [
+      definesType(
+        property(RDF_TYPE, schema.optional(schema.constant(ramp.ComputedProperty)))
+      ),
+    ],
   });
 
   const PropertyPath: TypedShapeID<PropertyPath> = schema.anyOf([
@@ -116,12 +165,17 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     }
   });
 
-  schema.readonlyRecord<PredicatePath & { exclude: undefined }>({
+  schema.readonlyRecord<PredicatePath>({
     id: ramp.PredicatePath,
     properties: {
       predicate: self(schema.namedNodeTerm()),
+      type: computedProperty(
+        schema.fromVocabulary('predicate', PropertyPathTypeVocabulary)
+      ),
+    },
+    transients: [
       // negative properties to exclude other property path types
-      exclude: transient(self(
+      self(
         schema.set(
           schema.anyOf<TypedShapeID<any>[]>([
             typedShapeID(ramp.SequencePath),
@@ -133,11 +187,8 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
           ], {lenient: true}),
           {maxCount: 0}
         )
-      )),
-      type: computedProperty(
-        schema.fromVocabulary('predicate', PropertyPathTypeVocabulary)
-      ),
-    }
+      )
+    ],
   });
 
   schema.record<SequencePath>({
@@ -220,10 +271,16 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
       ...makeBaseProperties(),
       itemShape: property(ramp.item, Shape),
       minCount: property(ramp.minCount, schema.optional(
-        schema.literal<number>({datatype: XSD_INTEGER})
+        schema.literal({
+          datatype: XSD_INTEGER,
+          mapper: mapAsNumber(factory),
+        })
       )),
       maxCount: property(ramp.maxCount, schema.optional(
-        schema.literal<number>({datatype: XSD_INTEGER})
+        schema.literal({
+          datatype: XSD_INTEGER,
+          mapper: mapAsNumber(factory),
+        })
       )),
     }
   });
@@ -247,12 +304,12 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
       ),
       ...makeBaseProperties(),
       onlyNamed: property(ramp.onlyNamed, schema.optional(
-        schema.literal({datatype: XSD_BOOLEAN})
+        schema.literal({
+          datatype: XSD_BOOLEAN,
+          mapper: mapAsBoolean(factory),
+        })
       )),
       value: property(ramp.termValue, schema.optional(schema.resourceTerm())),
-      keepAsTerm: property(ramp.keepAsTerm, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
       vocabulary: property(ramp.vocabulary, schema.optional(
         typedShapeID(ramp.Vocabulary)
       )),
@@ -276,7 +333,7 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     properties: {
       id: self(schema.optional(schema.resourceTerm())),
       terms: property(ramp.vocabItem, schema.map({
-        key: {target: VocabularyItemKey},
+        key: {target: VocabularyItemKey, part: 'value'},
         value: {target: VocabularyItemTerm},
         itemShape: VocabularyItem,
       })),
@@ -293,9 +350,6 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
       datatype: property(ramp.termDatatype, schema.optional(schema.namedNodeTerm())),
       language: property(ramp.termLanguage, schema.optional(schema.literal({datatype: XSD_STRING}))),
       value: property(ramp.termValue, schema.optional(schema.literalTerm())),
-      keepAsTerm: property(ramp.keepAsTerm, schema.optional(
-        schema.literal<boolean>({datatype: XSD_BOOLEAN})
-      )),
     }
   });
 
@@ -347,16 +401,44 @@ export function makeShapesForShapes(factory = DefaultDataFactory) {
     }
   });
 
+  const mappers: NamedMapper<unknown, unknown>[] = [
+    mapAsString(factory),
+    mapAsTerm(factory),
+    mapAsNumber(factory),
+    mapAsBoolean(factory),
+  ];
+
+  schema.anyOf(
+    mappers.map(m => typedShapeID(m.type)),
+    {
+      id: rampjs.Mapper,
+      lenient: true,
+    }
+  );
+
+  for (const mapper of mappers) {
+    schema.record({
+      id: mapper.type,
+      properties: {
+        type: definesType(property(RDF_TYPE, schema.constantTerm(mapper.type)))
+      },
+      mapper: {
+        map: () => new Match(mapper),
+        unmap: value => new Match({type: value.type}),
+      },
+    });
+  }
+
   return schema.shapes;
 }
 
 export function frameShapes(dataset: DatasetCore, factory = DefaultDataFactory): Shape[] {
   const shapesForShapes = makeShapesForShapes(factory);
-  const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape))!;
+  const rootShape = shapesForShapes.get(factory.namedNode(rampVocabulary.Shape)) as TypedShape<Shape>;
   const framingResults = frame({shape: rootShape, dataset});
   const shapes: Shape[] = [];
   for (const {value} of framingResults) {
-    shapes.push(value as Shape);
+    shapes.push(value);
   }
   return shapes;
 }

@@ -1,0 +1,44 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix ex: <http://example.com/schema#>.
+@prefix ramp: <http://ramp-shapes.github.io/schema#>.
+
+ex:FormField a ramp:Record;
+    ramp:typeProperty [
+        a ramp:TransientProperty;
+        ramp:path rdf:type;
+        ramp:shape [ a ramp:Resource; ramp:termValue ex:FormField ]
+    ];
+    ramp:property [
+        ramp:name "valueType";
+        ramp:path ex:valueType;
+        ramp:shape [
+            a ramp:AnyOf;
+            ramp:variant ex:NumericType, ex:StringType
+        ]
+    ].
+
+ex:NumericType a ramp:Resource;
+    ramp:vocabulary [
+        ramp:vocabItem [
+            ramp:vocabKey "integer";
+            ramp:termValue xsd:integer
+        ], [
+            ramp:vocabKey "nonNegativeInteger";
+            ramp:termValue xsd:nonNegativeInteger
+        ], [
+            ramp:vocabKey "decimal";
+            ramp:termValue xsd:decimal
+        ]
+    ].
+
+ex:StringType a ramp:Resource;
+    ramp:vocabulary [
+        ramp:vocabItem [
+            ramp:vocabKey "string";
+            ramp:termValue xsd:string
+        ], [
+            ramp:vocabKey "langString";
+            ramp:termValue rdf:langString
+        ]
+    ].

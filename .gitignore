@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /out
+/*.tgz
 *.tsbuildinfo
 
 !/.vscode/launch.json

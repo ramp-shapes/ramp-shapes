@@ -36,7 +36,14 @@ sc:Manifest a ramp:Record;
     ramp:property [
         ramp:name "license";
         ramp:path dcterms:rights;
-        ramp:shape [ a ramp:Optional; ramp:item [ a ramp:Literal; ramp:termDatatype xsd:string ] ]
+        ramp:shape [
+            a ramp:Optional;
+            ramp:item [
+                a ramp:AnyOf;
+                ramp:variant [ a ramp:Resource ],
+                    [ a ramp:Literal; ramp:termDatatype xsd:string ]
+            ]
+        ]
     ];
     ramp:property [
         ramp:name "sequences";
@@ -62,7 +69,11 @@ sc:Manifest a ramp:Record;
             ramp:item [
                 a ramp:Record;
                 ramp:property _:idProperty;
-                ramp:property _:serviceProperty
+                ramp:property [
+                    ramp:name "service";
+                    ramp:path svcs:has_service;
+                    ramp:shape [ a ramp:Optional; ramp:item _:service ]
+                ]
             ]
         ]
     ].
