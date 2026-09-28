@@ -127,7 +127,7 @@ export function formatShapeStack(stack: ReadonlyArray<StackFrame>): string {
 }
 
 export function formatStackFrameEdge(edge: PropertyPath | string | number): string {
-  return typeof edge === 'object' ? formatPropertyPath(edge) : String(edge);
+  return typeof edge === 'object' ? formatPropertyPath(edge) : `"${edge}"`;
 }
 
 function formatPropertyPath(path: PropertyPath): string {

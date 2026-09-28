@@ -391,7 +391,7 @@ function matchProperties<M>(
     } else if (required) {
       throw context.makeError(
         ErrorCode.FailedToMatchProperty,
-        `Failed to match property "${formatStackFrameEdge(edge)}"`
+        `Failed to match property ${formatStackFrameEdge(edge)}`
       );
     } else {
       return false;

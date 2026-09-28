@@ -295,14 +295,14 @@ function frameProperties(
         return required ? failMatch(
           focusedStack,
           ErrorCode.PropertyMismatch,
-          `Failed to match property "${formatStackFrameEdge(nextEdge)}"`
+          `Failed to match property ${formatStackFrameEdge(nextEdge)}`
         ) : false;
       }
       if (found) {
         return required ? failMatch(
           focusedStack,
           ErrorCode.MultiplePropertyMatches,
-          `Found multiple matches for property "${formatStackFrameEdge(nextEdge)}"`
+          `Found multiple matches for property ${formatStackFrameEdge(nextEdge)}`
         ) : false;
       }
       found = true;
@@ -319,7 +319,7 @@ function frameProperties(
       return required ? failMatch(
         focusedStack,
         ErrorCode.NoPropertyMatches,
-        `Found no matches for property "${formatStackFrameEdge(nextEdge)}"`
+        `Found no matches for property ${formatStackFrameEdge(nextEdge)}`
       ) : false;
     }
   }

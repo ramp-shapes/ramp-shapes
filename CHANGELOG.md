@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
   * Replace `ramp:transient` property on a property by allowing to specify a property type: `[ a ramp:TransientProperty ]` which does not have a `ramp:name`.
   * Remove `ramp:keepAsTerm` property from a `ramp:Literal` (can be repalced by a shape mapper, e.g. `rampjs:mapper [ a rampjs:MapAsTerm ]`).
 - `frame()` and `flatten()` changes:
+  * Accept any `DatasetCore` (from `@rdfjs/types`) dataset implementation;
   * `ValueMapper` interface is properly typed with `In` and `Out` generic type parameters to support typed schemas with TypeScript;
   * `ValueMapper.*` built-in mappers are replaced by `mapByDefault()`, `mapIdentity()`, `mapVocabularies()`, `mapVocabulary()`, `mapAsTerm()`, `mapAsString()`, `mapAsNumber()`, `mapAsBoolean()`, `mapAsNativeType()`, `mapInSequence()`;
   * `mapper` parameter to `frame()` and `flatten()` now specifies only a *default* mapper to use when a shape lacks an explicitly provided one;
@@ -17,6 +18,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
   * Construct type-safe schemas with shapes by providing a typed `mapper` instance to various builder methods;
   * Transient properties should be provided to as separate `{ ..., transients: [...] }` parameter to `ShapeBuilder.record()` without an explicit name.
 - Fix `generateQuery()` to merge groups of quads (BGPs) located next to each other.
+- Replace `makeIndexedDataset()` by `IndexedDataset.create()`.
 - Expand test suite:
   * Fix an error when trying to display a diff for a recursive (cyclic) value.
   * Enable `flatten` test result comparison with expected graph.
